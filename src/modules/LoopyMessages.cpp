@@ -83,7 +83,7 @@ bool LoopyMessages::TerminalCommandHandler(string commandName, vector<string> co
     if(commandName == "loopy"){
         //Get the id of the target node
         nodeID targetNodeId = atoi(commandArgs[0].c_str());
-        logt("LOOPY", "Trying to send message to node %u", targetNodeId);
+        logt("LOOPY", "Trying to send message to node %u\n", targetNodeId);
 
         //Send loopy message to that node
         connPacketModuleAction packet;
@@ -141,7 +141,7 @@ void LoopyMessages::ConnectionPacketReceivedEventHandler(connectionPacket* inPac
         //Check if our module is meant and we should trigger an action
         if(packet->moduleId == moduleId){
             if(packet->actionType == LoopyMessagesTriggerActionMessages::TRIGGER_MESSAGE){
-                logt("LOOPY", "Loopy message received with data: %d", packet->data[0]);
+                logt("LOOPY", "Loopy message received with data: %d\n", packet->data[0]);
 
                 //Send Response acknowledgement
                 connPacketModuleAction outPacket;
@@ -169,7 +169,7 @@ void LoopyMessages::ConnectionPacketReceivedEventHandler(connectionPacket* inPac
         {
             if(packet->actionType ==LoopyMessagesActionResponseMessages::RESPONSE_MESSAGE)
             {
-                 logt("LOOPY", "Loopy message came back from %u with data %d, %d", packet->header.sender, packet->data[0], packet->data[1]);
+                 logt("LOOPY", "Loopy message came back from %u with data %d, %d\n", packet->header.sender, packet->data[0], packet->data[1]);
             }
         }
     }
