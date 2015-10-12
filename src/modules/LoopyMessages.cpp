@@ -85,7 +85,7 @@ bool LoopyMessages::TerminalCommandHandler(string commandName, vector<string> co
         nodeID targetNodeId = atoi(commandArgs[0].c_str());
         logt("LOOPY", "Trying to send message to node %u", targetNodeId);
 
-        //Send ping packet to that node
+        //Send loopy message to that node
         connPacketModuleAction packet;
         packet.header.messageType = MESSAGE_TYPE_MODULE_TRIGGER_ACTION;
         packet.header.sender = node->persistentConfig.nodeId;
@@ -142,22 +142,36 @@ void LoopyMessages::ConnectionPacketReceivedEventHandler(connectionPacket* inPac
         if(packet->moduleId == moduleId){
             if(packet->actionType == LoopyMessagesTriggerActionMessages::TRIGGER_MESSAGE){
                 logt("LOOPY", "Loopy message received with data: %d", packet->data[0]);
+
+                //Send Response acknowledgement
+                connPacketModuleAction outPacket;
+                outPacket.header.messageType = MESSAGE_TYPE_MODULE_ACTION_RESPONSE;
+                outPacket.header.sender = node->persistentConfig.nodeId;
+                outPacket.header.receiver = packetHeader->sender;
+
+                outPacket.moduleId = moduleId;
+                outPacket.actionType = LoopyMessagesActionResponseMessages::RESPONSE_MESSAGE;
+                outPacket.data[0] = packet->data[0];
+                outPacket.data[1] = 111;
+
+                cm->SendMessageToReceiver(NULL, (u8*)&outPacket, SIZEOF_CONN_PACKET_MODULE_ACTION + 2, true);
+
             }
         }
     }
 
     //Parse Module responses
-    //if(packetHeader->messageType == MESSAGE_TYPE_MODULE_ACTION_RESPONSE){
-    //    connPacketModuleAction* packet = (connPacketModuleAction*)packetHeader;
+    if(packetHeader->messageType == MESSAGE_TYPE_MODULE_ACTION_RESPONSE){
+        connPacketModuleAction* packet = (connPacketModuleAction*)packetHeader;
 
-    //    //Check if our module is meant and we should trigger an action
-    //    if(packet->moduleId == moduleId)
-    //    {
-    //        if(packet->actionType == TemplateModuleActionResponseMessages::MESSAGE_0)
-    //        {
-
-    //        }
-    //    }
-    //}
+        //Check if our module is meant and we should trigger an action
+        if(packet->moduleId == moduleId)
+        {
+            if(packet->actionType ==LoopyMessagesActionResponseMessages::RESPONSE_MESSAGE)
+            {
+                 logt("LOOPY", "Loopy message came back from %u with data %d, %d", packet->header.sender, packet->data[0], packet->data[1]);
+            }
+        }
+    }
 }
 
