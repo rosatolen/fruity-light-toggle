@@ -21,6 +21,7 @@
 #include <AdvertisingModule.h>
 #include <ScanningModule.h>
 #include <EnrollmentModule.h>
+#include <LoopyMessages.h>
 
 extern "C"
 {
@@ -103,6 +104,7 @@ Node::Node(networkID networkId)
 	activeModules[3] = new AdvertisingModule(moduleID::ADVERTISING_MODULE_ID, this, cm, "adv", 4);
 	activeModules[4] = new ScanningModule(moduleID::SCANNING_MODULE_ID, this, cm, "scan", 5);
 	activeModules[5] = new EnrollmentModule(moduleID::ENROLLMENT_MODULE_ID, this, cm, "enroll", 6);
+	activeModules[6] = new LoopyMessages(moduleID::LOOPY_MESSAGES_ID, this, cm, "loopy", 7);
 
 
 	//Register a pre/post transmit hook for radio events
@@ -561,7 +563,7 @@ Node::decisionResult Node::DetermineBestClusterAvailable(void)
 }
 
 //Calculates the score for a cluster
-//Connect to big clusters but big clusters must connect nodes that are not able 
+//Connect to big clusters but big clusters must connect nodes that are not able
 u32 Node::CalculateClusterScoreAsMaster(joinMeBufferPacket* packet)
 {
 
