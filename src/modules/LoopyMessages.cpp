@@ -25,11 +25,23 @@
 #include <Utility.h>
 #include <Storage.h>
 #include <Node.h>
+#include "pca10028.h"
 
 
 extern "C"{
 #include <stdlib.h>
+#include "app_button.h"
+#include "nrf_gpio.h"
+#include "nrf_drv_gpiote.h"
+#include "app_timer.h"
+#include "app_gpiote.h"
 }
+
+#define APP_TIMER_PRESCALER     0
+#define APP_TIMER_MAX_TIMERS    1
+#define APP_TIMER_OP_QUEUE_SIZE 2
+#define BUTTON_DEBOUNCE_DELAY   50
+#define APP_GPIOTE_MAX_USERS    1
 
     LoopyMessages::LoopyMessages(u16 moduleId, Node* node, ConnectionManager* cm, const char* name, u16 storageSlot)
 : Module(moduleId, node, cm, name, storageSlot)
@@ -78,25 +90,63 @@ void LoopyMessages::ResetToDefaultConfiguration()
 
 }
 
+static void button_handler(uint8_t pin_no, uint8_t button_action)
+{
+    if (button_action == APP_BUTTON_PUSH)
+    {
+        nrf_gpio_pin_toggle(LED_4);
+    }
+}
+
+static app_button_cfg_t p_button[] = {
+    {BUTTON_3, APP_BUTTON_ACTIVE_LOW, NRF_GPIO_PIN_PULLUP, button_handler}
+};
+
 bool LoopyMessages::TerminalCommandHandler(string commandName, vector<string> commandArgs)
 {
     if(commandName == "loopy"){
         //Get the id of the target node
-        nodeID targetNodeId = atoi(commandArgs[0].c_str());
-        logt("LOOPY", "Trying to send message to node %u\n", targetNodeId);
+        //nodeID targetNodeId = atoi(commandArgs[0].c_str());
+        //logt("LOOPY", "Trying to send message to node %u\n", targetNodeId);
 
         //Send loopy message to that node
-        connPacketModuleAction packet;
-        packet.header.messageType = MESSAGE_TYPE_MODULE_TRIGGER_ACTION;
-        packet.header.sender = node->persistentConfig.nodeId;
-        packet.header.receiver = targetNodeId;
+        //connPacketModuleAction packet;
+        //packet.header.messageType = MESSAGE_TYPE_MODULE_TRIGGER_ACTION;
+        //packet.header.sender = node->persistentConfig.nodeId;
+        //packet.header.receiver = targetNodeId;
 
-        packet.moduleId = moduleId;
-        packet.actionType = LoopyMessagesTriggerActionMessages::TRIGGER_MESSAGE;
-        packet.data[0] = 123;
+        //packet.moduleId = moduleId;
+        //packet.actionType = LoopyMessagesTriggerActionMessages::TRIGGER_MESSAGE;
+        //strncpy((char *) packet.data, "hello this is a test", 21);
+        //logt("LOOPY", "length of buffer %d\n", sizeof(packet.data));
 
 
-        cm->SendMessageToReceiver(NULL, (u8*)&packet, SIZEOF_CONN_PACKET_MODULE_ACTION + 1, true);
+        /****/
+        // init leds
+        nrf_gpio_cfg_output(LED_4);
+        nrf_gpio_pin_set(LED_4);
+
+        uint8_t size = sizeof(p_button)/sizeof(p_button[0]);
+        uint32_t debounce_delay = 50;
+
+        APP_TIMER_INIT(APP_TIMER_PRESCALER, APP_TIMER_MAX_TIMERS, APP_TIMER_OP_QUEUE_SIZE, NULL);
+
+        APP_GPIOTE_INIT(APP_GPIOTE_MAX_USERS);
+
+        uint32_t error_code = app_button_init(p_button, size, BUTTON_DEBOUNCE_DELAY);
+        APP_ERROR_CHECK(error_code);
+
+        error_code = app_button_enable();
+        APP_ERROR_CHECK(error_code);
+
+        while (true) {
+             // wait for button press
+        }
+        logt("LOOPY", "Wait OVER.\n");
+        /****/
+
+
+        //cm->SendMessageToReceiver(NULL, (u8*)&packet, SIZEOF_CONN_PACKET_MODULE_ACTION + 1, true);
         return true;
     }
 

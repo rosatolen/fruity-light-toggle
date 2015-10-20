@@ -93,6 +93,10 @@ CPP_SOURCE_FILES += ./src/utility/Utility.cpp
 
 C_SOURCE_FILES += $(EHAL_PATH)/ARM/Nordic/nRF51/src/Vectors_nRF51.c
 C_SOURCE_FILES += $(COMPONENTS)/libraries/timer/app_timer.c
+C_SOURCE_FILES += $(COMPONENTS)/libraries/gpiote/app_gpiote.c
+C_SOURCE_FILES += $(COMPONENTS)/drivers_nrf/gpiote/nrf_drv_gpiote.c
+C_SOURCE_FILES += $(COMPONENTS)/drivers_nrf/common/nrf_drv_common.c
+C_SOURCE_FILES += $(COMPONENTS)/libraries/button/app_button.c
 C_SOURCE_FILES += $(COMPONENTS)/ble/ble_radio_notification/ble_radio_notification.c
 C_SOURCE_FILES += ./src/nrf/simple_uart.c
 C_SOURCE_FILES += $(COMPONENTS)/drivers_nrf/hal/nrf_delay.c
@@ -114,7 +118,9 @@ INC_PATHS += -I$(COMPONENTS)/ble/ble_services/ble_dfu
 INC_PATHS += -I$(COMPONENTS)/ble/common
 INC_PATHS += -I$(COMPONENTS)/device
 INC_PATHS += -I$(COMPONENTS)/libraries/timer
+INC_PATHS += -I$(COMPONENTS)/libraries/button
 INC_PATHS += -I$(COMPONENTS)/libraries/util
+INC_PATHS += -I$(COMPONENTS)/libraries/gpiote
 INC_PATHS += -I$(COMPONENTS)/softdevice/common/softdevice_handler
 INC_PATHS += -I$(COMPONENTS)/softdevice/s130/headers
 INC_PATHS += -I$(COMPONENTS)/toolchain
@@ -122,6 +128,9 @@ INC_PATHS += -I$(COMPONENTS)/toolchain/arm
 INC_PATHS += -I$(COMPONENTS)/toolchain/gcc
 INC_PATHS += -I$(COMPONENTS)/drivers_nrf/pstorage
 INC_PATHS += -I$(COMPONENTS)/drivers_nrf/hal
+INC_PATHS += -I$(COMPONENTS)/drivers_nrf/config
+INC_PATHS += -I$(COMPONENTS)/drivers_nrf/common
+INC_PATHS += -I$(COMPONENTS)/drivers_nrf/gpiote
 
 OBJECT_DIRECTORY = _build
 LISTING_DIRECTORY = $(OBJECT_DIRECTORY)
@@ -198,7 +207,7 @@ OBJECTS = $(CPP_OBJECTS) $(C_OBJECTS)
 
 all: $(BUILD_DIRECTORIES) $(OBJECTS)
 	@echo Linking target: $(OUTPUT_NAME).elf
-	$(NO_ECHO)$(CPP) $(LDFLAGS) $(OBJECTS) $(LIBS) $(INC_PATHS) -o $(OUTPUT_BINARY_DIRECTORY)/$(OUTPUT_NAME).elf
+	$(NO_ECHO)$(CPP) $(LDFLAGS) $(LIBS) $(INC_PATHS) $(OBJECTS) -o $(OUTPUT_BINARY_DIRECTORY)/$(OUTPUT_NAME).elf
 	$(NO_ECHO)$(MAKE) -f $(MAKEFILE_NAME) -C $(MAKEFILE_DIR) -e finalize
 
 	@echo "*****************************************************"
