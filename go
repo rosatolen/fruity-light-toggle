@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -e
+
 function helptext {
     echo "Usage: ./go <command>"
     echo ""
