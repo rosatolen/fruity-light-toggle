@@ -107,9 +107,9 @@ Node::Node(networkID networkId)
 	activeModules[4] = new ScanningModule(moduleID::SCANNING_MODULE_ID, this, cm, "scan", 5);
 	activeModules[5] = new EnrollmentModule(moduleID::ENROLLMENT_MODULE_ID, this, cm, "enroll", 6);
 	activeModules[6] = new LoopyGatewayCall(moduleID::LOOPY_MESSAGES_ID, this, cm, "loopy", 7);
-	activeModules[6] = new GatewayModule(moduleID::GATEWAY_MODULE_ID, this, cm, "gateway", 8);
+	activeModules[7] = new GatewayModule(moduleID::GATEWAY_MODULE_ID, this, cm, "gateway", 8);
 	isGatewayDevice = ((GatewayModule*)activeModules[6])->IsGatewayDevice();
-	activeModules[7] = new CustomModule(moduleID::CUSTOM_MODULE_ID, this, cm, "custom", 9);
+	activeModules[8] = new CustomModule(moduleID::CUSTOM_MODULE_ID, this, cm, "custom", 9);
 
 	//Register a pre/post transmit hook for radio events
 	if(Config->enableRadioNotificationHandler){
