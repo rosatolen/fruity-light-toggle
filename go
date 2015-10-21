@@ -13,8 +13,8 @@ function helptext {
 }
 
 function deploy-to-local-device {
-    /home/deploy/nrf/tools/jlink deploy/upload_softdevice.jlink
-    /home/deploy/nrf/tools/jlink deploy/upload_fruitymesh.jlink
+    $HOME/nrf/tools/jlink deploy/upload_softdevice.jlink
+    $HOME/nrf/tools/jlink deploy/upload_fruitymesh.jlink
 }
 
 function term {
