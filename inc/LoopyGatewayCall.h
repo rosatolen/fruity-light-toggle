@@ -24,22 +24,22 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <Module.h>
 
-class LoopyMessages: public Module
+class LoopyGatewayCall: public Module
 {
 	private:
 
 		//Module configuration that is saved persistently (size must be multiple of 4)
-		struct LoopyMessagesConfiguration : ModuleConfiguration{
+		struct LoopyGatewayCallConfiguration : ModuleConfiguration{
 			//Insert more persistent config values here
 		};
 
-		LoopyMessagesConfiguration configuration;
+		LoopyGatewayCallConfiguration configuration;
 
-		enum LoopyMessagesTriggerActionMessages{
+		enum LoopyGatewayCallTriggerActionMessages{
 			TRIGGER_MESSAGE = 0
 		};
 
-		enum LoopyMessagesActionResponseMessages{
+		enum LoopyGatewayCallActionResponseMessages{
 			RESPONSE_MESSAGE = 0
 		};
 
@@ -53,7 +53,7 @@ class LoopyMessages: public Module
 			{
 				//Insert values here
 
-			}LoopyMessages***Message;
+			}LoopyGatewayCall***Message;
 
 		#pragma pack(pop)
 		//####### Module messages end
@@ -61,7 +61,7 @@ class LoopyMessages: public Module
 
 
 	public:
-		LoopyMessages(u16 moduleId, Node* node, ConnectionManager* cm, const char* name, u16 storageSlot);
+		LoopyGatewayCall(u16 moduleId, Node* node, ConnectionManager* cm, const char* name, u16 storageSlot);
 
 		void ConfigurationLoadedHandler();
 

@@ -20,7 +20,7 @@
 
 */
 
-#include <LoopyMessages.h>
+#include <LoopyGatewayCall.h>
 #include <Logger.h>
 #include <Utility.h>
 #include <Storage.h>
@@ -43,7 +43,7 @@ extern "C"{
 #define BUTTON_DEBOUNCE_DELAY   50
 #define APP_GPIOTE_MAX_USERS    1
 
-    LoopyMessages::LoopyMessages(u16 moduleId, Node* node, ConnectionManager* cm, const char* name, u16 storageSlot)
+    LoopyGatewayCall::LoopyGatewayCall(u16 moduleId, Node* node, ConnectionManager* cm, const char* name, u16 storageSlot)
 : Module(moduleId, node, cm, name, storageSlot)
 {
     //Register callbacks n' stuff
@@ -52,13 +52,13 @@ extern "C"{
     //Save configuration to base class variables
     //sizeof configuration must be a multiple of 4 bytes
     configurationPointer = &configuration;
-    configurationLength = sizeof(LoopyMessagesConfiguration);
+    configurationLength = sizeof(LoopyGatewayCallConfiguration);
 
     //Start module configuration loading
     LoadModuleConfiguration();
 }
 
-void LoopyMessages::ConfigurationLoadedHandler()
+void LoopyGatewayCall::ConfigurationLoadedHandler()
 {
     //Does basic testing on the loaded configuration
     Module::ConfigurationLoadedHandler();
@@ -73,13 +73,13 @@ void LoopyMessages::ConfigurationLoadedHandler()
 
 }
 
-void LoopyMessages::TimerEventHandler(u16 passedTime, u32 appTimer)
+void LoopyGatewayCall::TimerEventHandler(u16 passedTime, u32 appTimer)
 {
     //Do stuff on timer...
 
 }
 
-void LoopyMessages::ResetToDefaultConfiguration()
+void LoopyGatewayCall::ResetToDefaultConfiguration()
 {
     //Set default configuration values
     configuration.moduleId = moduleId;
@@ -102,7 +102,7 @@ static app_button_cfg_t p_button[] = {
     {BUTTON_3, APP_BUTTON_ACTIVE_LOW, NRF_GPIO_PIN_PULLUP, button_handler}
 };
 
-bool LoopyMessages::TerminalCommandHandler(string commandName, vector<string> commandArgs)
+bool LoopyGatewayCall::TerminalCommandHandler(string commandName, vector<string> commandArgs)
 {
     if(commandName == "loopy"){
         //Get the id of the target node
@@ -116,7 +116,7 @@ bool LoopyMessages::TerminalCommandHandler(string commandName, vector<string> co
         //packet.header.receiver = targetNodeId;
 
         //packet.moduleId = moduleId;
-        //packet.actionType = LoopyMessagesTriggerActionMessages::TRIGGER_MESSAGE;
+        //packet.actionType = LoopyGatewayCallTriggerActionMessages::TRIGGER_MESSAGE;
         //strncpy((char *) packet.data, "hello this is a test", 21);
         //logt("LOOPY", "length of buffer %d\n", sizeof(packet.data));
 
@@ -180,7 +180,7 @@ bool LoopyMessages::TerminalCommandHandler(string commandName, vector<string> co
 }
 
 
-void LoopyMessages::ConnectionPacketReceivedEventHandler(connectionPacket* inPacket, Connection* connection, connPacketHeader* packetHeader, u16 dataLength)
+void LoopyGatewayCall::ConnectionPacketReceivedEventHandler(connectionPacket* inPacket, Connection* connection, connPacketHeader* packetHeader, u16 dataLength)
 {
     //Must call superclass for handling
     Module::ConnectionPacketReceivedEventHandler(inPacket, connection, packetHeader, dataLength);
@@ -190,8 +190,8 @@ void LoopyMessages::ConnectionPacketReceivedEventHandler(connectionPacket* inPac
 
         //Check if our module is meant and we should trigger an action
         if(packet->moduleId == moduleId){
-            if(packet->actionType == LoopyMessagesTriggerActionMessages::TRIGGER_MESSAGE){
-                logt("LOOPY", "Loopy message received with data: %d\n", packet->data[0]);
+            if(packet->actionType == LoopyGatewayCallTriggerActionMessages::TRIGGER_MESSAGE){
+                logt("LOOPY", "Loopy message received with data: %s\n", packet->data);
 
                 //Send Response acknowledgement
                 connPacketModuleAction outPacket;
@@ -200,7 +200,7 @@ void LoopyMessages::ConnectionPacketReceivedEventHandler(connectionPacket* inPac
                 outPacket.header.receiver = packetHeader->sender;
 
                 outPacket.moduleId = moduleId;
-                outPacket.actionType = LoopyMessagesActionResponseMessages::RESPONSE_MESSAGE;
+                outPacket.actionType = LoopyGatewayCallActionResponseMessages::RESPONSE_MESSAGE;
                 outPacket.data[0] = packet->data[0];
                 outPacket.data[1] = 111;
 
@@ -217,7 +217,7 @@ void LoopyMessages::ConnectionPacketReceivedEventHandler(connectionPacket* inPac
         //Check if our module is meant and we should trigger an action
         if(packet->moduleId == moduleId)
         {
-            if(packet->actionType ==LoopyMessagesActionResponseMessages::RESPONSE_MESSAGE)
+            if(packet->actionType ==LoopyGatewayCallActionResponseMessages::RESPONSE_MESSAGE)
             {
                  logt("LOOPY", "Loopy message came back from %u with data %d, %d\n", packet->header.sender, packet->data[0], packet->data[1]);
             }
