@@ -43,7 +43,40 @@ extern "C"{
 #define BUTTON_DEBOUNCE_DELAY   50
 #define APP_GPIOTE_MAX_USERS    1
 
-    LoopyGatewayCall::LoopyGatewayCall(u16 moduleId, Node* node, ConnectionManager* cm, const char* name, u16 storageSlot)
+static bool initialized = false;
+
+static void button_handler(uint8_t pin_no, uint8_t button_action)
+{
+    if (button_action == APP_BUTTON_PUSH)
+    {
+        nrf_gpio_pin_toggle(LED_4);
+
+        ConnectionManager *cm = ConnectionManager::getInstance();
+        Logger::getInstance().enableTag("LOOPY");
+        Node *node = Node::getInstance();
+        Conf *config = Conf::getInstance();
+
+        nodeID gatewayNodeId = 2810; // send message to myself
+        logt("LOOPY", "Trying to send message to gateway node %u\n", gatewayNodeId);
+        connPacketModuleAction packet;
+        packet.header.messageType = MESSAGE_TYPE_MODULE_TRIGGER_ACTION;
+        packet.header.sender = node->persistentConfig.nodeId;
+        packet.header.receiver = gatewayNodeId;
+        packet.moduleId = moduleID::LOOPY_MESSAGES_ID;
+        packet.actionType = 0; // hardcoded from the reference LoopyGatewayCall.h
+        strncpy((char *) packet.data, "hello", 6);
+        logt("LOOPY", "length of buffer %d\n", sizeof(packet.data));
+        cm->SendMessageToReceiver(NULL, (u8*)&packet, SIZEOF_CONN_PACKET_MODULE_ACTION + 1, true);
+
+
+    }
+}
+
+static app_button_cfg_t p_button[] = {
+    {BUTTON_3, APP_BUTTON_ACTIVE_LOW, NRF_GPIO_PIN_PULLUP, button_handler}
+};
+
+LoopyGatewayCall::LoopyGatewayCall(u16 moduleId, Node* node, ConnectionManager* cm, const char* name, u16 storageSlot)
 : Module(moduleId, node, cm, name, storageSlot)
 {
     //Register callbacks n' stuff
@@ -87,69 +120,10 @@ void LoopyGatewayCall::ResetToDefaultConfiguration()
     configuration.moduleVersion = 1;
 
     //Set additional config values...
-
 }
-
-static void button_handler(uint8_t pin_no, uint8_t button_action)
-{
-    if (button_action == APP_BUTTON_PUSH)
-    {
-        nrf_gpio_pin_toggle(LED_4);
-    }
-}
-
-static app_button_cfg_t p_button[] = {
-    {BUTTON_3, APP_BUTTON_ACTIVE_LOW, NRF_GPIO_PIN_PULLUP, button_handler}
-};
 
 bool LoopyGatewayCall::TerminalCommandHandler(string commandName, vector<string> commandArgs)
 {
-    if(commandName == "loopy"){
-        //Get the id of the target node
-        //nodeID targetNodeId = atoi(commandArgs[0].c_str());
-        //logt("LOOPY", "Trying to send message to node %u\n", targetNodeId);
-
-        //Send loopy message to that node
-        //connPacketModuleAction packet;
-        //packet.header.messageType = MESSAGE_TYPE_MODULE_TRIGGER_ACTION;
-        //packet.header.sender = node->persistentConfig.nodeId;
-        //packet.header.receiver = targetNodeId;
-
-        //packet.moduleId = moduleId;
-        //packet.actionType = LoopyGatewayCallTriggerActionMessages::TRIGGER_MESSAGE;
-        //strncpy((char *) packet.data, "hello this is a test", 21);
-        //logt("LOOPY", "length of buffer %d\n", sizeof(packet.data));
-
-
-        /****/
-        // init leds
-        nrf_gpio_cfg_output(LED_4);
-        nrf_gpio_pin_set(LED_4);
-
-        uint8_t size = sizeof(p_button)/sizeof(p_button[0]);
-        uint32_t debounce_delay = 50;
-
-        APP_TIMER_INIT(APP_TIMER_PRESCALER, APP_TIMER_MAX_TIMERS, APP_TIMER_OP_QUEUE_SIZE, NULL);
-
-        APP_GPIOTE_INIT(APP_GPIOTE_MAX_USERS);
-
-        uint32_t error_code = app_button_init(p_button, size, BUTTON_DEBOUNCE_DELAY);
-        APP_ERROR_CHECK(error_code);
-
-        error_code = app_button_enable();
-        APP_ERROR_CHECK(error_code);
-
-        while (true) {
-             // wait for button press
-        }
-        logt("LOOPY", "Wait OVER.\n");
-        /****/
-
-
-        //cm->SendMessageToReceiver(NULL, (u8*)&packet, SIZEOF_CONN_PACKET_MODULE_ACTION + 1, true);
-        return true;
-    }
-
     //React on commands, return true if handled, false otherwise
     if(commandArgs.size() >= 2 && commandArgs[1] == moduleName)
     {
@@ -185,11 +159,37 @@ void LoopyGatewayCall::ConnectionPacketReceivedEventHandler(connectionPacket* in
     //Must call superclass for handling
     Module::ConnectionPacketReceivedEventHandler(inPacket, connection, packetHeader, dataLength);
 
+    if(initialized == false) {
+        // init leds
+        nrf_gpio_cfg_output(LED_4);
+        nrf_gpio_pin_set(LED_4);
+
+        // init gpiote and button
+        uint8_t size = sizeof(p_button)/sizeof(p_button[0]);
+        APP_TIMER_INIT(APP_TIMER_PRESCALER, APP_TIMER_MAX_TIMERS, APP_TIMER_OP_QUEUE_SIZE, NULL);
+        APP_GPIOTE_INIT(APP_GPIOTE_MAX_USERS);
+
+        uint32_t error_code = app_button_init(p_button, size, BUTTON_DEBOUNCE_DELAY);
+        APP_ERROR_CHECK(error_code);
+
+        error_code = app_button_enable();
+        APP_ERROR_CHECK(error_code);
+
+        logt("LOOPY", "initialized stuff\n");
+
+        initialized = true;
+    }
+
+
+    logt("LOOPY", "In event handler\n");
     if(packetHeader->messageType == MESSAGE_TYPE_MODULE_TRIGGER_ACTION){
         connPacketModuleAction* packet = (connPacketModuleAction*)packetHeader;
+        logt("LOOPY", "In module trigger action\n");
+        logt("LOOPY", "ModuleId is %d\n", moduleId);
 
         //Check if our module is meant and we should trigger an action
         if(packet->moduleId == moduleId){
+            logt("LOOPY", "In module id matching\n");
             if(packet->actionType == LoopyGatewayCallTriggerActionMessages::TRIGGER_MESSAGE){
                 logt("LOOPY", "Loopy message received with data: %s\n", packet->data);
 
