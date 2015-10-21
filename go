@@ -1,5 +1,7 @@
 #!/bin/bash
 
+TTY=/dev/cu.usbmodem1411
+
 set -e
 
 function helptext {
@@ -18,7 +20,7 @@ function deploy-to-local-device {
 }
 
 function term {
-    minicom --device /dev/ttyACM0 --b 38400
+    minicom --device $TTY --b 38400
 }
 
 function compile {
