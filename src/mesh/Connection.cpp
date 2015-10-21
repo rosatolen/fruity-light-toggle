@@ -142,9 +142,6 @@ void Connection::StartHandshake(void)
 	//If there is no known sink, we set it to 0.
 	packet.payload.hopsToSink = connectionManager->GetHopsToShortestSink(this);
 
-
-	logt("HANDSHAKE", "OUT => conn(%d) CLUSTER_WELCOME, cID:%d, cSize:%d", connectionId, packet.payload.clusterId, packet.payload.clusterSize);
-
 	connectionManager->SendMessage(this, (u8*) &packet, SIZEOF_CONN_PACKET_CLUSTER_WELCOME, true);
 
 }
@@ -258,7 +255,7 @@ void Connection::ReceivePacketHandler(connectionPacket* inPacket)
 			logt("HANDSHAKE", "############ Handshake starting ###############");
 
 
-			logt("HANDSHAKE", "IN <= %d CLUSTER_WELCOME clustID:%d, clustSize:%d, toSink:%d", packet->header.sender, packet->payload.clusterId, packet->payload.clusterSize, packet->payload.hopsToSink);
+			logt("HANDSHAKE", "{\"handshakeMessage\" : {\"message\" : \"IN <= CLUSTER_WELCOME\", \"clustID\" : \"%d\", \"clustSize\" : \"%d\", \"toSink\" : \"%d\", \"nodeId\" : \"%d\"}}",  packet->payload.clusterId, packet->payload.clusterSize, packet->payload.hopsToSink, packet->header.sender);
 
 			//PART 1: We do have the same cluster ID. Ouuups, should not have happened, run Forest!
 			if (packet->payload.clusterId == node->clusterId)
@@ -338,8 +335,9 @@ void Connection::ReceivePacketHandler(connectionPacket* inPacket)
 			node->clusterSize += 1;
 			this->hopsToSink = packet->payload.hopsToSink < 0 ? -1 : packet->payload.hopsToSink + 1;
 
-
 			logt("HANDSHAKE", "ClusterSize Change from %d to %d", node->clusterSize-1, node->clusterSize);
+
+			logt("HANDSHAKE", "{\"handshakeMessage\" : {\"message\" : \"IN <= CLUSTER_WELCOME\", \"clustID\" : \"%d\", \"clustSize\" : \"%d\", \"toSink\" : \"%d\", \"nodeId\" : \"%d\"}}",  node->clusterId, node->clusterSize, packet->payload.hopsToSink, packet->header.sender);
 
 			//Update connection data
 			this->connectedClusterId = node->clusterId;
@@ -408,6 +406,8 @@ void Connection::ReceivePacketHandler(connectionPacket* inPacket)
 			logt("HANDSHAKE", "IN <= %d CLUSTER_ACK_2 clusterID:%d, clusterSize:%d", packet->header.sender, packet->payload.clusterId, packet->payload.clusterSize);
 
 			logt("HANDSHAKE", "ClusterSize Change from %d to %d", node->clusterSize, packet->payload.clusterSize);
+
+			logt("HANDSHAKE", "{\"handshakeMessage\" : {\"message\" : \"IN <= CLUSTER_WELCOME\", \"clustID\" : \"%d\", \"clustSize\" : \"%d\", \"nodeId\" : \"%d\"}}",  packet->payload.clusterId, packet->payload.clusterSize, packet->header.sender);
 
 			this->connectedClusterId = packet->payload.clusterId;
 			this->connectedClusterSize += packet->payload.clusterSize - 1; // minus myself

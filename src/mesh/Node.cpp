@@ -22,6 +22,8 @@
 #include <ScanningModule.h>
 #include <EnrollmentModule.h>
 #include <LoopyGatewayCall.h>
+#include <GatewayModule.h>
+#include <CustomModule.h>
 
 extern "C"
 {
@@ -105,7 +107,9 @@ Node::Node(networkID networkId)
 	activeModules[4] = new ScanningModule(moduleID::SCANNING_MODULE_ID, this, cm, "scan", 5);
 	activeModules[5] = new EnrollmentModule(moduleID::ENROLLMENT_MODULE_ID, this, cm, "enroll", 6);
 	activeModules[6] = new LoopyGatewayCall(moduleID::LOOPY_MESSAGES_ID, this, cm, "loopy", 7);
-
+	activeModules[6] = new GatewayModule(moduleID::GATEWAY_MODULE_ID, this, cm, "gateway", 8);
+	isGatewayDevice = ((GatewayModule*)activeModules[6])->IsGatewayDevice();
+	activeModules[7] = new CustomModule(moduleID::CUSTOM_MODULE_ID, this, cm, "custom", 9);
 
 	//Register a pre/post transmit hook for radio events
 	if(Config->enableRadioNotificationHandler){
@@ -221,6 +225,7 @@ void Node::DisconnectionHandler(ble_evt_t* bleEvent)
 
 	if (connection->handshakeDone)
 	{
+		logt("HANDSHAKE", "{\"handshakeMessage\" : {\"message\" : \"OUT => CLUSTER_INFO_UPDATE\", \"nodeId\" : \"%d\"}}", connection->partnerId);
 		//CASE 1: if this is the smaller cluster then we have to get a new clusterID
 		if (clusterSize - connection->connectedClusterSize < connection->connectedClusterSize || (clusterSize - connection->connectedClusterSize == connection->connectedClusterSize && persistentConfig.nodeId < connection->partnerId))
 		{
@@ -241,9 +246,6 @@ void Node::DisconnectionHandler(ble_evt_t* bleEvent)
 			packet.payload.newClusterId = this->clusterId;
 			packet.payload.clusterSizeChange = -connection->connectedClusterSize;
 
-
-
-			logt("HANDSHAKE", "OUT => %d CLUSTER_INFO_UPDATE sizeChange:%d", connection->partnerId, packet.payload.clusterSizeChange);
 
 			//Send message to all other connections and update the hops to sink accordingly
 			for(int i=0; i<Config->meshMaxConnections; i++){
@@ -359,6 +361,7 @@ void Node::messageReceivedCallback(connectionPacket* inPacket)
 			if (dataLength == SIZEOF_CONN_PACKET_CLUSTER_INFO_UPDATE)
 			{
 				connPacketClusterInfoUpdate* packet = (connPacketClusterInfoUpdate*) data;
+
 				logt("HANDSHAKE", "IN <= %d CLUSTER_INFO_UPDATE clstID:%d, newClstId:%d, sizeChange:%d, hop:%d", connection->partnerId, packet->payload.currentClusterId, packet->payload.newClusterId, packet->payload.clusterSizeChange, packet->payload.hopsToSink);
 				UpdateClusterInfo(connection, packet);
 
@@ -996,6 +999,12 @@ void Node::PrintStatus(void)
 	trace("**************" EOL);
 	trace("This is Node %u in clusterId:%x with clusterSize:%d, networkId:%u" EOL, this->persistentConfig.nodeId, this->clusterId, this->clusterSize, persistentConfig.networkId);
 	trace("Ack Field:%d, ChipIdA:%u, ChipIdB:%u, ConnectionLossCounter:%u, nodeType:%d" EOL, ackFieldDebugCopy, NRF_FICR->DEVICEID[0], NRF_FICR->DEVICEID[1], persistentConfig.connectionLossCounter, this->persistentConfig.deviceType);
+
+	if(isGatewayDevice) {
+		trace("\nThis is a GATEWAY device.\n=========================\n" EOL);
+	} else {
+		trace("\nThis is not a gateway device.\n" EOL);
+	}
 
 	ble_gap_addr_t p_addr;
 	sd_ble_gap_address_get(&p_addr);

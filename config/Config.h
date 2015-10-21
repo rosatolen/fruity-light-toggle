@@ -224,7 +224,9 @@ enum moduleID{
 
 	//Custom modules
 	TEST_MODULE_ID=30000,
-	LOOPY_MESSAGES_ID=30010
+	LOOPY_MESSAGES_ID=30020
+	CUSTOM_MODULE_ID=30010,
+	GATEWAY_MODULE_ID=30999
 };
 
 /*############ Regarding node ids ################*/
