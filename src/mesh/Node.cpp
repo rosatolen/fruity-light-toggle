@@ -223,6 +223,7 @@ void Node::DisconnectionHandler(ble_evt_t* bleEvent)
 
 	if (connection->handshakeDone)
 	{
+		logt("HANDSHAKE", "{\"handshakeMessage\" : {\"message\" : \"OUT => CLUSTER_INFO_UPDATE\", \"nodeId\" : \"%d\"}}", connection->partnerId);
 		//CASE 1: if this is the smaller cluster then we have to get a new clusterID
 		if (clusterSize - connection->connectedClusterSize < connection->connectedClusterSize || (clusterSize - connection->connectedClusterSize == connection->connectedClusterSize && persistentConfig.nodeId < connection->partnerId))
 		{
@@ -243,9 +244,6 @@ void Node::DisconnectionHandler(ble_evt_t* bleEvent)
 			packet.payload.newClusterId = this->clusterId;
 			packet.payload.clusterSizeChange = -connection->connectedClusterSize;
 
-
-
-			logt("HANDSHAKE", "OUT => %d CLUSTER_INFO_UPDATE sizeChange:%d", connection->partnerId, packet.payload.clusterSizeChange);
 
 			//Send message to all other connections and update the hops to sink accordingly
 			for(int i=0; i<Config->meshMaxConnections; i++){
@@ -361,6 +359,7 @@ void Node::messageReceivedCallback(connectionPacket* inPacket)
 			if (dataLength == SIZEOF_CONN_PACKET_CLUSTER_INFO_UPDATE)
 			{
 				connPacketClusterInfoUpdate* packet = (connPacketClusterInfoUpdate*) data;
+
 				logt("HANDSHAKE", "IN <= %d CLUSTER_INFO_UPDATE clstID:%d, newClstId:%d, sizeChange:%d, hop:%d", connection->partnerId, packet->payload.currentClusterId, packet->payload.newClusterId, packet->payload.clusterSizeChange, packet->payload.hopsToSink);
 				UpdateClusterInfo(connection, packet);
 
