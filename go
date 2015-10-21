@@ -14,14 +14,11 @@ function compile {
 }
 
 function deploy-to-local-device {
-    compile
-    /home/deploy/nrf/tools/jlink deploy/upload_fruitymesh.jlink
+    compile && /home/deploy/nrf/tools/jlink deploy/upload_fruitymesh.jlink
 }
 
 function deploy-all-to-local-device {
-    compile
-    /home/deploy/nrf/tools/jlink deploy/upload_softdevice.jlink
-    /home/deploy/nrf/tools/jlink deploy/upload_fruitymesh.jlink
+    compile && /home/deploy/nrf/tools/jlink deploy/upload_softdevice.jlink && /home/deploy/nrf/tools/jlink deploy/upload_fruitymesh.jlink
 }
 
 function term {
