@@ -67,7 +67,6 @@ class Node:
 		nodeID ackFieldDebugCopy;
 
 		bool stateMachineDisabled = false;
-		bool isGatewayDevice;
 
 		//Persistently saved configuration (should be multiple of 4 bytes long)
 		struct NodeConfiguration{
@@ -104,6 +103,8 @@ class Node:
 		{
 			return instance;
 		}
+
+		bool isGatewayDevice;
 
 		LedWrapper* LedRed;
 		LedWrapper* LedGreen;

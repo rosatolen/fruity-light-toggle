@@ -52,23 +52,21 @@ static void button_handler(uint8_t pin_no, uint8_t button_action)
         nrf_gpio_pin_toggle(LED_4);
 
         ConnectionManager *cm = ConnectionManager::getInstance();
-        Logger::getInstance().enableTag("LOOPY");
+        Logger::getInstance().enableTag("VOTER");
         Node *node = Node::getInstance();
         Conf *config = Conf::getInstance();
 
-        nodeID gatewayNodeId = 2810; // send message to myself
-        logt("LOOPY", "Trying to send message to gateway node %u\n", gatewayNodeId);
+        nodeID everyone = 0; // send message to myself
+        logt("VOTER", "Trying to vote.\n");
         connPacketModuleAction packet;
         packet.header.messageType = MESSAGE_TYPE_MODULE_TRIGGER_ACTION;
         packet.header.sender = node->persistentConfig.nodeId;
-        packet.header.receiver = gatewayNodeId;
+        packet.header.receiver = everyone;
         packet.moduleId = moduleID::LOOPY_MESSAGES_ID;
         packet.actionType = 0; // hardcoded from the reference LoopyGatewayCall.h
         strncpy((char *) packet.data, "hello", 6);
-        logt("LOOPY", "length of buffer %d\n", sizeof(packet.data));
+        logt("VOTER", "Sending message data: %s \n", packet.data);
         cm->SendMessageToReceiver(NULL, (u8*)&packet, SIZEOF_CONN_PACKET_MODULE_ACTION + 1, true);
-
-
     }
 }
 
@@ -80,7 +78,7 @@ LoopyGatewayCall::LoopyGatewayCall(u16 moduleId, Node* node, ConnectionManager* 
 : Module(moduleId, node, cm, name, storageSlot)
 {
     //Register callbacks n' stuff
-    Logger::getInstance().enableTag("LOOPY");
+    Logger::getInstance().enableTag("VOTER");
 
     //Save configuration to base class variables
     //sizeof configuration must be a multiple of 4 bytes
@@ -175,23 +173,19 @@ void LoopyGatewayCall::ConnectionPacketReceivedEventHandler(connectionPacket* in
         error_code = app_button_enable();
         APP_ERROR_CHECK(error_code);
 
-        logt("LOOPY", "initialized stuff\n");
-
+        logt("VOTER", "initialized button pin\n");
         initialized = true;
     }
 
 
-    logt("LOOPY", "In event handler\n");
-    if(packetHeader->messageType == MESSAGE_TYPE_MODULE_TRIGGER_ACTION){
+    //if this is gateway device and message type is correct
+    if(node->isGatewayDevice && packetHeader->messageType == MESSAGE_TYPE_MODULE_TRIGGER_ACTION){
         connPacketModuleAction* packet = (connPacketModuleAction*)packetHeader;
-        logt("LOOPY", "In module trigger action\n");
-        logt("LOOPY", "ModuleId is %d\n", moduleId);
 
         //Check if our module is meant and we should trigger an action
         if(packet->moduleId == moduleId){
-            logt("LOOPY", "In module id matching\n");
             if(packet->actionType == LoopyGatewayCallTriggerActionMessages::TRIGGER_MESSAGE){
-                logt("LOOPY", "Loopy message received with data: %s\n", packet->data);
+                logt("VOTER", "Voter message received with data: %s\n", packet->data);
 
                 //Send Response acknowledgement
                 connPacketModuleAction outPacket;
@@ -205,7 +199,6 @@ void LoopyGatewayCall::ConnectionPacketReceivedEventHandler(connectionPacket* in
                 outPacket.data[1] = 111;
 
                 cm->SendMessageToReceiver(NULL, (u8*)&outPacket, SIZEOF_CONN_PACKET_MODULE_ACTION + 2, true);
-
             }
         }
     }
