@@ -185,7 +185,7 @@ void LoopyGatewayCall::ConnectionPacketReceivedEventHandler(connectionPacket* in
         //Check if our module is meant and we should trigger an action
         if(packet->moduleId == moduleId){
             if(packet->actionType == LoopyGatewayCallTriggerActionMessages::TRIGGER_MESSAGE){
-                logt("VOTER", "Voter message received with data: %s\n", packet->data);
+                logt("VOTER", "Gateway %d received voter message from %d with data: %s\n", node->persistentConfig.nodeId, packetHeader->sender, packet->data);
 
                 //Send Response acknowledgement
                 connPacketModuleAction outPacket;
@@ -195,10 +195,9 @@ void LoopyGatewayCall::ConnectionPacketReceivedEventHandler(connectionPacket* in
 
                 outPacket.moduleId = moduleId;
                 outPacket.actionType = LoopyGatewayCallActionResponseMessages::RESPONSE_MESSAGE;
-                outPacket.data[0] = packet->data[0];
-                outPacket.data[1] = 111;
 
                 cm->SendMessageToReceiver(NULL, (u8*)&outPacket, SIZEOF_CONN_PACKET_MODULE_ACTION + 2, true);
+                logt("VOTER", "Gateway sent acknowledgement of vote to %d \n", packetHeader->sender);
             }
         }
     }
@@ -212,7 +211,7 @@ void LoopyGatewayCall::ConnectionPacketReceivedEventHandler(connectionPacket* in
         {
             if(packet->actionType ==LoopyGatewayCallActionResponseMessages::RESPONSE_MESSAGE)
             {
-                 logt("LOOPY", "Loopy message came back from %u with data %d, %d\n", packet->header.sender, packet->data[0], packet->data[1]);
+                 logt("VOTER", "Voter received acknowledgement from Gateway.\n");
             }
         }
     }
