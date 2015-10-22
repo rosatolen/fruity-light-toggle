@@ -11,6 +11,7 @@ function helptext {
     echo "    deploy        Deploy latest built FruityMesh to attached device"
     echo "    term          Open terminal to attached device"
     echo "    compile       Clean and compile FruityMesh source"
+    echo "    cd            Compile and deploy"
     echo "    cdt           Compile, deploy, and open the terminal."
 }
 
@@ -33,6 +34,11 @@ function cdt {
     term
 }
 
+function cd {
+    compile
+    deploy-to-local-device
+}
+
 case "$1" in
     deploy) deploy-to-local-device
     ;;
@@ -41,6 +47,8 @@ case "$1" in
     compile) compile
     ;;
     cdt) cdt
+    ;;
+    cd) cd
     ;;
     *) helptext
     ;;
