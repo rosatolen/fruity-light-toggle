@@ -6,14 +6,16 @@ function helptext {
     echo "Usage: ./go <command>"
     echo ""
     echo "Available commands are:"
-    echo "    deploy            Deploy latest built FruityMesh to all attached devices"
-    echo "    term <tty.file>   Open specified terminal to attached device"
-    echo "    compile           Clean and compile FruityMesh source"
-    echo "    gateway           Create and deploy a Gateway to oldest attached device"
     echo "    fleet             Create and deploy a Fleet: All connected devices become Nodes except for 1 Gateway at oldest attached device"
+    echo "    nodes             Create Nodes out of all connected devices"
+    echo "    gateway           Create and deploy a Gateway to oldest attached device"
+    echo "    term <tty.file>   Open terminal to specified file"
+    echo "    compile           Clean and compile FruityMesh source"
 }
 
-function deploy-to-all-local-devices {
+function deploy-nodes-to-all-local-devices {
+    toggle-gateway-config false
+    compile
     $HOME/nrf/projects/fruitymesh/deploy/deploy-to-all.sh
 }
 
@@ -57,15 +59,15 @@ function fleet {
 }
 
 case "$1" in
-    deploy) deploy-to-all-local-devices
+    gateway) create-gateway
+    ;;
+    fleet) fleet
+    ;;
+    nodes) deploy-nodes-to-all-local-devices
     ;;
     term) term "$2"
     ;;
     compile) compile
-    ;;
-    gateway) create-gateway
-    ;;
-    fleet) fleet
     ;;
     *) helptext
     ;;
