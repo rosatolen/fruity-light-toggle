@@ -27,6 +27,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <GatewayModule.h>
 #include <stdlib.h>
 
+#define IS_GATEWAY_DEVICE true
+
 extern "C"{
 
 }
@@ -140,14 +142,14 @@ bool GatewayModule::TerminalCommandHandler(string commandName, vector<string> co
 			return true;
 		}
 	}
-	
+
 	//Must be called to allow the module to get and set the config
 	return Module::TerminalCommandHandler(commandName, commandArgs);
 }
 
 bool GatewayModule::IsGatewayDevice()
 {
-	return true;
+	return IS_GATEWAY_DEVICE;
 }
 
 void GatewayModule::ConnectionPacketReceivedEventHandler(connectionPacket* inPacket, Connection* connection, connPacketHeader* packetHeader, u16 dataLength)
