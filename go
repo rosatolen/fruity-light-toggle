@@ -8,16 +8,15 @@ function helptext {
     echo "Usage: ./go <command>"
     echo ""
     echo "Available commands are:"
-    echo "    deploy        Deploy latest built FruityMesh to attached device"
+    echo "    deploy        Deploy latest built FruityMesh to all attached devices"
     echo "    term          Open terminal to attached device"
     echo "    compile       Clean and compile FruityMesh source"
-    echo "    cd            Compile and deploy"
+    echo "    cda           Compile and deploy to all devices"
     echo "    cdt           Compile, deploy, and open the terminal."
 }
 
-function deploy-to-local-device {
-    $HOME/nrf/tools/jlink deploy/upload_softdevice.jlink
-    $HOME/nrf/tools/jlink deploy/upload_fruitymesh.jlink
+function deploy-to-all-local-devices {
+    $HOME/nrf/projects/fruitymesh/deploy/deploy-to-all.sh
 }
 
 function term {
@@ -40,7 +39,7 @@ function cd {
 }
 
 case "$1" in
-    deploy) deploy-to-local-device
+    deploy) deploy-to-all-local-devices
     ;;
     term) term
     ;;
