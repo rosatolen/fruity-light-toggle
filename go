@@ -52,9 +52,7 @@ function create-gateway {
 }
 
 function fleet {
-    toggle-gateway-config false
-    compile
-    deploy-to-all-local-devices
+    deploy-nodes-to-all-local-devices
     create-gateway
 }
 
