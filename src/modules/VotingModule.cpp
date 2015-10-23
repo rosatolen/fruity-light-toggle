@@ -93,6 +93,9 @@ static app_button_cfg_t p_button[] = {
     configurationPointer = &configuration;
     configurationLength = sizeof(VotingModuleConfiguration);
 
+    lastConnectionReportingTimer = 0;
+    lastStatusReportingTimer = 0;
+
     //Start module configuration loading
     LoadModuleConfiguration();
 }
@@ -115,29 +118,31 @@ void VotingModule::ConfigurationLoadedHandler()
 void VotingModule::TimerEventHandler(u16 passedTime, u32 appTimer)
 {
     //Every reporting interval, the node should send its connections
-    //if(configuration.connectionReportingIntervalMs != 0 && node->appTimerMs - lastConnectionReportingTimer > configuration.connectionReportingIntervalMs)
-    //{
-    //    logt("VOTING", "In Timer Event Handler\n");
-    //    //Do stuff on timer...
-    //    if(!acknowledged) {
-    //        logt("VOTING", "Am not acknowledged\n");
-    //        vote();
-    //    }
+    if(configuration.connectionReportingIntervalMs != 0 && node->appTimerMs - lastConnectionReportingTimer > configuration.connectionReportingIntervalMs)
+  {
+        logt("VOTING", "In Timer Event Handler\n");
+        //Do stuff on timer...
+        if(!acknowledged) {
+            logt("VOTING", "Am not acknowledged\n");
+            vote();
+        }
 
-
-    //    lastConnectionReportingTimer = node->appTimerMs;
-    //}
-
-
+        lastConnectionReportingTimer = node->appTimerMs;
+    }
 }
 
 void VotingModule::ResetToDefaultConfiguration()
 {
     //Set default configuration values
     configuration.moduleId = moduleId;
-    configuration.moduleActive = false;
+    configuration.moduleActive = true;
     configuration.moduleVersion = 1;
 
+    lastConnectionReportingTimer = 0;
+    lastStatusReportingTimer = 0;
+
+    configuration.statusReportingIntervalMs = 0;
+    configuration.connectionReportingIntervalMs = 30 * 1000;
     //Set additional config values...
 }
 
@@ -208,7 +213,7 @@ void VotingModule::ConnectionPacketReceivedEventHandler(connectionPacket* inPack
             if(packet->actionType ==VotingModuleActionResponseMessages::RESPONSE_MESSAGE)
             {
                 logt("VOTING", "Voter received acknowledgement from Gateway.\n");
-                acknowledged=true;
+		acknowledged=true;
             }
         }
     }
