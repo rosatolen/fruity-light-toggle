@@ -24,22 +24,22 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <Module.h>
 
-class LoopyGatewayCall: public Module
+class VotingModule: public Module
 {
 	private:
 
 		//Module configuration that is saved persistently (size must be multiple of 4)
-		struct LoopyGatewayCallConfiguration : ModuleConfiguration{
+		struct VotingModuleConfiguration : ModuleConfiguration{
 			//Insert more persistent config values here
 		};
 
-		LoopyGatewayCallConfiguration configuration;
+		VotingModuleConfiguration configuration;
 
-		enum LoopyGatewayCallTriggerActionMessages{
+		enum VotingModuleTriggerActionMessages{
 			TRIGGER_MESSAGE = 0
 		};
 
-		enum LoopyGatewayCallActionResponseMessages{
+		enum VotingModuleActionResponseMessages{
 			RESPONSE_MESSAGE = 0
 		};
 
@@ -53,7 +53,7 @@ class LoopyGatewayCall: public Module
 			{
 				//Insert values here
 
-			}LoopyGatewayCall***Message;
+			}VotingModule***Message;
 
 		#pragma pack(pop)
 		//####### Module messages end
@@ -61,7 +61,7 @@ class LoopyGatewayCall: public Module
 
 
 	public:
-		LoopyGatewayCall(u16 moduleId, Node* node, ConnectionManager* cm, const char* name, u16 storageSlot);
+		VotingModule(u16 moduleId, Node* node, ConnectionManager* cm, const char* name, u16 storageSlot);
 
 		void ConfigurationLoadedHandler();
 

@@ -79,7 +79,7 @@ CPP_SOURCE_FILES += ./src/modules/Module.cpp
 CPP_SOURCE_FILES += ./src/modules/ScanningModule.cpp
 CPP_SOURCE_FILES += ./src/modules/StatusReporterModule.cpp
 CPP_SOURCE_FILES += ./src/modules/TestModule.cpp
-CPP_SOURCE_FILES += ./src/modules/LoopyGatewayCall.cpp
+CPP_SOURCE_FILES += ./src/modules/VotingModule.cpp
 
 CPP_SOURCE_FILES += ./src/test/TestBattery.cpp
 CPP_SOURCE_FILES += ./src/test/Testing.cpp

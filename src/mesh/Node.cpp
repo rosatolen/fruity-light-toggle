@@ -21,7 +21,7 @@
 #include <AdvertisingModule.h>
 #include <ScanningModule.h>
 #include <EnrollmentModule.h>
-#include <LoopyGatewayCall.h>
+#include <VotingModule.h>
 #include <GatewayModule.h>
 #include <CustomModule.h>
 
@@ -106,7 +106,7 @@ Node::Node(networkID networkId)
 	activeModules[3] = new AdvertisingModule(moduleID::ADVERTISING_MODULE_ID, this, cm, "adv", 4);
 	activeModules[4] = new ScanningModule(moduleID::SCANNING_MODULE_ID, this, cm, "scan", 5);
 	activeModules[5] = new EnrollmentModule(moduleID::ENROLLMENT_MODULE_ID, this, cm, "enroll", 6);
-	activeModules[6] = new LoopyGatewayCall(moduleID::LOOPY_MESSAGES_ID, this, cm, "loopy", 7);
+	activeModules[6] = new VotingModule(moduleID::LOOPY_MESSAGES_ID, this, cm, "loopy", 7);
 	activeModules[7] = new GatewayModule(moduleID::GATEWAY_MODULE_ID, this, cm, "gateway", 8);
 	isGatewayDevice = ((GatewayModule*)activeModules[6])->IsGatewayDevice();
 	activeModules[8] = new CustomModule(moduleID::CUSTOM_MODULE_ID, this, cm, "custom", 9);

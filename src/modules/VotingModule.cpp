@@ -20,7 +20,7 @@
 
 */
 
-#include <LoopyGatewayCall.h>
+#include <VotingModule.h>
 #include <Logger.h>
 #include <Utility.h>
 #include <Storage.h>
@@ -63,7 +63,7 @@ static void button_handler(uint8_t pin_no, uint8_t button_action)
         packet.header.sender = node->persistentConfig.nodeId;
         packet.header.receiver = everyone;
         packet.moduleId = moduleID::LOOPY_MESSAGES_ID;
-        packet.actionType = 0; // hardcoded from the reference LoopyGatewayCall.h
+        packet.actionType = 0; // hardcoded from the reference VotingModule.h
         strncpy((char *) packet.data, "hello", 6);
         logt("VOTER", "Sending message data: %s \n", packet.data);
         cm->SendMessageToReceiver(NULL, (u8*)&packet, SIZEOF_CONN_PACKET_MODULE_ACTION + 1, true);
@@ -74,7 +74,7 @@ static app_button_cfg_t p_button[] = {
     {BUTTON_3, APP_BUTTON_ACTIVE_LOW, NRF_GPIO_PIN_PULLUP, button_handler}
 };
 
-LoopyGatewayCall::LoopyGatewayCall(u16 moduleId, Node* node, ConnectionManager* cm, const char* name, u16 storageSlot)
+VotingModule::VotingModule(u16 moduleId, Node* node, ConnectionManager* cm, const char* name, u16 storageSlot)
 : Module(moduleId, node, cm, name, storageSlot)
 {
     //Register callbacks n' stuff
@@ -83,13 +83,13 @@ LoopyGatewayCall::LoopyGatewayCall(u16 moduleId, Node* node, ConnectionManager* 
     //Save configuration to base class variables
     //sizeof configuration must be a multiple of 4 bytes
     configurationPointer = &configuration;
-    configurationLength = sizeof(LoopyGatewayCallConfiguration);
+    configurationLength = sizeof(VotingModuleConfiguration);
 
     //Start module configuration loading
     LoadModuleConfiguration();
 }
 
-void LoopyGatewayCall::ConfigurationLoadedHandler()
+void VotingModule::ConfigurationLoadedHandler()
 {
     //Does basic testing on the loaded configuration
     Module::ConfigurationLoadedHandler();
@@ -104,13 +104,13 @@ void LoopyGatewayCall::ConfigurationLoadedHandler()
 
 }
 
-void LoopyGatewayCall::TimerEventHandler(u16 passedTime, u32 appTimer)
+void VotingModule::TimerEventHandler(u16 passedTime, u32 appTimer)
 {
     //Do stuff on timer...
 
 }
 
-void LoopyGatewayCall::ResetToDefaultConfiguration()
+void VotingModule::ResetToDefaultConfiguration()
 {
     //Set default configuration values
     configuration.moduleId = moduleId;
@@ -120,7 +120,7 @@ void LoopyGatewayCall::ResetToDefaultConfiguration()
     //Set additional config values...
 }
 
-bool LoopyGatewayCall::TerminalCommandHandler(string commandName, vector<string> commandArgs)
+bool VotingModule::TerminalCommandHandler(string commandName, vector<string> commandArgs)
 {
     //React on commands, return true if handled, false otherwise
     if(commandArgs.size() >= 2 && commandArgs[1] == moduleName)
@@ -152,7 +152,7 @@ bool LoopyGatewayCall::TerminalCommandHandler(string commandName, vector<string>
 }
 
 
-void LoopyGatewayCall::ConnectionPacketReceivedEventHandler(connectionPacket* inPacket, Connection* connection, connPacketHeader* packetHeader, u16 dataLength)
+void VotingModule::ConnectionPacketReceivedEventHandler(connectionPacket* inPacket, Connection* connection, connPacketHeader* packetHeader, u16 dataLength)
 {
     //Must call superclass for handling
     Module::ConnectionPacketReceivedEventHandler(inPacket, connection, packetHeader, dataLength);
@@ -184,7 +184,7 @@ void LoopyGatewayCall::ConnectionPacketReceivedEventHandler(connectionPacket* in
 
         //Check if our module is meant and we should trigger an action
         if(packet->moduleId == moduleId){
-            if(packet->actionType == LoopyGatewayCallTriggerActionMessages::TRIGGER_MESSAGE){
+            if(packet->actionType == VotingModuleTriggerActionMessages::TRIGGER_MESSAGE){
                 logt("VOTER", "Gateway %d received voter message from %d with data: %s\n", node->persistentConfig.nodeId, packetHeader->sender, packet->data);
 
                 //Send Response acknowledgement
@@ -194,7 +194,7 @@ void LoopyGatewayCall::ConnectionPacketReceivedEventHandler(connectionPacket* in
                 outPacket.header.receiver = packetHeader->sender;
 
                 outPacket.moduleId = moduleId;
-                outPacket.actionType = LoopyGatewayCallActionResponseMessages::RESPONSE_MESSAGE;
+                outPacket.actionType = VotingModuleActionResponseMessages::RESPONSE_MESSAGE;
 
                 cm->SendMessageToReceiver(NULL, (u8*)&outPacket, SIZEOF_CONN_PACKET_MODULE_ACTION + 2, true);
                 logt("VOTER", "Gateway sent acknowledgement of vote to %d \n", packetHeader->sender);
@@ -209,7 +209,7 @@ void LoopyGatewayCall::ConnectionPacketReceivedEventHandler(connectionPacket* in
         //Check if our module is meant and we should trigger an action
         if(packet->moduleId == moduleId)
         {
-            if(packet->actionType ==LoopyGatewayCallActionResponseMessages::RESPONSE_MESSAGE)
+            if(packet->actionType ==VotingModuleActionResponseMessages::RESPONSE_MESSAGE)
             {
                  logt("VOTER", "Voter received acknowledgement from Gateway.\n");
             }
