@@ -214,7 +214,9 @@ void VotingModule::ConnectionPacketReceivedEventHandler(connectionPacket* inPack
     }
 
     //if this is gateway device and message type is correct
-    if(node->isGatewayDevice && packetHeader->messageType == MESSAGE_TYPE_MODULE_TRIGGER_ACTION){
+    if(node->isGatewayDevice) {
+
+        if(packetHeader->messageType == MESSAGE_TYPE_MODULE_TRIGGER_ACTION){
         connPacketModuleAction* packet = (connPacketModuleAction*)packetHeader;
 
         if(packet->moduleId == moduleId){
@@ -232,8 +234,12 @@ void VotingModule::ConnectionPacketReceivedEventHandler(connectionPacket* inPack
 
                 cm->SendMessageToReceiver(NULL, (u8*)&outPacket, SIZEOF_CONN_PACKET_MODULE_ACTION + 2, true);
                 logt("VOTING", "Gateway sent acknowledgement of vote to %d \n", packetHeader->sender);
+                }
             }
         }
     }
+    else {
+            logt("VOTER", "I am not a gateway! :D\n", packetHeader->sender);
+            logt("VOTER", "I'm passing on a vote from node %d \n", packetHeader->sender);
+    }
 }
-
