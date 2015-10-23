@@ -59,11 +59,11 @@ function fleet {
 }
 
 case "$1" in
-    gateway) create-gateway
-    ;;
     fleet) fleet
     ;;
     nodes) deploy-nodes-to-all-local-devices
+    ;;
+    gateway) create-gateway
     ;;
     term) term "$2"
     ;;
