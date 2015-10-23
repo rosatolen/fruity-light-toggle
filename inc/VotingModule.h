@@ -1,24 +1,24 @@
 /**
 
-Copyright (c) 2014-2015 "M-Way Solutions GmbH"
-FruityMesh - Bluetooth Low Energy mesh protocol [http://mwaysolutions.com/]
+  Copyright (c) 2014-2015 "M-Way Solutions GmbH"
+  FruityMesh - Bluetooth Low Energy mesh protocol [http://mwaysolutions.com/]
 
-This file is part of FruityMesh
+  This file is part of FruityMesh
 
-FruityMesh is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
+  FruityMesh is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
 
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
 
-You should have received a copy of the GNU General Public License
-along with this program.  If not, see <http://www.gnu.org/licenses/>.
+  You should have received a copy of the GNU General Public License
+  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-*/
+ */
 
 #pragma once
 
@@ -51,19 +51,15 @@ class VotingModule: public Module
 
 		/*
 		//####### Module messages (these need to be packed)
-		#pragma pack(push)
-		#pragma pack(1)
+#pragma pack(push)
+#pragma pack(1)
 
-			#define SIZEOF_TEMPLATE_MODULE_***_MESSAGE 10
-			typedef struct
-			{
-				//Insert values here
+#define SIZEOF_TEMPLATE_MODULE_***_MESSAGE 10
+typedef struct
+{
+		//Insert values here
 
-			}VotingModule***Message;
-
-		#pragma pack(pop)
-		//####### Module messages end
-		*/
+		}VotingModule***Message;
 
 #pragma pack(pop)
 //####### Module messages end
@@ -71,20 +67,20 @@ class VotingModule: public Module
 u32 lastConnectionReportingTimer;
 u32 lastStatusReportingTimer;
 
-	public:
-		VotingModule(u16 moduleId, Node* node, ConnectionManager* cm, const char* name, u16 storageSlot);
+public:
+VotingModule(u16 moduleId, Node* node, ConnectionManager* cm, const char* name, u16 storageSlot);
 
-		void ConfigurationLoadedHandler();
+void ConfigurationLoadedHandler();
 
-		void ResetToDefaultConfiguration();
+void ResetToDefaultConfiguration();
 
-		void TimerEventHandler(u16 passedTime, u32 appTimer);
+void TimerEventHandler(u16 passedTime, u32 appTimer);
 
-		//void BleEventHandler(ble_evt_t* bleEvent);
+//void BleEventHandler(ble_evt_t* bleEvent);
 
-		void ConnectionPacketReceivedEventHandler(connectionPacket* inPacket, Connection* connection, connPacketHeader* packetHeader, u16 dataLength);
+void ConnectionPacketReceivedEventHandler(connectionPacket* inPacket, Connection* connection, connPacketHeader* packetHeader, u16 dataLength);
 
-		//void NodeStateChangedHandler(discoveryState newState);
+//void NodeStateChangedHandler(discoveryState newState);
 
-		bool TerminalCommandHandler(string commandName, vector<string> commandArgs);
+bool TerminalCommandHandler(string commandName, vector<string> commandArgs);
 };
