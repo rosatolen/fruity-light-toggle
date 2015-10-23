@@ -44,29 +44,37 @@ extern "C"{
 #define APP_GPIOTE_MAX_USERS    1
 
 static bool initialized = false;
+static bool acknowledged = false;
+
+static void vote() {
+    ConnectionManager *cm = ConnectionManager::getInstance();
+    Logger::getInstance().enableTag("VOTING");
+    Node *node = Node::getInstance();
+    Conf *config = Conf::getInstance();
+
+    nodeID everyone = 0; // send message to myself
+    logt("VOTING", "Trying to vote.\n");
+    connPacketModuleAction packet;
+    packet.header.messageType = MESSAGE_TYPE_MODULE_TRIGGER_ACTION;
+    packet.header.sender = node->persistentConfig.nodeId;
+    packet.header.receiver = everyone;
+    packet.moduleId = moduleID::LOOPY_MESSAGES_ID;
+    packet.actionType = 0; // hardcoded from the reference VotingModule.h
+    const char userId[] = "1234";
+    strncpy((char *) packet.data, userId, 5);
+    logt("VOTING", "Sending message data: %s \n", packet.data);
+    cm->SendMessageToReceiver(NULL, (u8*)&packet, SIZEOF_CONN_PACKET_MODULE_ACTION + 1, true);
+    //TODO keep track of this vote!
+}
+
+
 
 static void button_handler(uint8_t pin_no, uint8_t button_action)
 {
     if (button_action == APP_BUTTON_PUSH)
     {
         nrf_gpio_pin_toggle(LED_4);
-
-        ConnectionManager *cm = ConnectionManager::getInstance();
-        Logger::getInstance().enableTag("VOTER");
-        Node *node = Node::getInstance();
-        Conf *config = Conf::getInstance();
-
-        nodeID everyone = 0; // send message to myself
-        logt("VOTER", "Trying to vote.\n");
-        connPacketModuleAction packet;
-        packet.header.messageType = MESSAGE_TYPE_MODULE_TRIGGER_ACTION;
-        packet.header.sender = node->persistentConfig.nodeId;
-        packet.header.receiver = everyone;
-        packet.moduleId = moduleID::LOOPY_MESSAGES_ID;
-        packet.actionType = 0; // hardcoded from the reference VotingModule.h
-        strncpy((char *) packet.data, "hello", 6);
-        logt("VOTER", "Sending message data: %s \n", packet.data);
-        cm->SendMessageToReceiver(NULL, (u8*)&packet, SIZEOF_CONN_PACKET_MODULE_ACTION + 1, true);
+        vote();
     }
 }
 
@@ -74,11 +82,11 @@ static app_button_cfg_t p_button[] = {
     {BUTTON_3, APP_BUTTON_ACTIVE_LOW, NRF_GPIO_PIN_PULLUP, button_handler}
 };
 
-VotingModule::VotingModule(u16 moduleId, Node* node, ConnectionManager* cm, const char* name, u16 storageSlot)
+    VotingModule::VotingModule(u16 moduleId, Node* node, ConnectionManager* cm, const char* name, u16 storageSlot)
 : Module(moduleId, node, cm, name, storageSlot)
 {
     //Register callbacks n' stuff
-    Logger::getInstance().enableTag("VOTER");
+    Logger::getInstance().enableTag("VOTING");
 
     //Save configuration to base class variables
     //sizeof configuration must be a multiple of 4 bytes
@@ -106,7 +114,20 @@ void VotingModule::ConfigurationLoadedHandler()
 
 void VotingModule::TimerEventHandler(u16 passedTime, u32 appTimer)
 {
-    //Do stuff on timer...
+    //Every reporting interval, the node should send its connections
+    //if(configuration.connectionReportingIntervalMs != 0 && node->appTimerMs - lastConnectionReportingTimer > configuration.connectionReportingIntervalMs)
+    //{
+    //    logt("VOTING", "In Timer Event Handler\n");
+    //    //Do stuff on timer...
+    //    if(!acknowledged) {
+    //        logt("VOTING", "Am not acknowledged\n");
+    //        vote();
+    //    }
+
+
+    //    lastConnectionReportingTimer = node->appTimerMs;
+    //}
+
 
 }
 
@@ -173,19 +194,32 @@ void VotingModule::ConnectionPacketReceivedEventHandler(connectionPacket* inPack
         error_code = app_button_enable();
         APP_ERROR_CHECK(error_code);
 
-        logt("VOTER", "initialized button pin\n");
+        logt("VOTING", "initialized button pin\n");
         initialized = true;
     }
 
+    // TODO when i receive an acknowledgement, check off vote from queue
+    // Voter Receives acknowledgement from Gateway
+    if(packetHeader->messageType == MESSAGE_TYPE_MODULE_ACTION_RESPONSE){
+        connPacketModuleAction* packet = (connPacketModuleAction*)packetHeader;
+        // if it is meant for me...
+        if(packet->moduleId == moduleId)
+        {
+            if(packet->actionType ==VotingModuleActionResponseMessages::RESPONSE_MESSAGE)
+            {
+                logt("VOTING", "Voter received acknowledgement from Gateway.\n");
+                acknowledged=true;
+            }
+        }
+    }
 
     //if this is gateway device and message type is correct
     if(node->isGatewayDevice && packetHeader->messageType == MESSAGE_TYPE_MODULE_TRIGGER_ACTION){
         connPacketModuleAction* packet = (connPacketModuleAction*)packetHeader;
 
-        //Check if our module is meant and we should trigger an action
         if(packet->moduleId == moduleId){
             if(packet->actionType == VotingModuleTriggerActionMessages::TRIGGER_MESSAGE){
-                logt("VOTER", "Gateway %d received voter message from %d with data: %s\n", node->persistentConfig.nodeId, packetHeader->sender, packet->data);
+                logt("VOTING", "Gateway %d received voter message from %d with data: %s\n", node->persistentConfig.nodeId, packetHeader->sender, packet->data);
 
                 //Send Response acknowledgement
                 connPacketModuleAction outPacket;
@@ -197,21 +231,7 @@ void VotingModule::ConnectionPacketReceivedEventHandler(connectionPacket* inPack
                 outPacket.actionType = VotingModuleActionResponseMessages::RESPONSE_MESSAGE;
 
                 cm->SendMessageToReceiver(NULL, (u8*)&outPacket, SIZEOF_CONN_PACKET_MODULE_ACTION + 2, true);
-                logt("VOTER", "Gateway sent acknowledgement of vote to %d \n", packetHeader->sender);
-            }
-        }
-    }
-
-    //Parse Module responses
-    if(packetHeader->messageType == MESSAGE_TYPE_MODULE_ACTION_RESPONSE){
-        connPacketModuleAction* packet = (connPacketModuleAction*)packetHeader;
-
-        //Check if our module is meant and we should trigger an action
-        if(packet->moduleId == moduleId)
-        {
-            if(packet->actionType ==VotingModuleActionResponseMessages::RESPONSE_MESSAGE)
-            {
-                 logt("VOTER", "Voter received acknowledgement from Gateway.\n");
+                logt("VOTING", "Gateway sent acknowledgement of vote to %d \n", packetHeader->sender);
             }
         }
     }
