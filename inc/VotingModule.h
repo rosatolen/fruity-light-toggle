@@ -31,6 +31,12 @@ class VotingModule: public Module
 		//Module configuration that is saved persistently (size must be multiple of 4)
 		struct VotingModuleConfiguration : ModuleConfiguration{
 			//Insert more persistent config values here
+			//Insert more persistent config values here
+			u16 connectionReportingIntervalMs;
+			u16 statusReportingIntervalMs;
+			u8 connectionRSSISamplingMode; //typeof RSSISampingModes
+			u8 advertisingRSSISamplingMode; //typeof RSSISampingModes
+			u16 reserved;
 		};
 
 		VotingModuleConfiguration configuration;
@@ -59,6 +65,11 @@ class VotingModule: public Module
 		//####### Module messages end
 		*/
 
+#pragma pack(pop)
+//####### Module messages end
+		 */
+u32 lastConnectionReportingTimer;
+u32 lastStatusReportingTimer;
 
 	public:
 		VotingModule(u16 moduleId, Node* node, ConnectionManager* cm, const char* name, u16 storageSlot);
