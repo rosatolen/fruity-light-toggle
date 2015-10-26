@@ -7,3 +7,5 @@ _build/
 /deploy/current.txt
 .DS_Store
 */.DS_Store
+.idea/
+CMakeLists.txt
