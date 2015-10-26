@@ -70,7 +70,6 @@ protected:
 		};
 
 
-
 		//This function is called by the module itself when it wants to save its configuration
 		virtual void SaveModuleConfiguration();
 
@@ -79,6 +78,10 @@ protected:
 
 		//Called when the load failed
 		virtual void ResetToDefaultConfiguration(){};
+
+		//Constructs a simple TriggerAction message and sends it
+		void SendModuleActionMessage(u8 messageType, nodeID toNode, u8 actionType, u8 requestHandle, u8* additionalData, u16 additionalDataSize, bool reliable);
+
 
 
 	public:
@@ -91,6 +94,15 @@ protected:
 		//These two variables must be set by the submodule in the constructor before loading the configuration
 		ModuleConfiguration* configurationPointer;
 		u16 configurationLength;
+
+		enum ModuleConfigMessages
+		{
+			SET_CONFIG = 0, SET_CONFIG_RESULT = 1,
+			SET_ACTIVE = 2, SET_ACTIVE_RESULT = 3,
+			GET_CONFIG = 4, CONFIG = 5,
+			GET_MODULE_LIST = 6, MODULE_LIST = 7
+		};
+
 
 		//##### Handlers that can be implemented by any module, but are implemented empty here
 
@@ -123,6 +135,11 @@ protected:
 		//Changing the node state will affect some module's behaviour
 		virtual void NodeStateChangedHandler(discoveryState newState){};
 
+		//The Terminal Command handler is called for all modules with the user input
+#ifdef TERMINAL_ENABLED
 		virtual bool TerminalCommandHandler(string commandName, vector<string> commandArgs);
+#else
+		bool TerminalCommandHandler(string commandName, vector<string> commandArgs);
+#endif
 
 };

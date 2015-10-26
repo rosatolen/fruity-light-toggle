@@ -1,10 +1,9 @@
 /Debug/
 /Release/
-
+_build/
 /doc/
 /logs/
 /Debug52/
 /deploy/current.txt
-_build
 .DS_Store
 */.DS_Store

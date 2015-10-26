@@ -70,14 +70,17 @@ class Node:
 
 		//Persistently saved configuration (should be multiple of 4 bytes long)
 		struct NodeConfiguration{
-			u8 version;
+			u32 version;
 			ble_gap_addr_t nodeAddress; //7 bytes
 			networkID networkId;
 			nodeID nodeId;
+			u16 manufacturerId; //According to the BLE company identifiers: https://www.bluetooth.org/en-us/specification/assigned-numbers/company-identifiers
+			char serialNumber[SERIAL_NUMBER_LENGTH+1];//should be 0 terminated
 			u8 networkKey[BLE_GAP_SEC_KEY_LEN]; //16 bytes
 			u16 connectionLossCounter;
 			deviceTypes deviceType;
-			u8 calibratedRSSI; //The average RSSI, received in a distance of 1m with a tx power of +0 dBm
+			u8 dBmTX; //The average RSSI, received in a distance of 1m with a tx power of +0 dBm
+			u8 dBmRX; //Receiver sensitivity (or receied power from a packet sent at 1m distance with +0dBm?)
 			u8 reserved;
 		};
 
@@ -96,6 +99,8 @@ class Node:
 
 
 		void InitWithTestDeviceSettings();
+
+		void SendModuleList(nodeID toNode, u8 requestHandle);
 
 
 	public:
@@ -139,6 +144,8 @@ class Node:
 
 		u32 radioActiveCount;
 		u32 lastRadioActiveCountResetTimerMs;
+
+		u8 ledBlinkPosition;
 
 		enum ledMode
 		{

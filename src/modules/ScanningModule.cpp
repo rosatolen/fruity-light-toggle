@@ -11,7 +11,6 @@
 
 extern "C"
 {
-
 }
 
 //This module scans for specific messages and reports them back
@@ -113,7 +112,7 @@ void ScanningModule::SendReport()
 {
 	logt("SCANMOD", "Total:%d, avgRSSI:%d", totalMessages, totalRSSI);
 	if(totalMessages > 0){
-		connPacketModuleAction data;
+		connPacketModule data;
 		data.header.messageType = MESSAGE_TYPE_MODULE_TRIGGER_ACTION;
 		data.header.sender = node->persistentConfig.nodeId;
 		data.header.receiver = NODE_ID_BROADCAST; //Only send if sink available
@@ -125,7 +124,7 @@ void ScanningModule::SendReport()
 		memcpy(data.data + 0, &totalMessages, 4);
 		memcpy(data.data + 4, &totalRSSI, 4);
 
-		cm->SendMessageToReceiver(NULL, (u8*) &data, SIZEOF_CONN_PACKET_MODULE_ACTION + 8, false);
+		cm->SendMessageToReceiver(NULL, (u8*) &data, SIZEOF_CONN_PACKET_MODULE + 8, false);
 	}
 }
 
@@ -136,7 +135,7 @@ void ScanningModule::ConnectionPacketReceivedEventHandler(connectionPacket* inPa
 	Module::ConnectionPacketReceivedEventHandler(inPacket, connection, packetHeader, dataLength);
 
 	if(packetHeader->messageType == MESSAGE_TYPE_MODULE_TRIGGER_ACTION){
-		connPacketModuleAction* packet = (connPacketModuleAction*)packetHeader;
+		connPacketModule* packet = (connPacketModule*)packetHeader;
 
 		//Check if our module is meant and we should trigger an action
 		if(packet->moduleId == moduleId){
@@ -148,7 +147,7 @@ void ScanningModule::ConnectionPacketReceivedEventHandler(connectionPacket* inPa
 				memcpy(&totalMessages, packet->data + 0, 4);
 				memcpy(&totalRSSI, packet->data + 4, 4);
 
-				uart("SCANMOD", "{\"module\":%d, \"type\":\"general\", \"msgType\":\"totalpackets\", \"sender\":%d, \"messageSum\":%u, \"rssiSum\":%d}", moduleId, packet->header.sender, totalMessages, totalRSSI);
+				uart("SCANMOD", "{\"module\":%d, \"type\":\"general\", \"msgType\":\"totalpackets\", \"sender\":%d, \"messageSum\":%u, \"rssiSum\":%d}" SEP, moduleId, packet->header.sender, totalMessages, totalRSSI);
 			}
 		}
 	}

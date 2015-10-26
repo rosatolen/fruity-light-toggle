@@ -27,6 +27,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 extern "C"{
 #include <app_error.h>
 #include <stdlib.h>
+#include <cstring>
 }
 
 
@@ -68,7 +69,8 @@ Storage::Storage()
 
 void Storage::PstorageEventHandler(pstorage_handle_t* handle, u8 opCode, u32 result, u8* data, u32 dataLength)
 {
-	logt("STORAGE", "Event: %u, result:%d, len:%d", opCode, result, dataLength);
+	//FIXME: async log messages are not good for the logger
+	//logt("STORAGE", "Event: %u, result:%d, len:%d", opCode, result, dataLength);
 	if(result != NRF_SUCCESS) logt("STORAGE", "%s", Logger::getInstance().getPstorageStatusErrorString(opCode));
 
 
@@ -105,7 +107,7 @@ void Storage::PstorageEventHandler(pstorage_handle_t* handle, u8 opCode, u32 res
 //This involves problems when the data buffer has a different size
 bool Storage::BufferedRead(u8* data, u32 block, u32 len)
 {
-	logt("STORAGE", "Reading len:%u from block:%u", len, block);
+	//logt("STORAGE", "Reading len:%u from block:%u", len, block);
 
 	pstorage_load(data, &block_handles[block], len, 0);
 

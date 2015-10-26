@@ -28,7 +28,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include <Connection.h>
-#include <string>
 #include <types.h>
 
 extern "C"{
@@ -70,6 +69,7 @@ class ConnectionManager
 
 		//This method is called when empty buffers are available and there is data to send
 		void fillTransmitBuffers();
+		void fillTransmitBuffersOld();
 
 		void setConnectionManagerCallback(ConnectionManagerCallback* cb);
 
@@ -80,7 +80,7 @@ class ConnectionManager
 		//Keep track of outgoing packets and the transmit buffers
 		u16 pendingPackets;
 
-		u8 txBufferFreeCount;
+		u8 txBuffersPerLink;
 
 		u8 freeInConnections;
 		u8 freeOutConnections;

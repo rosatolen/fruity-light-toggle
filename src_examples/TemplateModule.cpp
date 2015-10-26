@@ -82,7 +82,7 @@ bool TemplateModule::TerminalCommandHandler(string commandName, vector<string> c
 	//React on commands, return true if handled, false otherwise
 	if(commandArgs.size() >= 2 && commandArgs[1] == moduleName)
 	{
-		if(commandName == "uart_module_trigger_action")
+		if(commandName == "action")
 		{
 			if(commandArgs[1] != moduleName) return false;
 
@@ -115,7 +115,7 @@ void TemplateModule::ConnectionPacketReceivedEventHandler(connectionPacket* inPa
 	Module::ConnectionPacketReceivedEventHandler(inPacket, connection, packetHeader, dataLength);
 
 	if(packetHeader->messageType == MESSAGE_TYPE_MODULE_TRIGGER_ACTION){
-		connPacketModuleAction* packet = (connPacketModuleAction*)packetHeader;
+		connPacketModule* packet = (connPacketModule*)packetHeader;
 
 		//Check if our module is meant and we should trigger an action
 		if(packet->moduleId == moduleId){
@@ -127,7 +127,7 @@ void TemplateModule::ConnectionPacketReceivedEventHandler(connectionPacket* inPa
 
 	//Parse Module responses
 	if(packetHeader->messageType == MESSAGE_TYPE_MODULE_ACTION_RESPONSE){
-		connPacketModuleAction* packet = (connPacketModuleAction*)packetHeader;
+		connPacketModule* packet = (connPacketModule*)packetHeader;
 
 		//Check if our module is meant and we should trigger an action
 		if(packet->moduleId == moduleId)

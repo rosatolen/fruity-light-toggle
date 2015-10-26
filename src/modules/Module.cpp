@@ -83,11 +83,31 @@ void Module::ConfigurationLoadedHandler()
 	}
 	//Config-> loaded and ok
 	else {
-		logt("MODULE", "Module config loaded version:%d", configurationPointer->moduleVersion);
+		logt("MODULE", "Module %u config loaded version:%d", moduleId, configurationPointer->moduleVersion);
 	}
 }
 
+//Constructs a simple trigger action message and can take aditional payload data
+void Module::SendModuleActionMessage(u8 messageType, nodeID toNode, u8 actionType, u8 requestHandle, u8* additionalData, u16 additionalDataSize, bool reliable)
+{
+	u8 buffer[SIZEOF_CONN_PACKET_MODULE + additionalDataSize];
 
+	connPacketModule* outPacket = (connPacketModule*)buffer;
+	outPacket->header.messageType = messageType;
+	outPacket->header.sender = node->persistentConfig.nodeId;
+	outPacket->header.receiver = toNode;
+
+	outPacket->moduleId = moduleId;
+	outPacket->requestHandle = requestHandle;
+	outPacket->actionType = actionType;
+
+	if(additionalData != NULL && additionalDataSize > 0)
+	{
+		memcpy(&outPacket->data, additionalData, additionalDataSize);
+	}
+
+	cm->SendMessageToReceiver(NULL, buffer, SIZEOF_CONN_PACKET_MODULE + additionalDataSize, reliable);
+}
 
 bool Module::TerminalCommandHandler(string commandName, vector<string> commandArgs)
 {
@@ -95,122 +115,75 @@ bool Module::TerminalCommandHandler(string commandName, vector<string> commandAr
 	//First, check if our module is meant
 	if(commandArgs.size() >= 2 && commandArgs[1] == moduleName)
 	{
+		nodeID receiver = commandArgs[0] == "this" ? node->persistentConfig.nodeId : atoi(commandArgs[0].c_str());
+
 		//E.g. UART_MODULE_SET_CONFIG 0 STATUS 00:FF:A0 => command, nodeId (this for current node), moduleId, hex-string
-		if(commandName == "uart_module_set_config" || commandName == "setconf")
+		if(commandName == "set_config")
 		{
-			if(commandArgs.size() == 3 && commandArgs[0] == "this")
-			{
-				logt("MODULE", "This is module %s setting config", moduleName);
-
-				//HexString must be like "FF:34:67:22:24"
-				const char* hexString = commandArgs[2].c_str();
-				u32 length = (commandArgs[2].length()+1)/3;
-				u8 buffer[200];
-				for(u32 i = 0; i<length; i++){
-					buffer[i] = (u8)strtoul(hexString + (i*3), NULL, 16);
-				}
-				//Check if this config seems right
-				ModuleConfiguration* newConfig = (ModuleConfiguration*)buffer;
-				if(
-						newConfig->moduleVersion == configurationPointer->moduleVersion
-						&& length == configurationLength
-				){
-					newConfig->moduleId = configurationPointer->moduleId; //ModuleID must not be transmitted
-					logt("MODULE", "Config set");
-					memcpy(configurationPointer, buffer, configurationLength);
-
-					ConfigurationLoadedHandler();
-				}
-				else
-				{
-					logt("ERROR", "Wrong configuration length:%u vs. %u or version:%d vs %d", length, configurationLength, newConfig->moduleVersion, configurationPointer->moduleVersion);
-				}
-
-				return true;
-			}
-			//Send command to other node
-			else
+			if(commandArgs.size() >= 3)
 			{
 				//calculate configuration size
 				const char* configString = commandArgs[2].c_str();
 				u16 configLength = (commandArgs[2].length()+1)/3;
 
-				u8 packetBuffer[configLength + SIZEOF_CONN_PACKET_MODULE_REQUEST];
-				connPacketModuleRequest* packet = (connPacketModuleRequest*)packetBuffer;
-				packet->header.messageType = MESSAGE_TYPE_MODULE_SET_CONFIGURATION;
-				packet->header.sender = node->persistentConfig.nodeId;
-				packet->header.receiver = atoi(commandArgs[0].c_str());
+				u8 requestHandle = commandArgs.size() >= 4 ? atoi(commandArgs[3].c_str()) : 0;
 
+				//Send the configuration to the destination node
+				u8 packetBuffer[configLength + SIZEOF_CONN_PACKET_MODULE];
+				connPacketModule* packet = (connPacketModule*)packetBuffer;
+				packet->header.messageType = MESSAGE_TYPE_MODULE_CONFIG;
+				packet->header.sender = node->persistentConfig.nodeId;
+				packet->header.receiver = receiver;
+
+				packet->actionType = ModuleConfigMessages::SET_CONFIG;
 				packet->moduleId = moduleId;
+				packet->requestHandle = requestHandle;
 				//Fill data region with module config
 				Logger::getInstance().parseHexStringToBuffer(configString, packet->data, configLength);
 
-
-				cm->SendMessageToReceiver(NULL, packetBuffer, configLength + SIZEOF_CONN_PACKET_MODULE_REQUEST, true);
+				cm->SendMessageToReceiver(NULL, packetBuffer, configLength + SIZEOF_CONN_PACKET_MODULE, true);
 
 				return true;
 			}
 
 		}
-		else if(commandName == "uart_module_get_config" || commandName == "getconf")
+		else if(commandName == "get_config")
 		{
-			if(commandArgs.size() == 2 && commandArgs[0] == "this")
+			if(commandArgs.size() == 2)
 			{
-				char* buffer[200];
-				Logger::getInstance().convertBufferToHexString((u8*)configurationPointer, configurationLength, (char*)buffer);
-
-				uart("MODULE", "{\"name\":\"%s\", \"config\":\"%s\"}", moduleName, buffer);
-
-				return true;
-			}
-			//It's a nodeID, we must send the get_config command to another module
-			else if(commandArgs.size() == 2)
-			{
-				connPacketModuleRequest packet;
-				packet.header.messageType = MESSAGE_TYPE_MODULE_GET_CONFIGURATION;
+				connPacketModule packet;
+				packet.header.messageType = MESSAGE_TYPE_MODULE_CONFIG;
 				packet.header.sender = node->persistentConfig.nodeId;
-				packet.header.receiver = atoi(commandArgs[0].c_str());
+				packet.header.receiver = receiver;
 
 				packet.moduleId = moduleId;
+				packet.actionType = ModuleConfigMessages::GET_CONFIG;
 
-				//TODO:Send config packet with variable length, leave version field empty
+				cm->SendMessageToReceiver(NULL, (u8*)&packet, SIZEOF_CONN_PACKET_MODULE, false);
 
 				return true;
 			}
 		}
-		else if(commandName == "uart_module_set_active" || commandName == "setactive")
+		else if(commandName == "set_active")
 		{
-			if(commandArgs[0] == "this")
-			{
-				if(commandArgs.size() > 2 && commandArgs[2] == "0"){
-					configurationPointer->moduleActive = false;
-				} else if(commandArgs.size() > 2 && commandArgs[2] == "1"){
-					configurationPointer->moduleActive = true;
-				} else {
-					configurationPointer->moduleActive = !configurationPointer->moduleActive;
-				}
+			u8 moduleState = commandArgs[2] == "on" ? 1: 0;
+			u8 requestHandle = commandArgs.size() >= 4 ? atoi(commandArgs[3].c_str()) : 0;
 
-				return true;
-			}
-			//Send command to another node
-			else
-			{
-				connPacketModuleRequest packet;
-				packet.header.messageType = MESSAGE_TYPE_MODULE_SET_ACTIVE;
-				packet.header.sender = node->persistentConfig.nodeId;
-				packet.header.receiver = atoi(commandArgs[0].c_str());
+			connPacketModule packet;
+			packet.header.messageType = MESSAGE_TYPE_MODULE_CONFIG;
+			packet.header.sender = node->persistentConfig.nodeId;
+			packet.header.receiver = receiver;
 
-				packet.moduleId = moduleId;
-				packet.data[0] = (commandArgs.size() < 3 || commandArgs[2] == "1") ? 1 : 0;
+			packet.moduleId = moduleId;
+			packet.actionType = ModuleConfigMessages::SET_ACTIVE;
+			packet.requestHandle = requestHandle;
+			packet.data[0] = moduleState;
 
-				cm->SendMessageToReceiver(NULL, (u8*) &packet, SIZEOF_CONN_PACKET_MODULE_REQUEST+1, true);
+			cm->SendMessageToReceiver(NULL, (u8*) &packet, SIZEOF_CONN_PACKET_MODULE + 1, true);
 
-				return true;
-			}
+			return true;
 		}
-
 	}
-
 
 	return false;
 }
@@ -219,61 +192,125 @@ void Module::ConnectionPacketReceivedEventHandler(connectionPacket* inPacket, Co
 {
 	//We want to handle incoming packets that change the module configuration
 	if(
-			packetHeader->messageType == MESSAGE_TYPE_MODULE_GET_CONFIGURATION
-			|| packetHeader->messageType == MESSAGE_TYPE_MODULE_SET_CONFIGURATION
-			|| packetHeader->messageType == MESSAGE_TYPE_MODULE_SET_ACTIVE
-	)
-	{
-		connPacketModuleRequest* packet = (connPacketModuleRequest*) packetHeader;
-		if(packet->moduleId != moduleId) return;
+			packetHeader->messageType == MESSAGE_TYPE_MODULE_CONFIG
+	){
+		connPacketModule* packet = (connPacketModule*) packetHeader;
+		if(packet->moduleId == moduleId)
+		{
 
-		if(packetHeader->messageType == MESSAGE_TYPE_MODULE_SET_CONFIGURATION){
-			u16 configLength = inPacket->dataLength - SIZEOF_CONN_PACKET_MODULE_REQUEST;
+			u16 dataFieldLength = inPacket->dataLength - SIZEOF_CONN_PACKET_MODULE;
 
-			//Save the received configuration to the module configuration
-			char* buffer[200];
-			Logger::getInstance().convertBufferToHexString((u8*)packet->data, configLength, (char*)buffer);
-
-			logt("MODULE", "rx (%d): %s", configLength,  buffer);
-
-			//Check if this config seems right
-			ModuleConfiguration* newConfig = (ModuleConfiguration*)packet->data;
-			if(
-					newConfig->moduleVersion == configurationPointer->moduleVersion
-					&& configLength == configurationLength
-			){
-				//Backup the module id because it must not be sent in the packet
-				u16 moduleId = configurationPointer->moduleId;
-				logt("MODULE", "Config set");
-				memcpy(configurationPointer, packet->data, configurationLength);
-				configurationPointer->moduleId = moduleId;
-
-				//TODO: Save
-
-
-				ConfigurationLoadedHandler();
-			}
-			else
+			if(packet->actionType == ModuleConfigMessages::SET_CONFIG)
 			{
-				logt("ERROR", "Wrong configuration length:%u vs. %u or version:%d vs %d", configLength, configurationLength, newConfig->moduleVersion, configurationPointer->moduleVersion);
+				//Log the config to the terminal
+				/*char* buffer[200];
+				Logger::getInstance().convertBufferToHexString((u8*)packet->data, dataFieldLength, (char*)buffer);
+				logt("MODULE", "rx (%d): %s", dataFieldLength,  buffer);*/
+
+				//Check if this config seems right
+				ModuleConfiguration* newConfig = (ModuleConfiguration*)packet->data;
+				if(
+						newConfig->moduleVersion == configurationPointer->moduleVersion
+						&& dataFieldLength == configurationLength
+				){
+					//Backup the module id because it must not be sent in the packet
+					u16 moduleId = configurationPointer->moduleId;
+					memcpy(configurationPointer, packet->data, configurationLength);
+					configurationPointer->moduleId = moduleId;
+
+					//TODO: Save, and afterwards send saveOK message
+
+					//Send set_config_ok message
+					connPacketModule outPacket;
+					outPacket.header.messageType = MESSAGE_TYPE_MODULE_CONFIG;
+					outPacket.header.sender = node->persistentConfig.nodeId;
+					outPacket.header.receiver = packet->header.sender;
+
+					outPacket.moduleId = moduleId;
+					outPacket.requestHandle = packet->requestHandle;
+					outPacket.actionType = ModuleConfigMessages::SET_CONFIG_RESULT;
+					outPacket.data[0] = NRF_SUCCESS; //Return ok
+
+					cm->SendMessageToReceiver(NULL, (u8*) &outPacket, SIZEOF_CONN_PACKET_MODULE + 1, false);
+
+					ConfigurationLoadedHandler();
+				}
+				else
+				{
+					if(newConfig->moduleVersion != configurationPointer->moduleVersion) uart("ERROR", "{\"type\":\"error\",\"module\":%u,\"code\":1,\"text\":\"wrong config version.\"}" SEP, moduleId);
+					else uart("ERROR", "{\"type\":\"error\",\"module\":%u,\"code\":2,\"text\":\"wrong configuration length. \"}" SEP, moduleId);
+				}
+			}
+			else if(packet->actionType == ModuleConfigMessages::GET_CONFIG)
+			{
+
+				u8 buffer[SIZEOF_CONN_PACKET_MODULE + configurationLength];
+
+				connPacketModule* outPacket = (connPacketModule*)buffer;
+				outPacket->header.messageType = MESSAGE_TYPE_MODULE_CONFIG;
+				outPacket->header.sender = node->persistentConfig.nodeId;
+				outPacket->header.receiver = packet->header.sender;
+
+				outPacket->moduleId = moduleId;
+				outPacket->requestHandle = packet->requestHandle;
+				outPacket->actionType = ModuleConfigMessages::CONFIG;
+
+				memcpy(outPacket->data, (u8*)configurationPointer, configurationLength);
+
+				cm->SendMessageToReceiver(NULL, buffer, SIZEOF_CONN_PACKET_MODULE + configurationLength, false);
+
+			}
+			else if(packet->actionType == ModuleConfigMessages::SET_ACTIVE)
+			{
+				//Look for the module and set it active or inactive
+				for(u32 i=0; i<MAX_MODULE_COUNT; i++){
+					if(node->activeModules[i] && node->activeModules[i]->moduleId == packet->moduleId)
+					{
+						node->activeModules[i]->configurationPointer->moduleActive = packet->data[0];
+
+						//Send confirmation that the module is now active
+						connPacketModule outPacket;
+						outPacket.header.messageType = MESSAGE_TYPE_MODULE_CONFIG;
+						outPacket.header.sender = node->persistentConfig.nodeId;
+						outPacket.header.receiver = packet->header.sender;
+
+						outPacket.moduleId = moduleId;
+						outPacket.requestHandle = packet->requestHandle;
+						outPacket.actionType = ModuleConfigMessages::SET_ACTIVE_RESULT;
+						outPacket.data[0] = NRF_SUCCESS; //Return ok
+
+						cm->SendMessageToReceiver(NULL, (u8*) &outPacket, SIZEOF_CONN_PACKET_MODULE + 1, false);
+
+						break;
+					}
+				}
 			}
 
 
+			/*
+			 * ######################### RESPONSES
+			 * */
+			if(packet->actionType == ModuleConfigMessages::SET_CONFIG_RESULT)
+			{
+				uart("MODULE", "{\"nodeId\":%u,\"type\":\"set_config_result\",\"module\":%u,", packet->header.sender, packet->moduleId);
+				uart("MODULE",  "\"requestHandle\":%u,\"code\":%u}" SEP, packet->requestHandle, packet->data[0]);
+			}
+			else if(packet->actionType == ModuleConfigMessages::SET_ACTIVE_RESULT)
+			{
+				uart("MODULE", "{\"nodeId\":%u,\"type\":\"set_active_result\",\"module\":%u,", packet->header.sender, packet->moduleId);
+				uart("MODULE",  "\"requestHandle\":%u,\"code\":%u}" SEP, packet->requestHandle, packet->data[0]);
+			}
+			else if(packet->actionType == ModuleConfigMessages::CONFIG)
+			{
+				char* buffer[200];
+				Logger::getInstance().convertBufferToHexString(packet->data, dataFieldLength, (char*)buffer);
+
+				uart("MODULE", "{\"nodeId\":%u,\"type\":\"config\",\"module\":%u,\"config\":\"%s\"}" SEP, packet->header.sender, moduleId, buffer);
 
 
-
-		} else if(packetHeader->messageType == MESSAGE_TYPE_MODULE_GET_CONFIGURATION){
-			//Send the module configuration
-
-
-		} else if(packetHeader->messageType == MESSAGE_TYPE_MODULE_SET_ACTIVE){
-			//Look for the module and set it active or inactive
-			for(u32 i=0; i<MAX_MODULE_COUNT; i++){
-				if(node->activeModules[i] && node->activeModules[i]->moduleId == packet->moduleId){
-					logt("MODULE", "Status set to:%u", packet->data[0]);
-					node->activeModules[i]->configurationPointer->moduleActive = packet->data[0];
-				}
 			}
 		}
 	}
+
+
 }

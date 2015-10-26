@@ -293,7 +293,7 @@ u32 GATTController::bleWriteCharacteristic(u16 connectionHandle, u16 characteris
 		return false;
 	}
 
-	//logt("CONN", "Data size is: %d, handles(%d, %d), reliable %d", dataLength, connectionHandle, characteristicHandle, reliable);
+	logt("CONN_DATA", "Data size is: %d, handles(%d, %d), reliable %d", dataLength, connectionHandle, characteristicHandle, reliable);
 
 	//Configure the write parameters with reliable/unreliable, writehandle, etc...
 	ble_gattc_write_params_t writeParameters;
@@ -369,6 +369,13 @@ bool GATTController::bleMeshServiceEventHandler(ble_evt_t* bleEvent)
 		case BLE_GATTC_EVT_WRITE_RSP:
 			//Send next packet after first has been received
 			dataTransmittedCallback(bleEvent);
+
+			return true;
+
+		case BLE_GATTC_EVT_TIMEOUT:
+			//FIXME: must be handled.
+			//we must tear down the connection or no more writes will be supported
+
 
 			return true;
 

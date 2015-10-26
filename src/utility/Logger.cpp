@@ -33,6 +33,7 @@ extern "C"
 #include <ble_hci.h>
 #include <nrf_error.h>
 #include <simple_uart.h>
+#include <cstring>
 #include <pstorage.h>
 #include <stdarg.h>
 #include <app_timer.h>
@@ -47,24 +48,25 @@ Logger::Logger()
 
 void Logger::log_f(bool printLine, const char* file, i32 line, const char* message, ...)
 {
+#ifdef ENABLE_LOGGING
 	memset(mhTraceBuffer, 0, TRACE_BUFFER_SIZE);
 
-	//Variable argument list must be passed to vsprintf
+	//Variable argument list must be passed to vnsprintf
 	va_list aptr;
 	va_start(aptr, message);
-	vsprintf(mhTraceBuffer, message, aptr);
+	vsnprintf(mhTraceBuffer, TRACE_BUFFER_SIZE, message, aptr);
 	va_end(aptr);
 
 	if (printLine)
 	{
-		sprintf(mhTraceBuffer2, "[%s@%d]: %s" EOL, file, line, mhTraceBuffer);
+		snprintf(mhTraceBuffer2, TRACE_BUFFER_SIZE, "[%s@%d]: %s" EOL, file, line, mhTraceBuffer);
 		simple_uart_putstring((const uint8_t *) mhTraceBuffer2);
 	}
 	else
 	{
 		simple_uart_putstring((const uint8_t *) mhTraceBuffer);
 	}
-
+#endif
 }
 
 void Logger::logTag_f(LogType logType, const char* file, i32 line, const char* tag, const char* message, ...)
@@ -75,15 +77,15 @@ void Logger::logTag_f(LogType logType, const char* file, i32 line, const char* t
 		memset(mhTraceBuffer, 0, TRACE_BUFFER_SIZE);
 		memset(mhTraceBuffer2, 0, TRACE_BUFFER_SIZE);
 
-		//Variable argument list must be passed to vsprintf
+		//Variable argument list must be passed to vsnprintf
 		va_list aptr;
 		va_start(aptr, message);
-		vsprintf(mhTraceBuffer, message, aptr);
+		vsnprintf(mhTraceBuffer, TRACE_BUFFER_SIZE, message, aptr);
 		va_end(aptr);
 
 		if (logType == LOG_LINE)
 		{
-			sprintf(mhTraceBuffer2, "[%s@%d %s]: %s" EOL, file, line, tag, mhTraceBuffer);
+			snprintf(mhTraceBuffer2, TRACE_BUFFER_SIZE, "[%s@%d %s]: %s" EOL, file, line, tag, mhTraceBuffer);
 			simple_uart_putstring((const uint8_t *) mhTraceBuffer2);
 		}
 		else if (logType == LOG_MESSAGE_ONLY)
@@ -92,7 +94,7 @@ void Logger::logTag_f(LogType logType, const char* file, i32 line, const char* t
 		}
 		else if (logType == UART_COMMUNICATION)
 		{
-			sprintf(mhTraceBuffer2, "<%s|%s>", tag, mhTraceBuffer);
+			snprintf(mhTraceBuffer2, TRACE_BUFFER_SIZE, "<%s|%s>", tag, mhTraceBuffer);
 			simple_uart_putstring((const uint8_t *) mhTraceBuffer2);
 		}
 	}
@@ -104,16 +106,16 @@ void Logger::uart_error_f(UartErrorType type)
 	switch (type)
 	{
 		case UartErrorType::NO_ERROR:
-			uart("ERROR", "{\"module\":0, \"type\":\"error\", \"code\":0, \"text\":\"OK\"}");
+			uart("ERROR", "{\"module\":0, \"type\":\"error\", \"code\":0, \"text\":\"OK\"}" SEP);
 			break;
 		case UartErrorType::COMMAND_NOT_FOUND:
-			uart("ERROR", "{\"module\":0, \"type\":\"error\", \"code\":1, \"text\":\"Command not found\"}");
+			uart("ERROR", "{\"module\":0, \"type\":\"error\", \"code\":1, \"text\":\"Command not found\"}" SEP);
 			break;
 		case UartErrorType::ARGUMENTS_WRONG:
-			uart("ERROR", "{\"module\":0, \"type\":\"error\", \"code\":2, \"text\":\"Wrong Arguments\"}");
+			uart("ERROR", "{\"module\":0, \"type\":\"error\", \"code\":2, \"text\":\"Wrong Arguments\"}" SEP);
 			break;
 		default:
-			uart("ERROR", "{\"module\":0, \"type\":\"error\", \"code\":99, \"text\":\"Unknown Error\"}");
+			uart("ERROR", "{\"module\":0, \"type\":\"error\", \"code\":99, \"text\":\"Unknown Error\"}" SEP);
 			break;
 	}
 }
@@ -557,6 +559,8 @@ void Logger::convertTimestampToString(u64 timestamp, char* buffer)
 	sprintf(buffer, "approx. %u years, %u days, %02uh:%02um:%02us,%03ums", years, days, hours, minutes, seconds, milliseconds);
 }
 
+//FIXME: This method does not know the destination buffer length and could crash the system
+//It also lets developers run into trouble while debugging....
 void Logger::convertBufferToHexString(u8* srcBuffer, u32 srcLength, char* dstBuffer)
 {
 	for (u32 i = 0; i < srcLength; i++)

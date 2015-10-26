@@ -51,12 +51,20 @@ class StatusReporterModule: public Module
 
 		enum StatusModuleTriggerActionMessages
 		{
-			SET_LED_MESSAGE = 0, GET_STATUS_MESSAGE = 1, GET_CONNECTIONS_MESSAGE = 2
+			SET_LED = 0,
+			GET_STATUS = 1,
+			GET_DEVICE_INFO = 2,
+			GET_ALL_CONNECTIONS = 3,
+			GET_NEARBY_NODES = 4
 		};
 
 		enum StatusModuleActionResponseMessages
 		{
-			STATUS_MESSAGE = 0, CONNECTIONS_MESSAGE = 1
+			SET_LED_RESULT = 0,
+			STATUS = 1,
+			DEVICE_INFO = 2,
+			ALL_CONNECTIONS = 3,
+			NEARBY_NODES = 4
 		};
 
 		//####### Module specific message structs (these need to be packed)
@@ -77,47 +85,35 @@ class StatusReporterModule: public Module
 
 			} StatusReporterModuleConnectionsMessage;
 
-			#define SIZEOF_STATUS_REPORTER_MODULE_STATUS_MESSAGE 24
-			typedef struct
-			{
-				u32 chipIdA;
-				u32 chipIdB;
-				clusterID clusterId;
-				clusterSIZE clusterSize;
-				ble_gap_addr_t accessAddress;
-				u8 freeIn;
-				u8 freeOut;
-				u8 batteryInfo;
-				u8 calibratedRSSI;
-
-			} StatusReporterModuleStatusMessage;
-
-
 			//This message delivers non- (or not often)changing information
-			#define SIZEOF_STATUS_REPORTER_MODULE_INFO_MESSAGE 13
+			#define SIZEOF_STATUS_REPORTER_MODULE_DEVICE_INFO_MESSAGE (25 + SERIAL_NUMBER_LENGTH)
 			typedef struct
 			{
-				u32 chipIdA;
-				u32 chipIdB;
+				u16 manufacturerId;
+				u8 serialNumber[SERIAL_NUMBER_LENGTH];
+				u8 chipId[8];
 				ble_gap_addr_t accessAddress;
 				networkID networkId;
-				u8 nodeVersion;
-				u8 calibratedRSSI;
+				u32 nodeVersion;
+				u8 dBmRX;
+				u8 dBmTX;
 				u8 deviceType;
 
-			} StatusReporterModuleInfoMessage;
+			} StatusReporterModuleDeviceInfoMessage;
 
 			//This message delivers often changing information and info about the incoming connection
-			#define SIZEOF_STATUS_REPORTER_MODULE_FULL_STATUS_MESSAGE 10
+			#define SIZEOF_STATUS_REPORTER_MODULE_STATUS_MESSAGE 9
 			typedef struct
 			{
-				clusterID clusterId;
 				clusterSIZE clusterSize;
 				nodeID inConnectionPartner;
 				i8 inConnectionRSSI;
+				u8 freeIn : 2;
+				u8 freeOut : 6;
 				u8 batteryInfo;
+				u8 connectionLossCounter; //Connection losses since reboot
 
-			} StatusReporterModuleFullStatusMessage;
+			} StatusReporterModuleStatusMessage;
 
 		#pragma pack(pop)
 		//####### Module messages end
@@ -125,10 +121,11 @@ class StatusReporterModule: public Module
 		u32 lastConnectionReportingTimer;
 		u32 lastStatusReportingTimer;
 
-		void SendConnectionInformation(nodeID toNode);
 
-		void RequestStatusInformation(nodeID targetNode);
-		void SendStatusInformation(nodeID toNode);
+		void SendStatus(nodeID toNode, u8 messageType);
+		void SendDeviceInfo(nodeID toNode, u8 messageType);
+		void SendNearbyNodes(nodeID toNode, u8 messageType);
+		void SendAllConnections(nodeID toNode, u8 messageType);
 
 		void StartConnectionRSSIMeasurement(Connection* connection);
 		void StopConnectionRSSIMeasurement(Connection* connection);

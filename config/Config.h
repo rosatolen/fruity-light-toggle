@@ -128,7 +128,7 @@ class Conf
 
 		//Allows a number of mesh networks to coexist in the same physical space without collision
 		//Allowed range is 0x0000 - 0xFF00 (0 - 65280), others are reserved for special purpose
-		u16 meshNetworkIdentifier = 1;
+		u16 meshNetworkIdentifier = 3;
 
 		const u8 meshMaxInConnections = 1; // Will probably never change and code will not allow this to change without modifications
 		const u8 meshMaxOutConnections = 3; //Will certainly change with future S130 versions
@@ -136,7 +136,7 @@ class Conf
 
 		const bool enableRadioNotificationHandler = false;
 
-		const bool enableConnectionRSSIMeasurement = true;
+		const bool enableConnectionRSSIMeasurement = false;
 
 
 		// ########### ENCRYPTION ################################################
@@ -146,6 +146,15 @@ class Conf
 		const u8 meshNetworkKey[16] = {1,2,3,4,5,6,7,8,9,0,1,2,3,4,5,6}; //16 byte Long term key in little endian format
 		//06050403020100090807060504030201 => How to enter it in the MCP
 		//01:02:03:04:05:06:07:08:09:00:01:02:03:04:05:06 => Format for TI Sniffer
+
+
+
+		// ########### OTHER ################################################
+		u16 firmwareVersionMajor = 0; //0-400
+		u16 firmwareVersionMinor = 1; //0-999
+		u16 firmwareVersionPatch = 9; //0-9999
+		u32 firmwareVersion = 10000000 * firmwareVersionMajor + 10000 * firmwareVersionMinor + firmwareVersionPatch;
+
 };
 
 
@@ -154,19 +163,20 @@ class Conf
 //Select the board for which to compile
 #ifdef NRF51
 	#include <board_pca10031.h>
+//#include <board_ars100748.h>
 #endif
 #ifdef NRF52
 	#include <board_pca10036.h>
 #endif
-//#include <board_adafruit_ble_friend.h>
-
-#define VERSION_STRING "0.1.8-beta"
 
 //Each of the Connections has a buffer for outgoing packets, this is its size in bytes
 #define PACKET_SEND_BUFFER_SIZE 400
 
 //Each connection does also have a buffer to assemble packets that were split into 20 byte chunks
 #define PACKET_REASSEMBLY_BUFFER_SIZE 200
+
+//Size for tracing messages to UART, if it is too short, messages will get truncated
+#define TRACE_BUFFER_SIZE 500
 
 //Number of supported Modules
 #define MAX_MODULE_COUNT 10
@@ -181,11 +191,15 @@ class Conf
 #define ATTR_TABLE_MAX_SIZE 0x200
 
 //Identifiers
-#define COMPANY_IDENTIFIER 0x024D // Company identifier for manufacturer specific data header (M-Way Solutions GmbH)
+#define COMPANY_IDENTIFIER 0x024D // Company identifier for manufacturer specific data header (M-Way Solutions GmbH) - Should not be changed to ensure compatibility with the mesh protocol
 #define MESH_IDENTIFIER 0xF0 //Identifier that defines this as the fruitymesh protocol
 
 //GAP device name
 #define DEVICE_NAME "FRUITY"
+
+//Serial should be short but unique for the given manufacturer id
+#define MANUFACTURER_ID 0xFFFF //The manufacturer id should match your company identifier that should be registered with the bluetooth sig: https://www.bluetooth.org/en-us/specification/assigned-numbers/company-identifiers
+#define SERIAL_NUMBER_LENGTH 5 //A serial could use the alphabet "BCDFGHJKLMNPQRSTVWXYZ123456789". This is good for readability (short, no inter-digit resemblance, 25 million possible combinations, no funny words)
 
 //Storage
 #define STORAGE_BLOCK_SIZE 128 //Determines the maximum size for a module configuration
@@ -194,6 +208,7 @@ class Conf
 /*############ LOGGER ################*/
 
 #define EOL "\r\n"
+#define SEP "\r\n"
 
 //If undefined, the final build will have no logging / Terminal functionality built in
 #define ENABLE_LOGGING
@@ -221,12 +236,12 @@ enum moduleID{
 	STATUS_REPORTER_MODULE_ID=30,
 	DFU_MODULE_ID=40,
 	ENROLLMENT_MODULE_ID=50,
+	IO_MODULE_ID=60,
 
 	//Custom modules
-	TEST_MODULE_ID=30000,
 	LOOPY_MESSAGES_ID=30020,
-	CUSTOM_MODULE_ID=30010,
-	GATEWAY_MODULE_ID=30999
+	GATEWAY_MODULE_ID=30999,
+	DEBUG_MODULE_ID=30000
 };
 
 /*############ Regarding node ids ################*/

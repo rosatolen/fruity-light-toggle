@@ -30,8 +30,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 
-#include <string>
 #include <vector>
+#include <string>
 
 #include <Config.h>
 #include <Terminal.h>
@@ -46,8 +46,6 @@ using namespace std;
 #define __FILE_S__ (strrchr(__FILE__, '/') ? strrchr(__FILE__, '/') + 1 : __FILE__)
 #endif
 
-#define TRACE_BUFFER_SIZE 200
-
 class Logger : public TerminalCommandListener
 {
 private:
@@ -57,8 +55,6 @@ private:
 
 	vector<string> logFilter;
 	vector<string>::iterator logFilterIterator;
-
-
 
 	char mhTraceBuffer[TRACE_BUFFER_SIZE] = { 0 };
 	char mhTraceBuffer2[TRACE_BUFFER_SIZE] = { 0 };

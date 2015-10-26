@@ -89,28 +89,29 @@ bool EnrollmentModule::TerminalCommandHandler(string commandName, vector<string>
 	//React on commands, return true if handled, false otherwise
 	if(commandArgs.size() >= 2 && commandArgs[1] == moduleName)
 	{
-		if(commandName == "uart_module_trigger_action" || commandName == "action")
+		nodeID receiver = commandArgs[0] == "this" ? node->persistentConfig.nodeId : atoi(commandArgs[0].c_str());
+
+		if(commandName == "action")
 		{
 			//If we know the previous id of the node, we can address it with this
 			if(commandArgs.size() >= 5 && commandArgs[2] == "nodeid")
 			{
-				nodeID currentNodeId = atoi(commandArgs[0].c_str());
-
 				nodeID futureNodeId = atoi(commandArgs[3].c_str());
 				networkID networkId = atoi(commandArgs[4].c_str());
 
 
 				//Build enrollment packet
-				u8 buffer[SIZEOF_CONN_PACKET_MODULE_ACTION + SIZEOF_ENROLLMENT_MODULE_SET_ENROLLMENT_BY_NODE_ID_MESSAGE];
-				connPacketModuleAction* packet = (connPacketModuleAction*)buffer;
+				u8 buffer[SIZEOF_CONN_PACKET_MODULE + SIZEOF_ENROLLMENT_MODULE_SET_ENROLLMENT_BY_NODE_ID_MESSAGE];
+				connPacketModule* packet = (connPacketModule*)buffer;
 				EnrollmentModuleSetEnrollmentByNodeIdMessage* enrollmentMessage = (EnrollmentModuleSetEnrollmentByNodeIdMessage*)packet->data;
 
 				packet->header.messageType = MESSAGE_TYPE_MODULE_TRIGGER_ACTION;
 				packet->header.sender = node->persistentConfig.nodeId;
-				packet->header.receiver = currentNodeId;
+				packet->header.receiver = receiver;
 
 				packet->moduleId = moduleId;
 				packet->actionType = EnrollmentModuleTriggerActionMessages::SET_ENROLLMENT_BY_NODE_ID;
+				packet->requestHandle = commandArgs.size() >= 6 ? atoi(commandArgs[5].c_str()) : 0;
 
 				enrollmentMessage->networkId = networkId;
 				enrollmentMessage->nodeId = futureNodeId;
@@ -121,11 +122,12 @@ bool EnrollmentModule::TerminalCommandHandler(string commandName, vector<string>
 					Logger::getInstance().parseHexStringToBuffer(commandArgs[5].c_str(), enrollmentMessage->networkKey, 16);
 				}
 
-				cm->SendMessageToReceiver(NULL, buffer, SIZEOF_CONN_PACKET_MODULE_ACTION + SIZEOF_ENROLLMENT_MODULE_SET_ENROLLMENT_BY_NODE_ID_MESSAGE, true);
+				cm->SendMessageToReceiver(NULL, buffer, SIZEOF_CONN_PACKET_MODULE + SIZEOF_ENROLLMENT_MODULE_SET_ENROLLMENT_BY_NODE_ID_MESSAGE, true);
 
 				return true;
 			}
 			//If it has a random id, we can broadcast an enrollment packet and use the chipid to address the node
+			//Example: action 0 enroll chipid [chipIdA] [chipIdB] [futureNodeId] [furutreNetworkId]
 			else if(commandArgs.size() >= 7 && commandArgs[2] == "chipid")
 			{
 				u32 chipIdA = strtoul(commandArgs[3].c_str(), NULL, 10);
@@ -135,16 +137,17 @@ bool EnrollmentModule::TerminalCommandHandler(string commandName, vector<string>
 				networkID networkId = atoi(commandArgs[6].c_str());
 
 				//Build enrollment packet
-				u8 buffer[SIZEOF_CONN_PACKET_MODULE_ACTION + SIZEOF_ENROLLMENT_MODULE_SET_ENROLLMENT_BY_CHIP_ID_MESSAGE];
-				connPacketModuleAction* packet = (connPacketModuleAction*)buffer;
+				u8 buffer[SIZEOF_CONN_PACKET_MODULE + SIZEOF_ENROLLMENT_MODULE_SET_ENROLLMENT_BY_CHIP_ID_MESSAGE];
+				connPacketModule* packet = (connPacketModule*)buffer;
 				EnrollmentModuleSetEnrollmentByChipIdMessage* enrollmentMessage = (EnrollmentModuleSetEnrollmentByChipIdMessage*)packet->data;
 
 				packet->header.messageType = MESSAGE_TYPE_MODULE_TRIGGER_ACTION;
 				packet->header.sender = node->persistentConfig.nodeId;
-				packet->header.receiver = NODE_ID_BROADCAST;
+				packet->header.receiver = receiver;
 
 				packet->moduleId = moduleId;
 				packet->actionType = EnrollmentModuleTriggerActionMessages::SET_ENROLLMENT_BY_CHIP_ID;
+				packet->requestHandle = commandArgs.size() >= 8 ? atoi(commandArgs[7].c_str()) : 0;
 
 				enrollmentMessage->chipIdA = chipIdA;
 				enrollmentMessage->chipIdB = chipIdB;
@@ -158,7 +161,41 @@ bool EnrollmentModule::TerminalCommandHandler(string commandName, vector<string>
 					Logger::getInstance().parseHexStringToBuffer(commandArgs[7].c_str(), enrollmentMessage->networkKey, 16);
 				}
 
-				cm->SendMessageToReceiver(NULL, buffer, SIZEOF_CONN_PACKET_MODULE_ACTION + SIZEOF_ENROLLMENT_MODULE_SET_ENROLLMENT_BY_CHIP_ID_MESSAGE, true);
+				cm->SendMessageToReceiver(NULL, buffer, SIZEOF_CONN_PACKET_MODULE + SIZEOF_ENROLLMENT_MODULE_SET_ENROLLMENT_BY_CHIP_ID_MESSAGE, true);
+
+				return true;
+			}
+			//Enroll by serial number
+			else if(commandArgs.size() >= 6 && commandArgs[2] == "serial")
+			{
+				nodeID newNodeId = atoi(commandArgs[4].c_str());
+				networkID newNetworkId = atoi(commandArgs[5].c_str());
+
+
+				//Build enrollment packet
+				u8 buffer[SIZEOF_CONN_PACKET_MODULE + SIZEOF_ENROLLMENT_MODULE_SET_ENROLLMENT_BY_SERIAL_MESSAGE];
+				connPacketModule* packet = (connPacketModule*)buffer;
+				EnrollmentModuleSetEnrollmentBySerialMessage* enrollmentMessage = (EnrollmentModuleSetEnrollmentBySerialMessage*)packet->data;
+
+				packet->header.messageType = MESSAGE_TYPE_MODULE_TRIGGER_ACTION;
+				packet->header.sender = node->persistentConfig.nodeId;
+				packet->header.receiver = receiver;
+
+				packet->moduleId = moduleId;
+				packet->actionType = EnrollmentModuleTriggerActionMessages::SET_ENROLLMENT_BY_SERIAL;
+				packet->requestHandle = commandArgs.size() >= 7 ? atoi(commandArgs[6].c_str()) : 0;
+
+				memcpy(enrollmentMessage->serialNumber, commandArgs[3].c_str(), SERIAL_NUMBER_LENGTH);
+				enrollmentMessage->newNodeId = newNodeId;
+				enrollmentMessage->newNetworkId = newNetworkId;
+
+				//If a network key is given, set it
+				if(commandArgs.size() > 6){
+					u8 networkKey[16];
+					Logger::getInstance().parseHexStringToBuffer(commandArgs[6].c_str(), enrollmentMessage->newNetworkKey, 16);
+				}
+
+				cm->SendMessageToReceiver(NULL, buffer, SIZEOF_CONN_PACKET_MODULE + SIZEOF_ENROLLMENT_MODULE_SET_ENROLLMENT_BY_SERIAL_MESSAGE, true);
 
 				return true;
 			}
@@ -175,7 +212,7 @@ void EnrollmentModule::ConnectionPacketReceivedEventHandler(connectionPacket* in
 	Module::ConnectionPacketReceivedEventHandler(inPacket, connection, packetHeader, dataLength);
 
 	if(packetHeader->messageType == MESSAGE_TYPE_MODULE_TRIGGER_ACTION){
-		connPacketModuleAction* packet = (connPacketModuleAction*)packetHeader;
+		connPacketModule* packet = (connPacketModule*)packetHeader;
 
 		//Check if our module is meant and we should trigger an action
 		if(packet->moduleId == moduleId){
@@ -199,6 +236,8 @@ void EnrollmentModule::ConnectionPacketReceivedEventHandler(connectionPacket* in
 				node->LedRed->Off();
 				node->LedGreen->On();
 				node->LedBlue->Off();
+
+				SendEnrollmentResponse(NODE_ID_BROADCAST, enrollmentMethods::BY_NODE_ID, packet->requestHandle, 0, (u8*)node->persistentConfig.serialNumber);
 
 			}
 			else if(packet->actionType == EnrollmentModuleTriggerActionMessages::SET_ENROLLMENT_BY_CHIP_ID)
@@ -224,6 +263,38 @@ void EnrollmentModule::ConnectionPacketReceivedEventHandler(connectionPacket* in
 					node->LedRed->Off();
 					node->LedGreen->On();
 					node->LedBlue->Off();
+
+
+					SendEnrollmentResponse(NODE_ID_BROADCAST, enrollmentMethods::BY_CHIP_ID, packet->requestHandle, 0, (u8*)node->persistentConfig.serialNumber);
+				}
+			}
+			//If an enrollment by serial is received
+			else if(packet->actionType == EnrollmentModuleTriggerActionMessages::SET_ENROLLMENT_BY_SERIAL)
+			{
+				EnrollmentModuleSetEnrollmentBySerialMessage* data = (EnrollmentModuleSetEnrollmentBySerialMessage*)packet->data;
+
+				if(memcmp(data->serialNumber, node->persistentConfig.serialNumber, SERIAL_NUMBER_LENGTH) == 0)
+				{
+					logt("ENROLLMOD", "Enrollment (by serial) received nodeId:%u, networkid:%u, key[0]=%u, key[10]=%u, key[15]=%u", data->newNodeId, data->newNetworkId, data->newNetworkKey[0], data->newNetworkKey[10], data->newNetworkKey[15]);
+
+					//Stop all meshing
+					node->Stop();
+
+					//Save values to persistent config
+					node->persistentConfig.nodeId = data->newNodeId;
+					node->persistentConfig.networkId = data->newNetworkId;
+					memcpy(&node->persistentConfig.networkKey, data->newNetworkKey, 16);
+
+					node->SaveConfiguration();
+
+					//Switch to green LED, user must now reboot the node
+					node->currentLedMode = Node::ledMode::LED_MODE_OFF;
+					node->LedRed->Off();
+					node->LedGreen->On();
+					node->LedBlue->Off();
+
+
+					SendEnrollmentResponse(NODE_ID_BROADCAST, enrollmentMethods::BY_SERIAL, packet->requestHandle, 0, (u8*)node->persistentConfig.serialNumber);
 				}
 			}
 		}
@@ -231,15 +302,53 @@ void EnrollmentModule::ConnectionPacketReceivedEventHandler(connectionPacket* in
 
 	//Parse Module responses
 	if(packetHeader->messageType == MESSAGE_TYPE_MODULE_ACTION_RESPONSE){
-		connPacketModuleAction* packet = (connPacketModuleAction*)packetHeader;
+		connPacketModule* packet = (connPacketModule*)packetHeader;
 
 		//Check if our module is meant and we should trigger an action
 		if(packet->moduleId == moduleId)
 		{
-			/*if(packet->actionType == EnrollmentModuleTriggerActionMessages::MESSAGE)
+			if(packet->actionType == EnrollmentModuleActionResponseMessages::ENROLLMENT_SUCCESSFUL)
 			{
+				EnrollmentModuleEnrollmentResponse* data = (EnrollmentModuleEnrollmentResponse*)packet->data;
 
-			}*/
+
+				const char* enrollmentMethodString = "";
+				if(data->enrollmentMethod == enrollmentMethods::BY_NODE_ID) enrollmentMethodString = "node_id";
+				else if(data->enrollmentMethod == enrollmentMethods::BY_CHIP_ID) enrollmentMethodString = "chip_id";
+				else if(data->enrollmentMethod == enrollmentMethods::BY_SERIAL) enrollmentMethodString = "serial";
+
+				//Add null terminator to string
+				u8 serialNumber[SERIAL_NUMBER_LENGTH+1];
+				memcpy(serialNumber, data->serialNumber, SERIAL_NUMBER_LENGTH);
+				serialNumber[SERIAL_NUMBER_LENGTH] = '\0';
+
+				uart("ENROLLMOD", "{\"type\":\"enroll_response\",\"module\":%d,\"method\":\"%s\",", moduleId, enrollmentMethodString);
+				uart("ENROLLMOD", "\"requestId\":%u,\"newNodeId\":%u,\"serial\":\"%s\"}" SEP,  packet->requestHandle, packet->header.sender, serialNumber);
+			}
 		}
 	}
+}
+
+void EnrollmentModule::SendEnrollmentResponse(nodeID receiver, u8 enrollmentMethod, u8 requestHandle, u8 result, u8* serialNumber)
+{
+	//Inform the sender, that the enrollment was successful
+	u8 buffer[SIZEOF_CONN_PACKET_MODULE + SIZEOF_ENROLLMENT_MODULE_SET_ENROLLMENT_RESPONSE];
+	connPacketModule* packet = (connPacketModule*)buffer;
+	EnrollmentModuleEnrollmentResponse* data = (EnrollmentModuleEnrollmentResponse*)packet->data;
+
+	packet->header.messageType = MESSAGE_TYPE_MODULE_ACTION_RESPONSE;
+	packet->header.sender = node->persistentConfig.nodeId;
+	packet->header.receiver = receiver;
+
+	packet->moduleId = moduleId;
+	packet->actionType = EnrollmentModuleActionResponseMessages::ENROLLMENT_SUCCESSFUL;
+	packet->requestHandle = requestHandle;
+
+	data->result = result;
+	data->enrollmentMethod = enrollmentMethod;
+	memcpy(data->serialNumber, node->persistentConfig.serialNumber, SERIAL_NUMBER_LENGTH);
+
+
+	cm->SendMessageToReceiver(NULL, buffer, SIZEOF_CONN_PACKET_MODULE + SIZEOF_ENROLLMENT_MODULE_SET_ENROLLMENT_RESPONSE, true);
+
 }
