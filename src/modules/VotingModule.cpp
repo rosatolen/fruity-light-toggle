@@ -54,7 +54,7 @@ static void vote() {
 
     nodeID everyone = 0; // send message to myself
     logt("VOTING", "Trying to vote.\n");
-    connPacketModuleAction packet;
+    connPacketModule packet;
     packet.header.messageType = MESSAGE_TYPE_MODULE_TRIGGER_ACTION;
     packet.header.sender = node->persistentConfig.nodeId;
     packet.header.receiver = everyone;
@@ -63,7 +63,7 @@ static void vote() {
     const char userId[] = "1234";
     strncpy((char *) packet.data, userId, 5);
     logt("VOTING", "Sending message data: %s \n", packet.data);
-    cm->SendMessageToReceiver(NULL, (u8*)&packet, SIZEOF_CONN_PACKET_MODULE_ACTION + 1, true);
+    cm->SendMessageToReceiver(NULL, (u8*)&packet, SIZEOF_CONN_PACKET_MODULE + 1, true);
     //TODO keep track of this vote!
 }
 
@@ -206,7 +206,7 @@ void VotingModule::ConnectionPacketReceivedEventHandler(connectionPacket* inPack
     // TODO when i receive an acknowledgement, check off vote from queue
     // Voter Receives acknowledgement from Gateway
     if(packetHeader->messageType == MESSAGE_TYPE_MODULE_ACTION_RESPONSE){
-        connPacketModuleAction* packet = (connPacketModuleAction*)packetHeader;
+        connPacketModule* packet = (connPacketModule*)packetHeader;
         // if it is meant for me...
         if(packet->moduleId == moduleId)
         {
@@ -222,14 +222,14 @@ void VotingModule::ConnectionPacketReceivedEventHandler(connectionPacket* inPack
     if(node->isGatewayDevice) {
 
         if(packetHeader->messageType == MESSAGE_TYPE_MODULE_TRIGGER_ACTION){
-        connPacketModuleAction* packet = (connPacketModuleAction*)packetHeader;
+        connPacketModule* packet = (connPacketModule*)packetHeader;
 
         if(packet->moduleId == moduleId){
             if(packet->actionType == VotingModuleTriggerActionMessages::TRIGGER_MESSAGE){
                 logt("VOTING", "Gateway %d received voter message from %d with data: %s\n", node->persistentConfig.nodeId, packetHeader->sender, packet->data);
 
                 //Send Response acknowledgement
-                connPacketModuleAction outPacket;
+                connPacketModule outPacket;
                 outPacket.header.messageType = MESSAGE_TYPE_MODULE_ACTION_RESPONSE;
                 outPacket.header.sender = node->persistentConfig.nodeId;
                 outPacket.header.receiver = packetHeader->sender;
@@ -237,7 +237,7 @@ void VotingModule::ConnectionPacketReceivedEventHandler(connectionPacket* inPack
                 outPacket.moduleId = moduleId;
                 outPacket.actionType = VotingModuleActionResponseMessages::RESPONSE_MESSAGE;
 
-                cm->SendMessageToReceiver(NULL, (u8*)&outPacket, SIZEOF_CONN_PACKET_MODULE_ACTION + 2, true);
+                cm->SendMessageToReceiver(NULL, (u8*)&outPacket, SIZEOF_CONN_PACKET_MODULE + 2, true);
                 logt("VOTING", "Gateway sent acknowledgement of vote to %d \n", packetHeader->sender);
                 }
             }

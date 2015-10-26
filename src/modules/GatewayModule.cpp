@@ -95,7 +95,7 @@ bool GatewayModule::TerminalCommandHandler(string commandName, vector<string> co
 			nodeID targetNodeId = atoi(commandArgs[0].c_str());
 			logt("GATEWAYMOD", "Sending message '%s' to node %u", commandArgs[2].c_str(), targetNodeId);
 
-			connPacketModuleAction packet;
+			connPacketModule packet;
 			packet.header.messageType = MESSAGE_TYPE_MODULE_TRIGGER_ACTION;
 			packet.header.sender = node->persistentConfig.nodeId;
 			packet.header.receiver = targetNodeId;
@@ -108,7 +108,7 @@ bool GatewayModule::TerminalCommandHandler(string commandName, vector<string> co
 			    packet.data[i] = convert[i];
 			}
 
-			cm->SendMessageToReceiver(NULL, (u8*)&packet, SIZEOF_CONN_PACKET_MODULE_ACTION + commandArgs[2].length() + 1, true);
+			cm->SendMessageToReceiver(NULL, (u8*)&packet, SIZEOF_CONN_PACKET_MODULE + commandArgs[2].length() + 1, true);
 			return true;
 		}
 
@@ -124,7 +124,7 @@ bool GatewayModule::TerminalCommandHandler(string commandName, vector<string> co
 			nodeID remoteNodeId = atoi(commandArgs[2].c_str());
 			logt("GATEWAYMOD", "Sending message '%s' to gateway %u intended for remote node %u", commandArgs[3].c_str(), gatewayNodeId, remoteNodeId);
 
-			connPacketModuleAction packet;
+			connPacketModule packet;
 			packet.header.messageType = MESSAGE_TYPE_MODULE_TRIGGER_ACTION;
 			packet.header.sender = node->persistentConfig.nodeId;
 			packet.header.receiver = gatewayNodeId;
@@ -138,7 +138,7 @@ bool GatewayModule::TerminalCommandHandler(string commandName, vector<string> co
 			    packet.data[i] = convert[i];
 			}
 
-			cm->SendMessageToReceiver(NULL, (u8*)&packet, SIZEOF_CONN_PACKET_MODULE_ACTION + commandArgs[3].length() + 1, true);
+			cm->SendMessageToReceiver(NULL, (u8*)&packet, SIZEOF_CONN_PACKET_MODULE + commandArgs[3].length() + 1, true);
 			return true;
 		}
 	}
@@ -157,11 +157,11 @@ void GatewayModule::ConnectionPacketReceivedEventHandler(connectionPacket* inPac
 	Module::ConnectionPacketReceivedEventHandler(inPacket, connection, packetHeader, dataLength);
 
 	if(packetHeader->messageType == MESSAGE_TYPE_MODULE_TRIGGER_ACTION){
-		connPacketModuleAction* packet = (connPacketModuleAction*)packetHeader;
+		connPacketModule* packet = (connPacketModule*)packetHeader;
 
 		if(packet->moduleId == moduleId && packet->actionType == GatewayModuleTriggerActionMessages::TRIGGER_GATEWAY){
 
-			connPacketModuleAction* packet = (connPacketModuleAction*)packetHeader;
+			connPacketModule* packet = (connPacketModule*)packetHeader;
 
 			string message = "";	
 			for(int i = 0; i < sizeof(packet->data); i++) {
