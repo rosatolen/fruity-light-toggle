@@ -158,7 +158,9 @@ void VotingModule::ConnectionPacketReceivedEventHandler(connectionPacket* inPack
 			if(packet->actionType ==VotingModuleActionResponseMessages::RESPONSE_MESSAGE)
 			{
 				//logt("VOTING", "Voter received acknowledgement from Gateway with userId %u \n", packet->data[0]);
-				logt("VOTING", "Voter received acknowledgement from Gateway. \n");
+				if(packet->data[0] != 5) {
+					logt("VOTING", "Voter received acknowledgement from Gateway. \n");
+				}
 				//TODO make voting stop
 				
 			}
@@ -169,27 +171,32 @@ void VotingModule::ConnectionPacketReceivedEventHandler(connectionPacket* inPack
 	if(node->isGatewayDevice) {
 		if(packetHeader->messageType == MESSAGE_TYPE_MODULE_TRIGGER_ACTION){
 			connPacketModule* packet = (connPacketModule*)packetHeader;
-			if (packet->data[0] == 5) {
-				logt("VOTING", "HEARTBEAT RECEIVED from nodeId:%d\n", node->persistentConfig.nodeId);
-			}
 
 			if(packet->moduleId == moduleId){
-				if(packet->actionType == VotingModuleTriggerActionMessages::TRIGGER_MESSAGE){
-					logt("VOTING", "Gateway %d received voter message from %d\n", node->persistentConfig.nodeId, packetHeader->sender);
+				if (packet->data[0] == 5) {
+					logt("VOTING", "HEARTBEAT RECEIVED from nodeId:%d\n", node->persistentConfig.nodeId);
+				} else {
+					if(packet->actionType == VotingModuleTriggerActionMessages::TRIGGER_MESSAGE){
+						logt("VOTING", "Gateway %d received voter message from %d\n", node->persistentConfig.nodeId, packetHeader->sender);
+					//packet.data[0] = uID & 0xff;
+					//packet.data[1] = (uID >> 8) & 0xff;
+					//unsigned int uID = 3566; 
 					//logt("VOTING", "Data inside is userId: %u \n", node->persistentConfig.nodeId, packetHeader->sender);
 
 					//Send Response acknowledgement
-					connPacketModule outPacket;
-					outPacket.header.messageType = MESSAGE_TYPE_MODULE_ACTION_RESPONSE;
-					outPacket.header.sender = node->persistentConfig.nodeId;
-					outPacket.header.receiver = packetHeader->sender;
+					//connPacketModule outPacket;
+					//outPacket.header.messageType = MESSAGE_TYPE_MODULE_ACTION_RESPONSE;
+					//outPacket.header.sender = node->persistentConfig.nodeId;
+					//outPacket.header.receiver = packetHeader->sender;
 
-					outPacket.moduleId = moduleId;
-					outPacket.actionType = VotingModuleActionResponseMessages::RESPONSE_MESSAGE;
+					//outPacket.moduleId = moduleId;
+					//outPacket.actionType = VotingModuleActionResponseMessages::RESPONSE_MESSAGE;
 					//outPacket.data[0] = packet->data[0];
-					strncpy((char*)outPacket.data, (char*)packet->data, 6);
-					cm->SendMessageToReceiver(NULL, (u8*)&outPacket, SIZEOF_CONN_PACKET_MODULE + 6 + 1, true);
-					logt("VOTING", "Gateway sent acknowledgement of vote to %d with userId: %s \n", packetHeader->sender, packet->data);
+					//outPacket.data[1] = packet->data[1];
+					//strncpy((char*)outPacket.data, (char*)packet->data, 6);
+					//cm->SendMessageToReceiver(NULL, (u8*)&outPacket, SIZEOF_CONN_PACKET_MODULE + 4 + 1, true);
+					//logt("VOTING", "Gateway sent acknowledgement of vote to %d with userId: %s \n", packetHeader->sender, packet->data);
+					}
 				}
 			}
 		}
