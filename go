@@ -17,7 +17,7 @@ function helptext {
 function deploy-nodes-to-all-local-devices {
     toggle-gateway-config false
     compile
-    $HOME/nrf/projects/fruitymesh/deploy/deploy-to-all.sh
+    $HOME/nrf/projects/fruitymesh/deploy/deploy-from-1-on.sh
 }
 
 function term {
