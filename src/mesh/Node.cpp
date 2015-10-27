@@ -109,7 +109,7 @@ Node::Node(networkID networkId)
 	activeModules[4] = new ScanningModule(moduleID::SCANNING_MODULE_ID, this, cm, "scan", 5);
 	activeModules[5] = new EnrollmentModule(moduleID::ENROLLMENT_MODULE_ID, this, cm, "enroll", 6);
 	activeModules[6] = new IoModule(moduleID::IO_MODULE_ID, this, cm, "io", 7);
-	activeModules[7] = new VotingModule(moduleID::LOOPY_MESSAGES_ID, this, cm, "loopy", 8);
+    activeModules[7] = new VotingModule(moduleID::VOTING_MODULE_ID, this, cm, "loopy", 8);
 	activeModules[8] = new GatewayModule(moduleID::GATEWAY_MODULE_ID, this, cm, "gateway", 9);
 	isGatewayDevice = ((GatewayModule*)activeModules[8])->IsGatewayDevice();
 

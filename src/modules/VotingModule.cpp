@@ -58,7 +58,7 @@ static void vote() {
     packet.header.messageType = MESSAGE_TYPE_MODULE_TRIGGER_ACTION;
     packet.header.sender = node->persistentConfig.nodeId;
     packet.header.receiver = everyone;
-    packet.moduleId = moduleID::LOOPY_MESSAGES_ID;
+    packet.moduleId = moduleID::VOTING_MODULE_ID;
     packet.actionType = 0; // hardcoded from the reference VotingModule.h
     const char userId[] = "1234";
     strncpy((char *) packet.data, userId, 5);
