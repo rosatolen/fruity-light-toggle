@@ -28,3 +28,9 @@ A node is ready to go when it is consistently blinking blue.
 1. Turn off and on the node.
 2. While the node is turning on, the lights show its state. A node can be connected to up to 4 other nodes. It will flash red 3 times if it has not been able to connect with any other nodes. If it is a gateway node, it will flash purple during set up as well as red.
 3. Every time the node connects to another, it will flash green once and then begin consistently blinking blue or purple if it is a gateway.
+
+## How do I get the timer handler right?
+Inside the TimerEventHandler, do the following logs:
+logt("<yourtag>", "appTimer = %d\n", appTimer);
+logt("<yourtag>", "calc = %d\n", appTimer/1000 % 10);  // find the seconds
+logt("<yourtag>", "calc2 = %d\n", appTimer/100 % 100); // find the miliseconds
