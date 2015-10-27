@@ -1,25 +1,3 @@
-/**
-
-  Copyright (c) 2014-2015 "M-Way Solutions GmbH"
-  FruityMesh - Bluetooth Low Energy mesh protocol [http://mwaysolutions.com/]
-
-  This file is part of FruityMesh
-
-  FruityMesh is free software: you can redistribute it and/or modify
-  it under the terms of the GNU General Public License as published by
-  the Free Software Foundation, either version 3 of the License, or
-  (at your option) any later version.
-
-  This program is distributed in the hope that it will be useful,
-  but WITHOUT ANY WARRANTY; without even the implied warranty of
-  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-  GNU General Public License for more details.
-
-  You should have received a copy of the GNU General Public License
-  along with this program.  If not, see <http://www.gnu.org/licenses/>.
-
-*/
-
 #include <VotingModule.h>
 #include <Logger.h>
 #include <Utility.h>
@@ -30,11 +8,6 @@
 
 extern "C"{
 #include <stdlib.h>
-#include "app_button.h"
-#include "nrf_gpio.h"
-#include "nrf_drv_gpiote.h"
-#include "app_timer.h"
-#include "app_gpiote.h"
 }
 
 #define APP_TIMER_PRESCALER     0
@@ -42,9 +15,6 @@ extern "C"{
 #define APP_TIMER_OP_QUEUE_SIZE 2
 #define BUTTON_DEBOUNCE_DELAY   50
 #define APP_GPIOTE_MAX_USERS    1
-
-static bool initialized = false;
-static bool acknowledged = false;
 
 static void vote() {
     ConnectionManager *cm = ConnectionManager::getInstance();
@@ -66,21 +36,6 @@ static void vote() {
     cm->SendMessageToReceiver(NULL, (u8*)&packet, SIZEOF_CONN_PACKET_MODULE + 1, true);
     //TODO keep track of this vote!
 }
-
-
-
-static void button_handler(uint8_t pin_no, uint8_t button_action)
-{
-    if (button_action == APP_BUTTON_PUSH)
-    {
-        nrf_gpio_pin_toggle(LED_4);
-        vote();
-    }
-}
-
-static app_button_cfg_t p_button[] = {
-    {BUTTON_3, APP_BUTTON_ACTIVE_LOW, NRF_GPIO_PIN_PULLUP, button_handler}
-};
 
     VotingModule::VotingModule(u16 moduleId, Node* node, ConnectionManager* cm, const char* name, u16 storageSlot)
 : Module(moduleId, node, cm, name, storageSlot)
@@ -117,17 +72,9 @@ void VotingModule::ConfigurationLoadedHandler()
 
 void VotingModule::TimerEventHandler(u16 passedTime, u32 appTimer)
 {
-    //Every reporting interval, the node should send its connections
-    if(configuration.connectionReportingIntervalMs != 0 && node->appTimerMs - lastConnectionReportingTimer > configuration.connectionReportingIntervalMs)
-  {
-        logt("VOTING", "In Timer Event Handler\n");
-        //Do stuff on timer...
-        if(!acknowledged) {
-            logt("VOTING", "Am not acknowledged\n");
-            vote();
-        }
-
-        lastConnectionReportingTimer = node->appTimerMs;
+    // if 10 seconds have passed
+    if ((appTimer / 1000) % 10 == 0 && (appTimer / 100) % 100 == 0) {
+        vote();
     }
 }
 
@@ -183,26 +130,6 @@ void VotingModule::ConnectionPacketReceivedEventHandler(connectionPacket* inPack
     //Must call superclass for handling
     Module::ConnectionPacketReceivedEventHandler(inPacket, connection, packetHeader, dataLength);
 
-    if(initialized == false) {
-        // init leds
-        nrf_gpio_cfg_output(LED_4);
-        nrf_gpio_pin_set(LED_4);
-
-        // init gpiote and button
-        uint8_t size = sizeof(p_button)/sizeof(p_button[0]);
-        APP_TIMER_INIT(APP_TIMER_PRESCALER, APP_TIMER_MAX_TIMERS, APP_TIMER_OP_QUEUE_SIZE, NULL);
-        APP_GPIOTE_INIT(APP_GPIOTE_MAX_USERS);
-
-        uint32_t error_code = app_button_init(p_button, size, BUTTON_DEBOUNCE_DELAY);
-        APP_ERROR_CHECK(error_code);
-
-        error_code = app_button_enable();
-        APP_ERROR_CHECK(error_code);
-
-        logt("VOTING", "initialized button pin\n");
-        initialized = true;
-    }
-
     // TODO when i receive an acknowledgement, check off vote from queue
     // Voter Receives acknowledgement from Gateway
     if(packetHeader->messageType == MESSAGE_TYPE_MODULE_ACTION_RESPONSE){
@@ -213,7 +140,6 @@ void VotingModule::ConnectionPacketReceivedEventHandler(connectionPacket* inPack
             if(packet->actionType ==VotingModuleActionResponseMessages::RESPONSE_MESSAGE)
             {
                 logt("VOTING", "Voter received acknowledgement from Gateway.\n");
-		acknowledged=true;
             }
         }
     }
@@ -242,9 +168,5 @@ void VotingModule::ConnectionPacketReceivedEventHandler(connectionPacket* inPack
                 }
             }
         }
-    }
-    else {
-            logt("VOTER", "I am not a gateway! :D\n", packetHeader->sender);
-            logt("VOTER", "I'm passing on a vote from node %d \n", packetHeader->sender);
     }
 }
