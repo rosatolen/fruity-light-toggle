@@ -26,5 +26,5 @@ A node is ready to go when it is consistently blinking blue.
 
 ### How do I return the node to ready state?
 1. Turn off and on the node.
-2. While the node is turning on, the lights show its state. A node can be connected to up to 4 other nodes. It will flash red 3 times if it has not been able to connect with any other nodes. When a node begins connecting with another, it will flash green. If it is a gateway node, it will flash purple during set up as well as red.
-3. Once the node connects, it will begin consistently blinking blue or purple if it is a gateway.
+2. While the node is turning on, the lights show its state. A node can be connected to up to 4 other nodes. It will flash red 3 times if it has not been able to connect with any other nodes. If it is a gateway node, it will flash purple during set up as well as red.
+3. Every time the node connects to another, it will flash green once and then begin consistently blinking blue or purple if it is a gateway.
