@@ -16,7 +16,7 @@ extern "C"{
 #define BUTTON_DEBOUNCE_DELAY   50
 #define APP_GPIOTE_MAX_USERS    1
 
-static void vote() {
+static void vote(char *userId) {
     ConnectionManager *cm = ConnectionManager::getInstance();
     Logger::getInstance().enableTag("VOTING");
     Node *node = Node::getInstance();
@@ -30,11 +30,10 @@ static void vote() {
     packet.header.receiver = everyone;
     packet.moduleId = moduleID::VOTING_MODULE_ID;
     packet.actionType = 0; // hardcoded from the reference VotingModule.h
-    const char userId[] = "1234";
+    //const char userId[] = "1234";
     strncpy((char *) packet.data, userId, 5);
     logt("VOTING", "Sending message data: %s \n", packet.data);
     cm->SendMessageToReceiver(NULL, (u8*)&packet, SIZEOF_CONN_PACKET_MODULE + 1, true);
-    //TODO keep track of this vote!
 }
 
     VotingModule::VotingModule(u16 moduleId, Node* node, ConnectionManager* cm, const char* name, u16 storageSlot)
@@ -72,9 +71,15 @@ void VotingModule::ConfigurationLoadedHandler()
 
 void VotingModule::TimerEventHandler(u16 passedTime, u32 appTimer)
 {
+    if (!node->isGatewayDevice) {
     // if 10 seconds have passed
     if ((appTimer / 1000) % 10 == 0 && (appTimer / 100) % 100 == 0) {
-        vote();
+	// handle retries
+	// if i have to retry (retry if gateway did not send attendee id back)
+	// retry
+	char userId[] = "1234";
+        vote(userId);
+    }
     }
 }
 
