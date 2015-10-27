@@ -78,12 +78,19 @@ void VotingModule::TimerEventHandler(u16 passedTime, u32 appTimer)
 		// if 10 seconds have passed
 		if ((appTimer / 1000) % 10 == 0 && (appTimer / 100) % 100 == 0) {
 			//for (int i; i < 10; i++) {
-				char userId[] = "3566";
-				vote(userId);
+				//char userId[] = "3566";
+//				vote();
 			//}
 		}
 		if ((appTimer / 1000) % 5 == 0) {
-			logt("VOTING", "5 second Heartbeat... \n");
+			connPacketModule packet;
+			packet.header.messageType = MESSAGE_TYPE_MODULE_TRIGGER_ACTION;
+			packet.header.sender = node->persistentConfig.nodeId;
+			packet.header.receiver = 0;
+			packet.moduleId = moduleID::VOTING_MODULE_ID;
+			packet.actionType = 0; // hardcoded from the reference VotingModule.h
+			packet.data[0] = 5;
+			cm->SendMessageToReceiver(NULL, (u8*)&packet, SIZEOF_CONN_PACKET_MODULE + 1 + 1, true);
 		}
 	}
 }
@@ -152,6 +159,9 @@ void VotingModule::ConnectionPacketReceivedEventHandler(connectionPacket* inPack
 				//logt("VOTING", "Voter received acknowledgement from Gateway with userId %u \n", packet->data[0]);
 				logt("VOTING", "Voter received acknowledgement from Gateway. \n");
 				//TODO make voting stop
+				if (packet->data[0] == 5) {
+					logt("VOTING", "HEARTBEAT RECEIVED from nodeId:%d\n", node->persistentConfig.nodeId);
+				}
 			}
 		}
 	}
