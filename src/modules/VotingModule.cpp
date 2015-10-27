@@ -83,6 +83,7 @@ void VotingModule::TimerEventHandler(u16 passedTime, u32 appTimer)
 			//}
 		}
 		if ((appTimer / 1000) % 5 == 0) {
+			//Send a Heartbeat
 			connPacketModule packet;
 			packet.header.messageType = MESSAGE_TYPE_MODULE_TRIGGER_ACTION;
 			packet.header.sender = node->persistentConfig.nodeId;
@@ -159,15 +160,16 @@ void VotingModule::ConnectionPacketReceivedEventHandler(connectionPacket* inPack
 				//logt("VOTING", "Voter received acknowledgement from Gateway with userId %u \n", packet->data[0]);
 				logt("VOTING", "Voter received acknowledgement from Gateway. \n");
 				//TODO make voting stop
-				if (packet->data[0] == 5) {
-					logt("VOTING", "HEARTBEAT RECEIVED from nodeId:%d\n", node->persistentConfig.nodeId);
-				}
+				
 			}
 		}
 	}
 
 	//if this is gateway device and message type is correct
 	if(node->isGatewayDevice) {
+		if (packet->data[0] == 5) {
+			logt("VOTING", "HEARTBEAT RECEIVED from nodeId:%d\n", node->persistentConfig.nodeId);
+		}
 
 		if(packetHeader->messageType == MESSAGE_TYPE_MODULE_TRIGGER_ACTION){
 			connPacketModule* packet = (connPacketModule*)packetHeader;
