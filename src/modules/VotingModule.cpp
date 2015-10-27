@@ -167,12 +167,11 @@ void VotingModule::ConnectionPacketReceivedEventHandler(connectionPacket* inPack
 
 	//if this is gateway device and message type is correct
 	if(node->isGatewayDevice) {
-		if (packet->data[0] == 5) {
-			logt("VOTING", "HEARTBEAT RECEIVED from nodeId:%d\n", node->persistentConfig.nodeId);
-		}
-
 		if(packetHeader->messageType == MESSAGE_TYPE_MODULE_TRIGGER_ACTION){
 			connPacketModule* packet = (connPacketModule*)packetHeader;
+			if (packet->data[0] == 5) {
+				logt("VOTING", "HEARTBEAT RECEIVED from nodeId:%d\n", node->persistentConfig.nodeId);
+			}
 
 			if(packet->moduleId == moduleId){
 				if(packet->actionType == VotingModuleTriggerActionMessages::TRIGGER_MESSAGE){
