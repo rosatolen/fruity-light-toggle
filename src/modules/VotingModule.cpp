@@ -16,72 +16,65 @@ extern "C"{
 #define BUTTON_DEBOUNCE_DELAY   50
 #define APP_GPIOTE_MAX_USERS    1
 
-#define MAX_QUEUE_SIZE 5
+#define MAX_RETRY_STORAGE_SIZE 5
 
 bool INITIALIZED_QUEUE = false;
 
-typedef struct Queue {
-	short capacity;
-	short size;
-	short front;
-	short rear;
-	short *elements;
-} Queue;
+short empty = 0;
 
-static Queue * failed = NULL;
+// should be unsigned??
+short retryStorage[MAX_RETRY_STORAGE_SIZE] = {0,0,0,0,0};
 
-void createQueue(int maxElements) {
-	failed = (Queue *)malloc(sizeof(Queue));
-	failed->elements = (short *)malloc(sizeof(short)*maxElements);
-	failed->size = 0;
-	failed->capacity = maxElements;
-	failed->front = 0;
-	failed->rear = -1;
-}
 
-short dequeue(Queue *Q) {
-	// cannot dequeue if empty
-	if (Q->size==0) {
-		return -1;
-	} else {
-		Q->size--;
-		Q->front++;
-		if(Q->front == Q->capacity) {
-			Q->front=0;
+void putInRetryStorage(short userId) {
+	// TODO: check if storage is full and if full, kill the oldest
+	
+	// if not full, naively add to empty storage;
+	Logger::getInstance().enableTag("VOTING");
+	int index = 0; 
+	short temp[MAX_RETRY_STORAGE_SIZE] = { empty,empty,empty,empty,empty };
+	
+	logt("VOTING", "BEFORE: Called with %d ", userId);				
+	for (int i = 0; i < MAX_RETRY_STORAGE_SIZE; i++) {
+		logt("VOTING", "[%d]:%d, ", i, retryStorage[i]);
+	}
+	/*****/
+	for (int i=0; i < MAX_RETRY_STORAGE_SIZE; i++) {
+		if(retryStorage[i] == userId) {
+			index = -1;
+			break;
+		}
+		if (retryStorage[i] == empty) {
+			retryStorage[i] = userId;
+			break;
 		}
 	}
-	return 0;
-}
 
-short front(Queue *Q) {
-	// queue is empty
-	if (Q->size==0) {
-		return -1;
+	/*****/
+	logt("VOTING", "AFTER: Called with %d ", userId);				
+	for (int i = 0; i < MAX_RETRY_STORAGE_SIZE; i++) {
+		logt("VOTING", "[%d]:%d, ", i, retryStorage[i]);
 	}
-	return Q->elements[Q->front];
+			
 }
 
-short enqueue(Queue *Q, short element) {
-	// queue is full
-	if (Q->size == Q->capacity) {
-		return -1;
-	} else {
-		Q->size++;
-		Q->rear = Q->rear + 1;
-		if (Q->rear == Q->capacity) {
-			Q->rear = 0;
+void removeFromRetryStorage(short userId) {
+	// recreate the storage and drop the mic on matching userId
+	short tempStorage[MAX_RETRY_STORAGE_SIZE] = {empty,empty,empty,empty,empty};
+	for (int i=0, j=0; i < MAX_RETRY_STORAGE_SIZE; i++) {
+		if (retryStorage[i] != userId) {
+			tempStorage[j] = retryStorage[i];
+			j++;
 		}
-		Q->elements[Q->rear] = element;
 	}
-	return 0;
-}
-
-void setupQueue(int maxElements) {
-	createQueue(MAX_QUEUE_SIZE);
-	enqueue(failed, 3566);
-	enqueue(failed, 1234);
-	enqueue(failed, 5432);
-	enqueue(failed, 9999);
+	// transfer tempstorage to retry storage
+	for (int i=0; i < MAX_RETRY_STORAGE_SIZE; i++) {
+		if(tempStorage[i] != empty){
+			retryStorage[i] = tempStorage[i];
+		} else {
+			retryStorage[i] = empty;
+		}
+	}
 }
 
 static void vote(unsigned short uID) {
@@ -100,9 +93,9 @@ static void vote(unsigned short uID) {
 
 	packet.data[0] = uID & 0xff;
 	packet.data[1] = (uID >> 8) & 0xff;
+	putInRetryStorage(uID);
 	cm->SendMessageToReceiver(NULL, (u8*)&packet, SIZEOF_CONN_PACKET_MODULE + 3 + 1, true);
 	logt("VOTING", "Sending vote with id: %d\n", uID);
-	// TODO store id in failed queue until ack received
 }
 
 	VotingModule::VotingModule(u16 moduleId, Node* node, ConnectionManager* cm, const char* name, u16 storageSlot)
@@ -140,18 +133,28 @@ void VotingModule::ConfigurationLoadedHandler()
 
 void VotingModule::TimerEventHandler(u16 passedTime, u32 appTimer)
 {
-	if (!INITIALIZED_QUEUE) {
-		 setupQueue(MAX_QUEUE_SIZE);
-		 INITIALIZED_QUEUE=true;
-		logt("VOTING", "Initialized da failures\n");
+	if (!INITIALIZED_QUEUE && !node->isGatewayDevice) {
+		putInRetryStorage(3566);
+		putInRetryStorage(1234);
+		putInRetryStorage(4321);
+		putInRetryStorage(9999);
+		INITIALIZED_QUEUE=true;
+		logt("VOTING", "Initializing.... ");					
+		for (int i = 0; i < MAX_RETRY_STORAGE_SIZE; i++) {
+			logt("VOTING", "[%d]:%d, ", i, retryStorage[i]);
+		}
+		logt("VOTING", "\n");
 	}
 
 	if (!node->isGatewayDevice) {
 		// if 10 seconds have passed
 		if ((appTimer / 1000) % 10 == 0 && (appTimer / 100) % 100 == 0) {
 			//TODO if i should retry...
-			for (int i=0; i < failed->size; i++){
-				vote(failed->elements[i]);
+			for (int i=0; i < MAX_RETRY_STORAGE_SIZE; i++){
+				if (retryStorage[i] != empty) {
+					logt("VOTING", "YES WE CAN. %d \n", retryStorage[i]);
+					vote(retryStorage[i]);	
+				}
 			}
 		}
 		// EVERY SECOND
@@ -226,7 +229,17 @@ void VotingModule::ConnectionPacketReceivedEventHandler(connectionPacket* inPack
 				if(packet->data[0] != 5) {
 					unsigned short userId = (( (short)packet->data[1] ) << 8) | packet->data[0];
 					logt("VOTING", "Voter received acknowledgement from Gateway with userId: %d \n", userId);
-					// TODO: Remove ID from Queue
+					
+					logt("VOTING", "Before removing.... ");					
+					for (int i = 0; i < MAX_RETRY_STORAGE_SIZE; i++) {
+						logt("VOTING", "[%d]:%d, ", i, retryStorage[i]);
+					}
+					logt("VOTING", "\n Voting After.... ");		
+					removeFromRetryStorage(userId);
+
+					for (int i = 0; i < MAX_RETRY_STORAGE_SIZE; i++) {
+						logt("VOTING", "[%d]:%d, ", i, retryStorage[i]);
+					}
 				}
 			}
 		}
@@ -238,7 +251,7 @@ void VotingModule::ConnectionPacketReceivedEventHandler(connectionPacket* inPack
 
 			if(packet->moduleId == moduleId){
 				if (packet->data[0] == 5) {
-					logt("VOTING", "HEARTBEAT RECEIVED from nodeId:%d\n", packetHeader->sender);
+					//logt("VOTING", "HEARTBEAT RECEIVED from nodeId:%d\n", packetHeader->sender);
 				} else {
 					if(packet->actionType == VotingModuleTriggerActionMessages::TRIGGER_MESSAGE){
 						unsigned short uID = (( (short)packet->data[1] ) << 8) | packet->data[0];
