@@ -225,7 +225,7 @@ void VotingModule::ConnectionPacketReceivedEventHandler(connectionPacket* inPack
 		{
 			if(packet->actionType ==VotingModuleActionResponseMessages::RESPONSE_MESSAGE)
 			{
-				//logt("VOTING", "Voter received acknowledgement from Gateway with userId %u \n", packet->data[0]);
+				logt("VOTING", "Voter received acknowledgement from Gateway with userId %u \n", packet->data[0]);
 				if(packet->data[0] != 5) {
 					unsigned short userId = (( (short)packet->data[1] ) << 8) | packet->data[0];
 					logt("VOTING", "Voter received acknowledgement from Gateway with userId: %d \n", userId);
