@@ -22,7 +22,6 @@ bool INITIALIZED_QUEUE = false;
 
 unsigned short empty = 0;
 
-// should be unsigned??
 unsigned short retryStorage[MAX_RETRY_STORAGE_SIZE] = {0,0,0,0,0};
 
 void removeFromRetryStorage(unsigned short userId) {
@@ -246,7 +245,7 @@ void VotingModule::ConnectionPacketReceivedEventHandler(connectionPacket* inPack
 			logt("VOTING", "Received message from %d with userId %d \n", node->persistentConfig.nodeId, packetHeader->sender, uID);
 			if(packet->moduleId == moduleId){
 				if (packet->data[0] == 5) {
-					//logt("VOTING", "HEARTBEAT RECEIVED from nodeId:%d\n", packetHeader->sender);
+					logt("VOTING", "HEARTBEAT RECEIVED from nodeId:%d\n", packetHeader->sender);
 				} else {
 					if(packet->actionType == VotingModuleTriggerActionMessages::TRIGGER_MESSAGE){
 						unsigned short uID = (( (unsigned short)packet->data[1] ) << 8) | packet->data[0];
