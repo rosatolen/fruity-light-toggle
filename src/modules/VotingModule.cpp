@@ -36,8 +36,6 @@ static void vote() {
 	packet.data[1] = (uID >> 8) & 0xff;
 	cm->SendMessageToReceiver(NULL, (u8*)&packet, SIZEOF_CONN_PACKET_MODULE + 3 + 1, true);
 	logt("VOTING", "Sending vote with id: %d\n", uID);
-	logt("VOTING", "Vote Part1: %d\n", packet.data[0]);
-	logt("VOTING", "Vote Part2: %d\n", packet.data[1]);
 }
 
 	VotingModule::VotingModule(u16 moduleId, Node* node, ConnectionManager* cm, const char* name, u16 storageSlot)
@@ -78,10 +76,7 @@ void VotingModule::TimerEventHandler(u16 passedTime, u32 appTimer)
 	if (!node->isGatewayDevice) {
 		// if 10 seconds have passed
 		if ((appTimer / 1000) % 10 == 0 && (appTimer / 100) % 100 == 0) {
-			//for (int i; i < 10; i++) {
-				//char userId[] = "3566";
 			vote();
-			//}
 		}
 		if ((appTimer / 1000) % 5 == 0) {
 			//Send a Heartbeat
@@ -154,9 +149,6 @@ void VotingModule::ConnectionPacketReceivedEventHandler(connectionPacket* inPack
 				//logt("VOTING", "Voter received acknowledgement from Gateway with userId %u \n", packet->data[0]);
 				if(packet->data[0] != 5) {
 					unsigned short userId = (( (short)packet->data[1] ) << 8) | packet->data[0];
-					//logt("VOTING", "Data inside is userId: %d \n", uID);
-					//logt("VOTING", "Received Part1: %d \n", packet->data[0]);
-					//logt("VOTING", "Received Part2: %d \n", packet->data[1]);
 					logt("VOTING", "Voter received acknowledgement from Gateway with userId: %d \n", userId);
 				}
 				//TODO make voting stop
@@ -173,11 +165,8 @@ void VotingModule::ConnectionPacketReceivedEventHandler(connectionPacket* inPack
 					logt("VOTING", "HEARTBEAT RECEIVED from nodeId:%d\n", packetHeader->sender);
 				} else {
 					if(packet->actionType == VotingModuleTriggerActionMessages::TRIGGER_MESSAGE){
-						logt("VOTING", "Gateway %d received voter message from %d\n", node->persistentConfig.nodeId, packetHeader->sender);
 						unsigned short uID = (( (short)packet->data[1] ) << 8) | packet->data[0];
-						logt("VOTING", "Data inside is userId: %d \n", uID);
-						logt("VOTING", "Received Part1: %d \n", packet->data[0]);
-						logt("VOTING", "Received Part2: %d \n", packet->data[1]);
+						logt("VOTING", "Gateway %d received voter message from %d with userId %d \n", node->persistentConfig.nodeId, packetHeader->sender, uID);
 
 						//Send Response acknowledgement
 						connPacketModule outPacket;
