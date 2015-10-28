@@ -16,13 +16,13 @@ extern "C"{
 #define BUTTON_DEBOUNCE_DELAY   50
 #define APP_GPIOTE_MAX_USERS    1
 
-static void vote(char *userId) {
+static void vote() {
 	ConnectionManager *cm = ConnectionManager::getInstance();
 	Logger::getInstance().enableTag("VOTING");
 	Node *node = Node::getInstance();
 	Conf *config = Conf::getInstance();
 
-	nodeID everyone = 0; // send message to myself
+	nodeID everyone = 0;
 	logt("VOTING", "Trying to vote.\n");
 	connPacketModule packet;
 	packet.header.messageType = MESSAGE_TYPE_MODULE_TRIGGER_ACTION;
@@ -31,12 +31,13 @@ static void vote(char *userId) {
 	packet.moduleId = moduleID::VOTING_MODULE_ID;
 	packet.actionType = 0; // hardcoded from the reference VotingModule.h
 
-	//TODO: check for id length
-	strncpy((char*)packet.data, userId, 6);
-	//unsigned int uID = 3566;
-	//packet.data[0] = uID & 0xff;
-	//packet.data[1] = (uID >> 8) & 0xff;
-	cm->SendMessageToReceiver(NULL, (u8*)&packet, SIZEOF_CONN_PACKET_MODULE + 6 + 1, true);
+	unsigned short uID = 3566;
+	packet.data[0] = uID & 0xff;
+	packet.data[1] = (uID >> 8) & 0xff;
+	cm->SendMessageToReceiver(NULL, (u8*)&packet, SIZEOF_CONN_PACKET_MODULE + 3 + 1, true);
+	logt("VOTING", "Sending vote with id: %d\n", uID);
+	logt("VOTING", "Vote Part1: %d\n", packet.data[0]);
+	logt("VOTING", "Vote Part2: %d\n", packet.data[1]);
 }
 
 	VotingModule::VotingModule(u16 moduleId, Node* node, ConnectionManager* cm, const char* name, u16 storageSlot)
@@ -79,7 +80,7 @@ void VotingModule::TimerEventHandler(u16 passedTime, u32 appTimer)
 		if ((appTimer / 1000) % 10 == 0 && (appTimer / 100) % 100 == 0) {
 			//for (int i; i < 10; i++) {
 				//char userId[] = "3566";
-//				vote();
+			vote();
 			//}
 		}
 		if ((appTimer / 1000) % 5 == 0) {
@@ -162,12 +163,10 @@ void VotingModule::ConnectionPacketReceivedEventHandler(connectionPacket* inPack
 					logt("VOTING", "Voter received acknowledgement from Gateway. \n");
 				}
 				//TODO make voting stop
-
 			}
 		}
 	}
 
-	//if this is gateway device and message type is correct
 	if(node->isGatewayDevice) {
 		if(packetHeader->messageType == MESSAGE_TYPE_MODULE_TRIGGER_ACTION){
 			connPacketModule* packet = (connPacketModule*)packetHeader;
@@ -178,10 +177,10 @@ void VotingModule::ConnectionPacketReceivedEventHandler(connectionPacket* inPack
 				} else {
 					if(packet->actionType == VotingModuleTriggerActionMessages::TRIGGER_MESSAGE){
 						logt("VOTING", "Gateway %d received voter message from %d\n", node->persistentConfig.nodeId, packetHeader->sender);
-					//packet.data[0] = uID & 0xff;
-					//packet.data[1] = (uID >> 8) & 0xff;
-					//unsigned int uID = 3566;
-					//logt("VOTING", "Data inside is userId: %u \n", node->persistentConfig.nodeId, packetHeader->sender);
+						unsigned short uID = (( (short)packet->data[1] ) << 8) | packet->data[0];
+						logt("VOTING", "Data inside is userId: %d \n", uID);
+						logt("VOTING", "Received Part1: %d \n", packet->data[0]);
+						logt("VOTING", "Received Part2: %d \n", packet->data[1]);
 
 					//Send Response acknowledgement
 					//connPacketModule outPacket;
