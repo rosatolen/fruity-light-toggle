@@ -120,22 +120,15 @@ bool VotingModule::TerminalCommandHandler(string commandName, vector<string> com
 		if(commandName == "uart_module_trigger_action")
 		{
 			if(commandArgs[1] != moduleName) return false;
-
 			if(commandArgs.size() == 3 && commandArgs[2] == "argument_a")
 			{
-
-
 				return true;
 			}
 			else if(commandArgs.size() == 3 && commandArgs[2] == "argument_b")
 			{
-
-
 				return true;
 			}
-
 			return true;
-
 		}
 	}
 
