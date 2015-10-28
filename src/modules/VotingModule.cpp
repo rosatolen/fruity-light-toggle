@@ -25,11 +25,26 @@ short empty = 0;
 // should be unsigned??
 short retryStorage[MAX_RETRY_STORAGE_SIZE] = {0,0,0,0,0};
 
+void removeFromRetryStorage(short userId) {
+	// recreate the storage and drop the mic on matching userId
+	short tempStorage[MAX_RETRY_STORAGE_SIZE] = {empty,empty,empty,empty,empty};
+	for (int i=0, j=0; i < MAX_RETRY_STORAGE_SIZE; i++) {
+		if (retryStorage[i] != userId) {
+			tempStorage[j] = retryStorage[i];
+			j++;
+		}
+	}
+	// transfer tempstorage to retry storage
+	for (int i=0; i < MAX_RETRY_STORAGE_SIZE; i++) {
+		if(tempStorage[i] != empty){
+			retryStorage[i] = tempStorage[i];
+		} else {
+			retryStorage[i] = empty;
+		}
+	}
+}
 
 void putInRetryStorage(short userId) {
-	// TODO: check if storage is full and if full, kill the oldest
-	
-	// if not full, naively add to empty storage;
 	Logger::getInstance().enableTag("VOTING");
 	int index = 0; 
 	short temp[MAX_RETRY_STORAGE_SIZE] = { empty,empty,empty,empty,empty };
@@ -48,33 +63,16 @@ void putInRetryStorage(short userId) {
 			retryStorage[i] = userId;
 			break;
 		}
+		if(i == MAX_RETRY_STORAGE_SIZE-1) {
+			removeFromRetryStorage(retryStorage[0]);
+			retryStorage[i] = userId;
+		}
 	}
-
 	/*****/
 	logt("VOTING", "AFTER: Called with %d ", userId);				
 	for (int i = 0; i < MAX_RETRY_STORAGE_SIZE; i++) {
 		logt("VOTING", "[%d]:%d, ", i, retryStorage[i]);
-	}
-			
-}
-
-void removeFromRetryStorage(short userId) {
-	// recreate the storage and drop the mic on matching userId
-	short tempStorage[MAX_RETRY_STORAGE_SIZE] = {empty,empty,empty,empty,empty};
-	for (int i=0, j=0; i < MAX_RETRY_STORAGE_SIZE; i++) {
-		if (retryStorage[i] != userId) {
-			tempStorage[j] = retryStorage[i];
-			j++;
-		}
-	}
-	// transfer tempstorage to retry storage
-	for (int i=0; i < MAX_RETRY_STORAGE_SIZE; i++) {
-		if(tempStorage[i] != empty){
-			retryStorage[i] = tempStorage[i];
-		} else {
-			retryStorage[i] = empty;
-		}
-	}
+	}			
 }
 
 static void vote(unsigned short uID) {
@@ -134,16 +132,13 @@ void VotingModule::ConfigurationLoadedHandler()
 void VotingModule::TimerEventHandler(u16 passedTime, u32 appTimer)
 {
 	if (!INITIALIZED_QUEUE && !node->isGatewayDevice) {
-		putInRetryStorage(3566);
-		putInRetryStorage(1234);
-		putInRetryStorage(4321);
-		putInRetryStorage(9999);
+		putInRetryStorage(3333);
+		putInRetryStorage(3333);
+		putInRetryStorage(3333);
+		putInRetryStorage(3333);
+		putInRetryStorage(3333);
 		INITIALIZED_QUEUE=true;
 		logt("VOTING", "Initializing.... ");					
-		for (int i = 0; i < MAX_RETRY_STORAGE_SIZE; i++) {
-			logt("VOTING", "[%d]:%d, ", i, retryStorage[i]);
-		}
-		logt("VOTING", "\n");
 	}
 
 	if (!node->isGatewayDevice) {
@@ -152,7 +147,6 @@ void VotingModule::TimerEventHandler(u16 passedTime, u32 appTimer)
 			//TODO if i should retry...
 			for (int i=0; i < MAX_RETRY_STORAGE_SIZE; i++){
 				if (retryStorage[i] != empty) {
-					logt("VOTING", "YES WE CAN. %d \n", retryStorage[i]);
 					vote(retryStorage[i]);	
 				}
 			}
