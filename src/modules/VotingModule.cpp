@@ -20,14 +20,14 @@ extern "C"{
 
 bool INITIALIZED_QUEUE = false;
 
-short empty = 0;
+unsigned short empty = 0;
 
 // should be unsigned??
-short retryStorage[MAX_RETRY_STORAGE_SIZE] = {0,0,0,0,0};
+unsigned short retryStorage[MAX_RETRY_STORAGE_SIZE] = {0,0,0,0,0};
 
-void removeFromRetryStorage(short userId) {
+void removeFromRetryStorage(unsigned short userId) {
 	// recreate the storage and drop the mic on matching userId
-	short tempStorage[MAX_RETRY_STORAGE_SIZE] = {empty,empty,empty,empty,empty};
+	unsigned short tempStorage[MAX_RETRY_STORAGE_SIZE] = {empty,empty,empty,empty,empty};
 	for (int i=0, j=0; i < MAX_RETRY_STORAGE_SIZE; i++) {
 		if (retryStorage[i] != userId) {
 			tempStorage[j] = retryStorage[i];
@@ -44,10 +44,10 @@ void removeFromRetryStorage(short userId) {
 	}
 }
 
-void putInRetryStorage(short userId) {
+void putInRetryStorage(unsigned short userId) {
 	Logger::getInstance().enableTag("VOTING");
 	int index = 0; 
-	short temp[MAX_RETRY_STORAGE_SIZE] = { empty,empty,empty,empty,empty };
+	unsigned short temp[MAX_RETRY_STORAGE_SIZE] = { empty,empty,empty,empty,empty };
 	
 	logt("VOTING", "BEFORE: Called with %d ", userId);				
 	for (int i = 0; i < MAX_RETRY_STORAGE_SIZE; i++) {
@@ -132,9 +132,9 @@ void VotingModule::ConfigurationLoadedHandler()
 void VotingModule::TimerEventHandler(u16 passedTime, u32 appTimer)
 {
 	if (!INITIALIZED_QUEUE && !node->isGatewayDevice) {
-		putInRetryStorage(3333);
-		putInRetryStorage(3333);
-		putInRetryStorage(3333);
+		putInRetryStorage(1233);
+		putInRetryStorage(3533);
+		putInRetryStorage(3399);
 		putInRetryStorage(3333);
 		putInRetryStorage(3333);
 		INITIALIZED_QUEUE=true;
@@ -242,13 +242,14 @@ void VotingModule::ConnectionPacketReceivedEventHandler(connectionPacket* inPack
 	if(node->isGatewayDevice) {
 		if(packetHeader->messageType == MESSAGE_TYPE_MODULE_TRIGGER_ACTION){
 			connPacketModule* packet = (connPacketModule*)packetHeader;
-
+			unsigned short uID = (( (unsigned short)packet->data[1] ) << 8) | packet->data[0];
+			logt("VOTING", "Received message from %d with userId %d \n", node->persistentConfig.nodeId, packetHeader->sender, uID);
 			if(packet->moduleId == moduleId){
 				if (packet->data[0] == 5) {
 					//logt("VOTING", "HEARTBEAT RECEIVED from nodeId:%d\n", packetHeader->sender);
 				} else {
 					if(packet->actionType == VotingModuleTriggerActionMessages::TRIGGER_MESSAGE){
-						unsigned short uID = (( (short)packet->data[1] ) << 8) | packet->data[0];
+						unsigned short uID = (( (unsigned short)packet->data[1] ) << 8) | packet->data[0];
 						logt("VOTING", "Gateway %d received voter message from %d with userId %d \n", node->persistentConfig.nodeId, packetHeader->sender, uID);
 
 						//Send Response acknowledgement
