@@ -11,7 +11,8 @@ function helptext {
     echo "    gateway           Create and deploy a Gateway to oldest attached device"
     echo "    term <tty.file>   Open terminal to specified file"
     echo "    compile           Clean and compile FruityMesh source"
-    echo "    debug             Setup jlinkgdbserver and start gdb."
+    echo "    debug             Setup jlinkgdbserver and start gdb"
+    echo "    size              Show the size of the FruityMesh.hex and Soft Device files used for flashing"
 }
 
 function deploy-nodes-to-all-local-devices {
@@ -74,6 +75,11 @@ function debug {
     killall jlinkgdbserver
 }
 
+function size {
+    ls -alh _build | grep FruityMesh.hex | cut -d ' ' -f13 -f17
+    ls -alh ../../softdevices/sd130_1.0.0-prod/s130_nrf51_1.0.0_softdevice.hex | cut -d ' ' -f8 -f13
+}
+
 case "$1" in
     fleet) fleet
     ;;
@@ -86,6 +92,8 @@ case "$1" in
     compile) compile
     ;;
     debug) debug
+    ;;
+    size) size
     ;;
     *) helptext
     ;;

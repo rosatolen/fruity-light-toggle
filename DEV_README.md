@@ -1,3 +1,12 @@
+CHIP INFO
+---
+We are using the nRF51422 and nRF51822. The chips are the same except for what kind of softdevice software they use.
+32/16kB RAM
+256/128kB Flash WLCSP
+2.4GHz
+32-bit ARM Cortex MO CPU core
+---
+
 You will need a patched version of the SDK in order to get the buttons and GPIOTE system to work. The problem is detailed [here](https://devzone.nordicsemi.com/question/47031/button-debouncer-nrf51822/) and [here](https://devzone.nordicsemi.com/question/40670/sdk81-and-sdk-90-app_gpiote-and-nrf_drv_gpiote-conflict/).
 
 RUN THIS FROM HERE:
