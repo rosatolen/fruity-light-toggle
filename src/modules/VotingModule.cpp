@@ -33,7 +33,7 @@ static void vote(char *userId) {
 
 	//TODO: check for id length
 	strncpy((char*)packet.data, userId, 6);
-	//unsigned int uID = 3566; 
+	//unsigned int uID = 3566;
 	//packet.data[0] = uID & 0xff;
 	//packet.data[1] = (uID >> 8) & 0xff;
 	cm->SendMessageToReceiver(NULL, (u8*)&packet, SIZEOF_CONN_PACKET_MODULE + 6 + 1, true);
@@ -162,7 +162,7 @@ void VotingModule::ConnectionPacketReceivedEventHandler(connectionPacket* inPack
 					logt("VOTING", "Voter received acknowledgement from Gateway. \n");
 				}
 				//TODO make voting stop
-				
+
 			}
 		}
 	}
@@ -174,13 +174,13 @@ void VotingModule::ConnectionPacketReceivedEventHandler(connectionPacket* inPack
 
 			if(packet->moduleId == moduleId){
 				if (packet->data[0] == 5) {
-					logt("VOTING", "HEARTBEAT RECEIVED from nodeId:%d\n", node->persistentConfig.nodeId);
+					logt("VOTING", "HEARTBEAT RECEIVED from nodeId:%d\n", packetHeader->sender);
 				} else {
 					if(packet->actionType == VotingModuleTriggerActionMessages::TRIGGER_MESSAGE){
 						logt("VOTING", "Gateway %d received voter message from %d\n", node->persistentConfig.nodeId, packetHeader->sender);
 					//packet.data[0] = uID & 0xff;
 					//packet.data[1] = (uID >> 8) & 0xff;
-					//unsigned int uID = 3566; 
+					//unsigned int uID = 3566;
 					//logt("VOTING", "Data inside is userId: %u \n", node->persistentConfig.nodeId, packetHeader->sender);
 
 					//Send Response acknowledgement
