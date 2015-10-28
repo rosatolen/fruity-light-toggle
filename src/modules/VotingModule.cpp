@@ -16,14 +16,13 @@ extern "C"{
 #define BUTTON_DEBOUNCE_DELAY   50
 #define APP_GPIOTE_MAX_USERS    1
 
-static void vote() {
+static void vote(unsigned short uID) {
 	ConnectionManager *cm = ConnectionManager::getInstance();
 	Logger::getInstance().enableTag("VOTING");
 	Node *node = Node::getInstance();
 	Conf *config = Conf::getInstance();
 
 	nodeID everyone = 0;
-	logt("VOTING", "Trying to vote.\n");
 	connPacketModule packet;
 	packet.header.messageType = MESSAGE_TYPE_MODULE_TRIGGER_ACTION;
 	packet.header.sender = node->persistentConfig.nodeId;
@@ -31,7 +30,6 @@ static void vote() {
 	packet.moduleId = moduleID::VOTING_MODULE_ID;
 	packet.actionType = 0; // hardcoded from the reference VotingModule.h
 
-	unsigned short uID = 3566;
 	packet.data[0] = uID & 0xff;
 	packet.data[1] = (uID >> 8) & 0xff;
 	cm->SendMessageToReceiver(NULL, (u8*)&packet, SIZEOF_CONN_PACKET_MODULE + 3 + 1, true);
@@ -76,7 +74,12 @@ void VotingModule::TimerEventHandler(u16 passedTime, u32 appTimer)
 	if (!node->isGatewayDevice) {
 		// if 10 seconds have passed
 		if ((appTimer / 1000) % 10 == 0 && (appTimer / 100) % 100 == 0) {
-			vote();
+			//unsigned short uID = 3566;
+			unsigned short failed[] = { 3566, 1234, 4321 };
+			// using sizeof(failed) is buggy
+			for (int i=0; i < 3; i++){
+				vote(failed[i]);
+			}
 		}
 		if ((appTimer / 1000) % 5 == 0) {
 			//Send a Heartbeat
@@ -162,7 +165,7 @@ void VotingModule::ConnectionPacketReceivedEventHandler(connectionPacket* inPack
 
 			if(packet->moduleId == moduleId){
 				if (packet->data[0] == 5) {
-					logt("VOTING", "HEARTBEAT RECEIVED from nodeId:%d\n", packetHeader->sender);
+					//logt("VOTING", "HEARTBEAT RECEIVED from nodeId:%d\n", packetHeader->sender);
 				} else {
 					if(packet->actionType == VotingModuleTriggerActionMessages::TRIGGER_MESSAGE){
 						unsigned short uID = (( (short)packet->data[1] ) << 8) | packet->data[0];
