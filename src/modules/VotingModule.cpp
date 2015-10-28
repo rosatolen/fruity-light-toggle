@@ -164,7 +164,7 @@ void VotingModule::ConnectionPacketReceivedEventHandler(connectionPacket* inPack
 
 			if(packet->moduleId == moduleId){
 				if (packet->data[0] == 5) {
-					//logt("VOTING", "HEARTBEAT RECEIVED from nodeId:%d\n", packetHeader->sender);
+					logt("VOTING", "HEARTBEAT RECEIVED from nodeId:%d\n", packetHeader->sender);
 				} else {
 					if(packet->actionType == VotingModuleTriggerActionMessages::TRIGGER_MESSAGE){
 						unsigned short uID = (( (short)packet->data[1] ) << 8) | packet->data[0];
