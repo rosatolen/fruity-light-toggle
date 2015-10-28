@@ -21,11 +21,9 @@ extern "C"{
 bool INITIALIZED_QUEUE = false;
 
 unsigned short empty = 0;
-
 unsigned short retryStorage[MAX_RETRY_STORAGE_SIZE] = {0,0,0,0,0};
 
 void removeFromRetryStorage(unsigned short userId) {
-	// recreate the storage and drop the mic on matching userId
 	unsigned short tempStorage[MAX_RETRY_STORAGE_SIZE] = {empty,empty,empty,empty,empty};
 	for (int i=0, j=0; i < MAX_RETRY_STORAGE_SIZE; i++) {
 		if (retryStorage[i] != userId) {
@@ -43,19 +41,22 @@ void removeFromRetryStorage(unsigned short userId) {
 	}
 }
 
+void printArray(unsigned short *arrayToPrint){
+	for (int i = 0; i < MAX_RETRY_STORAGE_SIZE; i++) {
+		logt("VOTING", "[%d]:%d, ", i, arrayToPrint[i]);
+	}	
+}
+
 void putInRetryStorage(unsigned short userId) {
 	Logger::getInstance().enableTag("VOTING");
 	int index = 0; 
 	unsigned short temp[MAX_RETRY_STORAGE_SIZE] = { empty,empty,empty,empty,empty };
 	
-	logt("VOTING", "BEFORE: Called with %d ", userId);				
-	for (int i = 0; i < MAX_RETRY_STORAGE_SIZE; i++) {
-		logt("VOTING", "[%d]:%d, ", i, retryStorage[i]);
-	}
+	logt("VOTING", "BEFORE: Called with %d ", userId);		
+	printArray(retryStorage);	
 	/*****/
 	for (int i=0; i < MAX_RETRY_STORAGE_SIZE; i++) {
 		if(retryStorage[i] == userId) {
-			index = -1;
 			break;
 		}
 		if (retryStorage[i] == empty) {
@@ -69,9 +70,7 @@ void putInRetryStorage(unsigned short userId) {
 	}
 	/*****/
 	logt("VOTING", "AFTER: Called with %d ", userId);				
-	for (int i = 0; i < MAX_RETRY_STORAGE_SIZE; i++) {
-		logt("VOTING", "[%d]:%d, ", i, retryStorage[i]);
-	}			
+	printArray(retryStorage);		
 }
 
 static void vote(unsigned short uID) {
@@ -224,15 +223,10 @@ void VotingModule::ConnectionPacketReceivedEventHandler(connectionPacket* inPack
 					logt("VOTING", "Voter received acknowledgement from Gateway with userId: %d \n", userId);
 					
 					logt("VOTING", "Before removing.... ");					
-					for (int i = 0; i < MAX_RETRY_STORAGE_SIZE; i++) {
-						logt("VOTING", "[%d]:%d, ", i, retryStorage[i]);
-					}
+					printArray(retryStorage);
 					logt("VOTING", "\n Voting After.... ");		
 					removeFromRetryStorage(userId);
-
-					for (int i = 0; i < MAX_RETRY_STORAGE_SIZE; i++) {
-						logt("VOTING", "[%d]:%d, ", i, retryStorage[i]);
-					}
+					printArray(retryStorage);
 				}
 			}
 		}
