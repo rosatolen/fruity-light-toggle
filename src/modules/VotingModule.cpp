@@ -74,7 +74,6 @@ void VotingModule::TimerEventHandler(u16 passedTime, u32 appTimer)
 	if (!node->isGatewayDevice) {
 		// if 10 seconds have passed
 		if ((appTimer / 1000) % 10 == 0 && (appTimer / 100) % 100 == 0) {
-			//unsigned short uID = 3566;
 			unsigned short failed[] = { 3566, 1234, 4321 };
 			// using sizeof(failed) is buggy
 			for (int i=0; i < 3; i++){
