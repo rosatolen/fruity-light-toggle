@@ -236,7 +236,7 @@ void VotingModule::ConnectionPacketReceivedEventHandler(connectionPacket* inPack
 		if(packetHeader->messageType == MESSAGE_TYPE_MODULE_TRIGGER_ACTION){
 			connPacketModule* packet = (connPacketModule*)packetHeader;
 			unsigned short uID = (( (unsigned short)packet->data[1] ) << 8) | packet->data[0];
-			logt("VOTING", "Received message from %d with userId %d \n", node->persistentConfig.nodeId, packetHeader->sender, uID);
+			logt("VOTING", "Received message from %d with userId %d \n", node->persistentConfig.nodeId, uID);
 			if(packet->moduleId == moduleId){
 				if (packet->data[0] == 5) {
 					logt("VOTING", "HEARTBEAT RECEIVED from nodeId:%d\n", packetHeader->sender);
