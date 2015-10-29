@@ -76,8 +76,7 @@ function debug {
 }
 
 function size {
-    ls -alh _build | grep FruityMesh.hex | cut -d ' ' -f13 -f17
-    ls -alh ../../softdevices/sd130_1.0.0-prod/s130_nrf51_1.0.0_softdevice.hex | cut -d ' ' -f8 -f13
+    ls -alh _build | grep FruityMesh.bin | cut -d ' ' -f13 -f17
 }
 
 case "$1" in
