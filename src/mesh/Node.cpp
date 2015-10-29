@@ -22,6 +22,7 @@
 #include <ScanningModule.h>
 #include <EnrollmentModule.h>
 #include <VotingModule.h>
+#include <HeartbeatModule.h>
 #include <GatewayModule.h>
 #include <IoModule.h>
 
@@ -109,8 +110,10 @@ Node::Node(networkID networkId)
 	activeModules[4] = new ScanningModule(moduleID::SCANNING_MODULE_ID, this, cm, "scan", 5);
 	activeModules[5] = new EnrollmentModule(moduleID::ENROLLMENT_MODULE_ID, this, cm, "enroll", 6);
 	activeModules[6] = new IoModule(moduleID::IO_MODULE_ID, this, cm, "io", 7);
-        activeModules[7] = new GatewayModule(moduleID::GATEWAY_MODULE_ID, this, cm, "gateway", 8);
-        activeModules[8] = new VotingModule(moduleID::VOTING_MODULE_ID, this, cm, "voting", 9);
+  activeModules[7] = new GatewayModule(moduleID::GATEWAY_MODULE_ID, this, cm, "gateway", 8);
+  activeModules[8] = new VotingModule(moduleID::VOTING_MODULE_ID, this, cm, "voting", 9);
+  activeModules[9] = new HeartbeatModule(this, cm, "heartbeat", 10);
+
 	isGatewayDevice = ((GatewayModule*)activeModules[7])->IsGatewayDevice();
 
 	//Register a pre/post transmit hook for radio events

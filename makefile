@@ -84,6 +84,7 @@ CPP_SOURCE_FILES += ./src/modules/Module.cpp
 CPP_SOURCE_FILES += ./src/modules/ScanningModule.cpp
 CPP_SOURCE_FILES += ./src/modules/StatusReporterModule.cpp
 CPP_SOURCE_FILES += ./src/modules/VotingModule.cpp
+CPP_SOURCE_FILES += ./src/modules/HeartbeatModule.cpp
 CPP_SOURCE_FILES += ./src/modules/DebugModule.cpp
 CPP_SOURCE_FILES += ./src/modules/IoModule.cpp
 CPP_SOURCE_FILES += ./src/test/TestBattery.cpp
