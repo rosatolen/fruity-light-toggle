@@ -86,7 +86,6 @@ static void vote(unsigned short uID) {
 	packet.header.receiver = everyone;
 	packet.moduleId = moduleID::VOTING_MODULE_ID;
 	packet.actionType = 0; // hardcoded from the reference VotingModule.h
-
 	packet.data[0] = uID & 0xff;
 	packet.data[1] = (uID >> 8) & 0xff;
 	putInRetryStorage(uID);
@@ -157,8 +156,7 @@ void VotingModule::TimerEventHandler(u16 passedTime, u32 appTimer)
 			packet.header.sender = node->persistentConfig.nodeId;
 			packet.header.receiver = 0; // send to everyone
 			packet.moduleId = moduleID::VOTING_MODULE_ID;
-			packet.actionType = 0; // hardcoded from the reference VotingModule.h
-			packet.data[0] = 5;
+			packet.actionType = 1; // hardcoded from voting module trigger action messages as heartbeat from VotingModule.h
 			cm->SendMessageToReceiver(NULL, (u8*)&packet, SIZEOF_CONN_PACKET_MODULE + 1 + 1, true);
 		}
 	}
@@ -215,19 +213,16 @@ void VotingModule::ConnectionPacketReceivedEventHandler(connectionPacket* inPack
 		connPacketModule* packet = (connPacketModule*)packetHeader;
 		if(packet->moduleId == moduleId)
 		{
-			if(packet->actionType ==VotingModuleActionResponseMessages::RESPONSE_MESSAGE)
+			if(packet->actionType == VotingModuleActionResponseMessages::RESPONSE_MESSAGE)
 			{
 				logt("VOTING", "Voter received acknowledgement from Gateway with userId %u \n", packet->data[0]);
-				if(packet->data[0] != 5) {
 					unsigned short userId = (( (short)packet->data[1] ) << 8) | packet->data[0];
 					logt("VOTING", "Voter received acknowledgement from Gateway with userId: %d \n", userId);
-					
 					logt("VOTING", "Before removing.... ");					
 					printArray(retryStorage);
 					logt("VOTING", "\n Voting After.... ");		
 					removeFromRetryStorage(userId);
 					printArray(retryStorage);
-				}
 			}
 		}
 	}
@@ -235,29 +230,28 @@ void VotingModule::ConnectionPacketReceivedEventHandler(connectionPacket* inPack
 	if(node->isGatewayDevice) {
 		if(packetHeader->messageType == MESSAGE_TYPE_MODULE_TRIGGER_ACTION){
 			connPacketModule* packet = (connPacketModule*)packetHeader;
-			unsigned short uID = (( (unsigned short)packet->data[1] ) << 8) | packet->data[0];
+			unsigned short uID = (((unsigned short)packet->data[1] ) << 8) | packet->data[0];
 			logt("VOTING", "Received message from %d with userId %d \n", node->persistentConfig.nodeId, uID);
 			if(packet->moduleId == moduleId){
-				if (packet->data[0] == 5) {
+				if (packet->actionType == VotingModuleTriggerActionMessages::HEARTBEAT) {
 					logt("VOTING", "HEARTBEAT RECEIVED from nodeId:%d\n", packetHeader->sender);
-				} else {
-					if(packet->actionType == VotingModuleTriggerActionMessages::TRIGGER_MESSAGE){
-						unsigned short uID = (( (unsigned short)packet->data[1] ) << 8) | packet->data[0];
-						logt("VOTING", "Gateway %d received voter message from %d with userId %d \n", node->persistentConfig.nodeId, packetHeader->sender, uID);
+				}
+				if(packet->actionType == VotingModuleTriggerActionMessages::TRIGGER_MESSAGE){
+					unsigned short uID = (( (unsigned short)packet->data[1] ) << 8) | packet->data[0];
+					logt("VOTING", "Gateway %d received voter message from %d with userId %d \n", node->persistentConfig.nodeId, packetHeader->sender, uID);
 
-						//Send Response acknowledgement
-						connPacketModule outPacket;
-						outPacket.header.messageType = MESSAGE_TYPE_MODULE_ACTION_RESPONSE;
-						outPacket.header.sender = node->persistentConfig.nodeId;
-						outPacket.header.receiver = packetHeader->sender;
+					//Send Response acknowledgement
+					connPacketModule outPacket;
+					outPacket.header.messageType = MESSAGE_TYPE_MODULE_ACTION_RESPONSE;
+					outPacket.header.sender = node->persistentConfig.nodeId;
+					outPacket.header.receiver = packetHeader->sender;
 
-						outPacket.moduleId = moduleId;
-						outPacket.actionType = VotingModuleActionResponseMessages::RESPONSE_MESSAGE;
-						outPacket.data[0] = packet->data[0];
-						outPacket.data[1] = packet->data[1];
-						cm->SendMessageToReceiver(NULL, (u8*)&outPacket, SIZEOF_CONN_PACKET_MODULE + 3 + 1, true);
-						logt("VOTING", "Gateway sent acknowledgement of vote to %d with userId: %d \n", packetHeader->sender, uID);
-					}
+					outPacket.moduleId = moduleId;
+					outPacket.actionType = VotingModuleActionResponseMessages::RESPONSE_MESSAGE;
+					outPacket.data[0] = packet->data[0];
+					outPacket.data[1] = packet->data[1];
+					cm->SendMessageToReceiver(NULL, (u8*)&outPacket, SIZEOF_CONN_PACKET_MODULE + 3 + 1, true);
+					logt("VOTING", "Gateway sent acknowledgement of vote to %d with userId: %d \n", packetHeader->sender, uID);
 				}
 			}
 		}
