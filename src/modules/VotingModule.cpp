@@ -128,25 +128,26 @@ void VotingModule::ConfigurationLoadedHandler()
 
 void VotingModule::TimerEventHandler(u16 passedTime, u32 appTimer)
 {
-	if (!INITIALIZED_QUEUE && !node->isGatewayDevice) {
-		putInRetryStorage(1233);
-		putInRetryStorage(3533);
-		putInRetryStorage(3399);
-		putInRetryStorage(3333);
-		putInRetryStorage(3333);
+	if (!INITIALIZED_QUEUE) {
+		srand(12345678);
 		INITIALIZED_QUEUE=true;
-		logt("VOTING", "Initializing.... ");					
+		logt("VOTING", "Initialized random # generator.... ");	
 	}
 
 	if (!node->isGatewayDevice) {
 		// if 10 seconds have passed
 		if ((appTimer / 1000) % 10 == 0 && (appTimer / 100) % 100 == 0) {
-			//TODO if i should retry...
-			for (int i=0; i < MAX_RETRY_STORAGE_SIZE; i++){
-				if (retryStorage[i] != empty) {
-					vote(retryStorage[i]);	
+			// send 50 random votes
+			// for (int k=0; k < 5; k++) {
+			// 	for (int j=0; j < 5; j++) {
+			// 		putInRetryStorage((short)rand() % 5000);
+			// 	}
+				for (int i=0; i < MAX_RETRY_STORAGE_SIZE; i++){
+					if (retryStorage[i] != empty) {
+						vote(retryStorage[i]);	
+					}
 				}
-			}
+			// }
 		}
 		// EVERY SECOND
 		if ((appTimer / 1000) % 5 == 0) {
