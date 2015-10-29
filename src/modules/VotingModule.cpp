@@ -149,17 +149,6 @@ void VotingModule::TimerEventHandler(u16 passedTime, u32 appTimer)
 				}
 			// }
 		}
-		// EVERY SECOND
-		if ((appTimer / 1000) % 5 == 0) {
-			//Send a Heartbeat
-			connPacketModule packet;
-			packet.header.messageType = MESSAGE_TYPE_MODULE_TRIGGER_ACTION;
-			packet.header.sender = node->persistentConfig.nodeId;
-			packet.header.receiver = 0; // send to everyone
-			packet.moduleId = moduleID::VOTING_MODULE_ID;
-			packet.actionType = 1; // hardcoded from voting module trigger action messages as heartbeat from VotingModule.h
-			cm->SendMessageToReceiver(NULL, (u8*)&packet, SIZEOF_CONN_PACKET_MODULE + 1 + 1, true);
-		}
 	}
 }
 
@@ -232,9 +221,6 @@ void VotingModule::ConnectionPacketReceivedEventHandler(connectionPacket* inPack
 		if(packetHeader->messageType == MESSAGE_TYPE_MODULE_TRIGGER_ACTION){
 			connPacketModule* packet = (connPacketModule*)packetHeader;
 			if(packet->moduleId == moduleId){
-				if (packet->actionType == VotingModuleTriggerActionMessages::HEARTBEAT) {
-					logt("VOTING", "HEARTBEAT RECEIVED from nodeId:%d\n", packetHeader->sender);
-				}
 				if(packet->actionType == VotingModuleTriggerActionMessages::TRIGGER_MESSAGE){
 					unsigned short uID = (( (unsigned short)packet->data[1] ) << 8) | packet->data[0];
 					logt("VOTING", "Gateway %d received voter message from %d with userId %d \n", node->persistentConfig.nodeId, packetHeader->sender, uID);
