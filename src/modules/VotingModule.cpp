@@ -16,12 +16,12 @@ extern "C"{
 #define BUTTON_DEBOUNCE_DELAY   50
 #define APP_GPIOTE_MAX_USERS    1
 
-#define MAX_RETRY_STORAGE_SIZE 5
+#define MAX_RETRY_STORAGE_SIZE 10
 
 bool INITIALIZED_QUEUE = false;
 
 unsigned short empty = 0;
-unsigned short retryStorage[MAX_RETRY_STORAGE_SIZE] = {0,0,0,0,0};
+unsigned short retryStorage[MAX_RETRY_STORAGE_SIZE] = {0,0,0,0,0,0,0,0,0,0};
 
 void removeFromRetryStorage(unsigned short userId) {
 	unsigned short tempStorage[MAX_RETRY_STORAGE_SIZE] = {empty,empty,empty,empty,empty};
@@ -230,8 +230,6 @@ void VotingModule::ConnectionPacketReceivedEventHandler(connectionPacket* inPack
 	if(node->isGatewayDevice) {
 		if(packetHeader->messageType == MESSAGE_TYPE_MODULE_TRIGGER_ACTION){
 			connPacketModule* packet = (connPacketModule*)packetHeader;
-			unsigned short uID = (((unsigned short)packet->data[1] ) << 8) | packet->data[0];
-			logt("VOTING", "Received message from %d with userId %d \n", node->persistentConfig.nodeId, uID);
 			if(packet->moduleId == moduleId){
 				if (packet->actionType == VotingModuleTriggerActionMessages::HEARTBEAT) {
 					logt("VOTING", "HEARTBEAT RECEIVED from nodeId:%d\n", packetHeader->sender);
