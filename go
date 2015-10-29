@@ -76,7 +76,7 @@ function debug {
 }
 
 function size {
-    ls -alh _build | grep FruityMesh.bin | cut -d ' ' -f13 -f17
+    /usr/local/gcc-arm-none-eabi-4_9-2015q2/bin/arm-none-eabi-size _build/FruityMesh.elf
 }
 
 case "$1" in
