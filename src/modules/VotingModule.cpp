@@ -29,13 +29,6 @@ unsigned short empty = 0;
 unsigned short retryStorage[MAX_RETRY_STORAGE_SIZE] = {0,0,0,0,0,0,0,0,0,0};
 int currentMinute = 0;
 
-static void twi_event_handler(nrf_drv_twi_evt_t *evt) {
-	// light up led 1 if transmit succeeded
-	if(evt->type == NRF_DRV_TWI_TX_DONE) nrf_gpio_pin_clear(LED_1);
-	// light up led 2 if receive succeeded
-	if(evt->type == NRF_DRV_TWI_RX_DONE) nrf_gpio_pin_clear(LED_2);
-}
-
 void removeFromRetryStorage(unsigned short userId) {
 	unsigned short tempStorage[MAX_RETRY_STORAGE_SIZE] = {empty,empty,empty,empty,empty};
 	for (int i=0, j=0; i < MAX_RETRY_STORAGE_SIZE; i++) {
@@ -124,15 +117,18 @@ void VotingModule::ConfigurationLoadedHandler()
 
 }
 
+static void twi_event_handler(nrf_drv_twi_evt_t *evt) {
+	// light up led 1 if transmit succeeded
+	//if(evt->type == NRF_DRV_TWI_TX_DONE) nrf_gpio_pin_clear(LED_1);
+	// light up led 2 if receive succeeded
+	//if(evt->type == NRF_DRV_TWI_RX_DONE) nrf_gpio_pin_clear(LED_2);
+}
+
 void VotingModule::TimerEventHandler(u16 passedTime, u32 appTimer)
 {
 	if (!INITIALIZED_QUEUE) {
 		srand(12345678);
 		INITIALIZED_QUEUE=true;
-		nrf_gpio_cfg_output(LED_1);
-		nrf_gpio_pin_set(LED_1);
-		nrf_gpio_cfg_output(LED_2);
-		nrf_gpio_pin_set(LED_2);
 
 		uint8_t tx_data[] = {0x0,0x0,0xFF,0x02,0xFE,0xD4,0x02,0x2A,0x00};  // I believe this is the i2c command sequence for firmware version
 		uint8_t rx_data[32];
