@@ -32,7 +32,6 @@ void removeFromRetryStorage(unsigned short userId) {
 			j++;
 		}
 	}
-	// transfer tempstorage to retry storage
 	for (int i=0; i < MAX_RETRY_STORAGE_SIZE; i++) {
 		if(tempStorage[i] != empty){
 			retryStorage[i] = tempStorage[i];
@@ -42,20 +41,10 @@ void removeFromRetryStorage(unsigned short userId) {
 	}
 }
 
-void printArray(unsigned short *arrayToPrint){
-	for (int i = 0; i < MAX_RETRY_STORAGE_SIZE; i++) {
-		logt("VOTING", "[%d]:%d, ", i, arrayToPrint[i]);
-	}	
-}
-
 void putInRetryStorage(unsigned short userId) {
-	Logger::getInstance().enableTag("VOTING");
 	int index = 0; 
 	unsigned short temp[MAX_RETRY_STORAGE_SIZE] = { empty,empty,empty,empty,empty };
 	
-	logt("VOTING", "BEFORE: Called with %d ", userId);		
-	printArray(retryStorage);	
-	/*****/
 	for (int i=0; i < MAX_RETRY_STORAGE_SIZE; i++) {
 		if(retryStorage[i] == userId) {
 			break;
@@ -69,14 +58,10 @@ void putInRetryStorage(unsigned short userId) {
 			retryStorage[i] = userId;
 		}
 	}
-	/*****/
-	logt("VOTING", "AFTER: Called with %d ", userId);				
-	printArray(retryStorage);		
 }
 
 static void vote(unsigned short uID) {
 	ConnectionManager *cm = ConnectionManager::getInstance();
-	Logger::getInstance().enableTag("VOTING");
 	Node *node = Node::getInstance();
 	Conf *config = Conf::getInstance();
 
@@ -209,14 +194,9 @@ void VotingModule::ConnectionPacketReceivedEventHandler(connectionPacket* inPack
 		{
 			if(packet->actionType == VotingModuleActionResponseMessages::RESPONSE_MESSAGE)
 			{
-				logt("VOTING", "Voter received acknowledgement from Gateway with userId %u \n", packet->data[0]);
-					unsigned short userId = (( (short)packet->data[1] ) << 8) | packet->data[0];
-					logt("VOTING", "Voter received acknowledgement from Gateway with userId: %d \n", userId);
-					logt("VOTING", "Before removing.... ");					
-					printArray(retryStorage);
-					logt("VOTING", "\n Voting After.... ");		
-					removeFromRetryStorage(userId);
-					printArray(retryStorage);
+				//logt("VOTING", "Voter received acknowledgement from Gateway with userId %u \n", packet->data[0]);
+				unsigned short userId = (( (short)packet->data[1] ) << 8) | packet->data[0];
+				removeFromRetryStorage(userId);
 			}
 		}
 	}
