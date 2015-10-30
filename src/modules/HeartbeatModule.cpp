@@ -58,8 +58,8 @@ void HeartbeatModule::ConnectionPacketReceivedEventHandler(connectionPacket* inP
 {
 	Module::ConnectionPacketReceivedEventHandler(inPacket, connection, packetHeader, dataLength);
 
-	if(packetHeader->messageType != MESSAGE_TYPE_HEARTBEAT)
-    return;
+	if(!node->isGatewayDevice) return;
+	if(packetHeader->messageType != MESSAGE_TYPE_HEARTBEAT) return;
 
   connPacketHeartbeat* packet = (connPacketHeartbeat*)packetHeader;
 
