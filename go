@@ -13,6 +13,7 @@ function helptext {
     echo "    compile           Clean and compile FruityMesh source"
     echo "    debug             Setup jlinkgdbserver and start gdb"
     echo "    size              Show the size of the FruityMesh.hex and Soft Device files used for flashing"
+    echo "    minprog		Show the progression of file size."
 }
 
 function deploy-nodes-to-all-local-devices {
@@ -79,6 +80,13 @@ function size {
     /usr/local/gcc-arm-none-eabi-4_9-2015q2/bin/arm-none-eabi-size _build/FruityMesh.elf
 }
 
+
+function minprog {
+    for file in $(ls size_records); do
+        echo $file && cat size_records/$file
+    done
+}
+
 case "$1" in
     fleet) fleet
     ;;
@@ -91,6 +99,8 @@ case "$1" in
     compile) compile
     ;;
     debug) debug
+    ;;
+    minprog) minprog
     ;;
     size) size
     ;;
