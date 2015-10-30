@@ -213,7 +213,7 @@ class Conf
 //If undefined, the final build will have no logging / Terminal functionality built in
 //#define ENABLE_LOGGING
 //#define ENABLE_TERMINAL
-#define ENABLE_UART
+//#define ENABLE_UART
 
 
 /*############ SERVICES ################*/
