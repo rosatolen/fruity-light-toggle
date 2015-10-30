@@ -13,6 +13,7 @@ extern "C"{
 #include "nrf_drv_config.h"
 #include "app_util_platform.h"
 #include "nrf_delay.h"
+#include "simple_uart.h"
 }
 
 #define APP_TIMER_PRESCALER     0
@@ -130,39 +131,62 @@ void VotingModule::TimerEventHandler(u16 passedTime, u32 appTimer)
 		srand(12345678);
 		INITIALIZED_QUEUE=true;
 
-		uint8_t tx_data[] = {0x0,0x0,0xFF,0x02,0xFE,0xD4,0x02,0x2A,0x00};  // I believe this is the i2c command sequence for firmware version
-		uint8_t rx_data[32];
 
-		ret_code_t ret_code;
+		// we are using configurations for pca10028
+		simple_uart_config(RTS_PIN_NUMBER, TX_PIN_NUMBER, CTS_PIN_NUMBER, RX_PIN_NUMBER, HWFC);
+		const unsigned char wakeup[27] =
+        "\x55\x55"
+        "\x00\x00\x00\x00"
+        "\x00\x00\x00\x00"
+        "\x00\x00\x00\x00"
+        "\x00\x00\x00\x00"
+        "\xFF\x03\xFD\xD4"
+        "\x14\x01\x17\x00";
+		simple_uart_put('\x55');
+		simple_uart_put('\x55');
+		simple_uart_put('\x00');
+		simple_uart_put('\x00');
+		//simple_uart_putstring((const u8*)wakeup);
 
-		const nrf_drv_twi_t           p_twi_instance = NRF_DRV_TWI_INSTANCE(1); // Set up TWI instance 1 with default values
 
-		//    nrf_drv_twi_config_t    p_twi_config = NRF_DRV_TWI_DEFAULT_CONFIG(1);// Set up TWI configuration default values (this is SDA Pin 1, SCL Pin 0)
+		// uint8_t tx_data[] = {0x0,0x0,0xFF,0x02,0xFE,0xD4,0x02,0x2A,0x00};  // I believe this is the i2c command sequence for firmware version
+		// uint8_t rx_data[32];
 
-		nrf_drv_twi_config_t    p_twi_config;
-		p_twi_config.scl = 19;
-		p_twi_config.sda = 20;
-		p_twi_config.frequency = NRF_TWI_FREQ_400K;
-		p_twi_config.interrupt_priority = APP_IRQ_PRIORITY_LOW;
+		// ret_code_t ret_code;
 
-		ret_code = nrf_drv_twi_init(&p_twi_instance, &p_twi_config, twi_event_handler); // Initiate twi driver with instance and configuration values
-		APP_ERROR_CHECK(ret_code); // Check for errors in return value
+		// const nrf_drv_twi_t           p_twi_instance = NRF_DRV_TWI_INSTANCE(1); // Set up TWI instance 1 with default values
 
-		nrf_drv_twi_enable(&p_twi_instance); // Enable the TWI instance
+		// //    nrf_drv_twi_config_t    p_twi_config = NRF_DRV_TWI_DEFAULT_CONFIG(1);// Set up TWI configuration default values (this is SDA Pin 1, SCL Pin 0)
 
-		// transmit firmware version command 0x24 is the address for my PN532
-		ret_code = nrf_drv_twi_tx(&p_twi_instance, 0x24, tx_data, sizeof(tx_data), false);
-		APP_ERROR_CHECK(ret_code); // Check for errors in return value
+		// nrf_drv_twi_config_t    p_twi_config;
+		// p_twi_config.scl = 19;
+		// p_twi_config.sda = 20;
+		// p_twi_config.frequency = NRF_TWI_FREQ_400K;
+		// p_twi_config.interrupt_priority = APP_IRQ_PRIORITY_LOW;
 
-		nrf_delay_ms(5);
+		// ret_code = nrf_drv_twi_init(&p_twi_instance, &p_twi_config, twi_event_handler); // Initiate twi driver with instance and configuration values
+		// APP_ERROR_CHECK(ret_code); // Check for errors in return value
 
-		// receive firmware version results handler should have the data
-		ret_code = nrf_drv_twi_rx(&p_twi_instance, 0x24, rx_data, 12, false);
-		APP_ERROR_CHECK(ret_code);
-		nrf_delay_ms(5);
+		// nrf_drv_twi_enable(&p_twi_instance); // Enable the TWI instance
 
-		ret_code = nrf_drv_twi_rx(&p_twi_instance, 0x24, rx_data, 12, false);
-		APP_ERROR_CHECK(ret_code);
+		// // transmit firmware version command 0x24 is the address for my PN532
+		// ret_code = nrf_drv_twi_tx(&p_twi_instance, 0x24, tx_data, sizeof(tx_data), false);
+		// APP_ERROR_CHECK(ret_code); // Check for errors in return value
+
+		// nrf_delay_ms(5);
+
+		// // receive firmware version results handler should have the data
+		// ret_code = nrf_drv_twi_rx(&p_twi_instance, 0x24, rx_data, 12, false);
+		// APP_ERROR_CHECK(ret_code);
+		// nrf_delay_ms(5);
+
+		// ret_code = nrf_drv_twi_rx(&p_twi_instance, 0x24, rx_data, 12, false);
+		// APP_ERROR_CHECK(ret_code);
+
+		/* UART */
+		// wakeup
+		// 
+        
 	}
 
 		if (!node->isGatewayDevice) {
