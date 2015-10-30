@@ -16,12 +16,14 @@ extern "C"{
 #define BUTTON_DEBOUNCE_DELAY   50
 #define APP_GPIOTE_MAX_USERS    1
 
-#define MAX_RETRY_STORAGE_SIZE 10
+#define MAX_RETRY_STORAGE_SIZE 60
+
+int voteIndex = 0;
 
 bool INITIALIZED_QUEUE = false;
 
 unsigned short empty = 0;
-unsigned short retryStorage[MAX_RETRY_STORAGE_SIZE] = {0,0,0,0,0,0,0,0,0,0};
+unsigned short retryStorage[MAX_RETRY_STORAGE_SIZE] = {0};
 int currentMinute = 0;
 
 void removeFromRetryStorage(unsigned short userId) {
@@ -126,15 +128,18 @@ void VotingModule::TimerEventHandler(u16 passedTime, u32 appTimer)
 		int minuteRate = 2;
 		int minuteRatePlusOne = 3;
 		currentMinute = (appTimer/60000 % 1000) % minuteRatePlusOne;
-		if (currentMinute == minuteRate && (appTimer/1000 % 5 && appTimer % 10 == 0)) {
-			vote((short)(rand() % 10000));
+
+
+        if(currentMinute == minuteRate && (appTimer/1000 % 5 && appTimer % 1000 == 0)) {
+			vote((short)(voteIndex));
+            voteIndex++;
 		}
-		
+
 		// if 10 seconds have passed, trigger retries
 		if ((appTimer / 1000) % 10 == 0 && (appTimer / 100) % 100 == 0) {
 			for (int i=0; i < MAX_RETRY_STORAGE_SIZE; i++){
 				if (retryStorage[i] != empty) {
-					vote(retryStorage[i]);	
+					vote(retryStorage[i]);
 				}
 			}
 		}
