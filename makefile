@@ -172,8 +172,12 @@ CFLAGS += -fno-rtti
 CFLAGS += -fno-use-cxa-atexit
 CFLAGS += -fno-threadsafe-statics
 
-CFLAGS += -DENABLE_LOGGING
 CFLAGS += -DDEST_BOARD_ID=0
+
+# Helpful flags for minimizing bin file
+#CFLAGS += -DENABLE_LOGGING #disabled to minimize
+#CFLAGS += -v -Wall
+#LDFLAGS += -v
 
 LDFLAGS += -mcpu=cortex-m0
 LDFLAGS += -mthumb
