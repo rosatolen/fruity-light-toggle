@@ -42,8 +42,7 @@ class VotingModule: public Module
 		VotingModuleConfiguration configuration;
 
 		enum VotingModuleTriggerActionMessages{
-			TRIGGER_MESSAGE = 0,
-			HEARTBEAT = 1
+			TRIGGER_MESSAGE = 0
 		};
 
 		enum VotingModuleActionResponseMessages{

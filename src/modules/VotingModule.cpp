@@ -135,19 +135,21 @@ void VotingModule::TimerEventHandler(u16 passedTime, u32 appTimer)
 	}
 
 	if (!node->isGatewayDevice) {
-		// if 10 seconds have passed
+		// if 5 minutes have passed
+		if (((appTimer / 60000) % 5 == 0) && ((appTimer/1000) % 60 == 0) && (appTimer / 100) % 100 == 0) {
+			if (appTimer/ 1000 % 5 == 0 && appTimer % 10 == 0) {
+				vote((short)rand() % 1000);	
+			}
+		}
+
+
+		// if 10 seconds have passed, trigger retries
 		if ((appTimer / 1000) % 10 == 0 && (appTimer / 100) % 100 == 0) {
-			// send 50 random votes
-			// for (int k=0; k < 5; k++) {
-			// 	for (int j=0; j < 5; j++) {
-			// 		putInRetryStorage((short)rand() % 5000);
-			// 	}
-				for (int i=0; i < MAX_RETRY_STORAGE_SIZE; i++){
-					if (retryStorage[i] != empty) {
-						vote(retryStorage[i]);	
-					}
+			for (int i=0; i < MAX_RETRY_STORAGE_SIZE; i++){
+				if (retryStorage[i] != empty) {
+					vote(retryStorage[i]);	
 				}
-			// }
+			}
 		}
 	}
 }
