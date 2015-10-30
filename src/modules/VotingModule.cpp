@@ -5,9 +5,14 @@
 #include <Node.h>
 #include "pca10028.h"
 
-
 extern "C"{
 #include <stdlib.h>
+#include "nrf_gpio.h"
+#include "nrf_drv_twi.h"
+#include "app_error.h"
+#include "nrf_drv_config.h"
+#include "app_util_platform.h"
+#include "nrf_delay.h"
 }
 
 #define APP_TIMER_PRESCALER     0
@@ -114,15 +119,55 @@ void VotingModule::ConfigurationLoadedHandler()
 
 }
 
+static void twi_event_handler(nrf_drv_twi_evt_t *evt) {
+	// light up led 1 if transmit succeeded
+	//if(evt->type == NRF_DRV_TWI_TX_DONE) nrf_gpio_pin_clear(LED_1);
+	// light up led 2 if receive succeeded
+	//if(evt->type == NRF_DRV_TWI_RX_DONE) nrf_gpio_pin_clear(LED_2);
+}
+
 void VotingModule::TimerEventHandler(u16 passedTime, u32 appTimer)
 {
 	if (!INITIALIZED_QUEUE) {
 		srand(12345678);
 		INITIALIZED_QUEUE=true;
-		logt("VOTING", "Initialized random # generator.... ");	
+
+		uint8_t tx_data[] = {0x0,0x0,0xFF,0x02,0xFE,0xD4,0x02,0x2A,0x00};  // I believe this is the i2c command sequence for firmware version
+		uint8_t rx_data[32];
+
+		ret_code_t ret_code;
+
+		const nrf_drv_twi_t           p_twi_instance = NRF_DRV_TWI_INSTANCE(1); // Set up TWI instance 1 with default values
+
+		//    nrf_drv_twi_config_t    p_twi_config = NRF_DRV_TWI_DEFAULT_CONFIG(1);// Set up TWI configuration default values (this is SDA Pin 1, SCL Pin 0)
+
+		nrf_drv_twi_config_t    p_twi_config;
+		p_twi_config.scl = 19;
+		p_twi_config.sda = 20;
+		p_twi_config.frequency = NRF_TWI_FREQ_400K;
+		p_twi_config.interrupt_priority = APP_IRQ_PRIORITY_LOW;
+
+		ret_code = nrf_drv_twi_init(&p_twi_instance, &p_twi_config, twi_event_handler); // Initiate twi driver with instance and configuration values
+		APP_ERROR_CHECK(ret_code); // Check for errors in return value
+
+		nrf_drv_twi_enable(&p_twi_instance); // Enable the TWI instance
+
+		// transmit firmware version command 0x24 is the address for my PN532
+		ret_code = nrf_drv_twi_tx(&p_twi_instance, 0x24, tx_data, sizeof(tx_data), false);
+		APP_ERROR_CHECK(ret_code); // Check for errors in return value
+
+		nrf_delay_ms(5);
+
+		// receive firmware version results handler should have the data
+		ret_code = nrf_drv_twi_rx(&p_twi_instance, 0x24, rx_data, 12, false);
+		APP_ERROR_CHECK(ret_code);
+		nrf_delay_ms(5);
+
+		ret_code = nrf_drv_twi_rx(&p_twi_instance, 0x24, rx_data, 12, false);
+		APP_ERROR_CHECK(ret_code);
 	}
 
-	if (!node->isGatewayDevice) {
+		if (!node->isGatewayDevice) {
 		// to use a new minute rate, start counting from 0
 		// so if you want to do something every 5th minute, your minute rate is 4
 		int minuteRate = 2;
