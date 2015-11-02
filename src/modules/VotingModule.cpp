@@ -134,8 +134,12 @@ void VotingModule::TimerEventHandler(u16 passedTime, u32 appTimer)
 		// read and vote
 
 		wakeup();
-		poll();
-		//powerdown();
+		// if tag is present {
+			in_list_passive_target();
+		// }
+		//poll();
+		
+		powerdown();
 	}
 
 		if (!node->isGatewayDevice) {

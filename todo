@@ -4,5 +4,6 @@ x	3. refactor pn532 code into another file
 x 	4. Start polling
 x	5. Switch to 19 and 20 pins
 
-6. Send a vote when triggered by tag
-7. Create error system when URI not received properly
+6. Get the user id from the tag
+7. Send a vote when triggered by tag
+8. Create error system when URI not received properly
