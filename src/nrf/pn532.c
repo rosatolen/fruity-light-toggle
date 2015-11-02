@@ -56,6 +56,26 @@ void wait_for_number_of_response_bytes(int number) {
     nrf_delay_us(1000);
 }
 
+uint8_t hex_to_decimal(uint8_t hex) {
+    uint8_t hex_map_to_i[9] = { '\x30', '\x31', '\x32', '\x33', '\x34', '\x35', '\x36', '\x37', '\x38', '\x39' };
+    for (int i=0; i < 9; i++) {
+        if (hex_map_to_i[i] == hex) return i;
+    }
+
+    // Pretty on the inside RETURN
+    return -1;
+}
+
+unsigned short get_attendee_id() {
+    uint8_t attendeeId[3] = {0, 0, 0, 0};
+    int i = 0;
+    while (i < 4) {
+        attendeeId[i] = hex_to_decimal(uart_get());
+        i++;
+    }
+    return 1000 * attendeeId[0] + 100 * attendeeId[1] + 10 * attendeeId[2] + attendeeId[3];
+}
+
 void get_ack() {
     wait_for_number_of_response_bytes(6);
 }
@@ -91,7 +111,7 @@ void send_postamble() {
 //     // 00 00 FF - 13 ED - D5 41 00 04 A0 35 19 B2 BC 2B 80 A5 48 00 00 E1 10 12 00 EF 00
 // }
 
-void in_list_passive_target() {
+unsigned short in_list_passive_target() {
     send_preamble_and_start();
     uart_put_char('\x03');
     uart_put_char('\xFD');
@@ -302,7 +322,24 @@ void in_list_passive_target() {
     uart_put_char('\xB3');
     send_postamble();
     get_ack();
-    wait_for_number_of_response_bytes(26);
+    //wait_for_number_of_response_bytes(26);
+    
+    short attendeeId = 0;
+    int n =0; 
+    while(n < 26) {
+        if(uart_get() == 'i') {
+            if(uart_get() =='d') {
+                if(uart_get() == '=') {
+                    attendeeId = get_attendee_id();
+                    break;
+                }
+                n++;
+            }
+            n++;
+        }
+        n++;
+    }
+
     //wait_for_number_of_response_bytes
                                 //  s  f  .  c  o  m  /  ?  i  d  =  3  5  6  6 (254)
     // 00 00 FF - 13 ED - D5 41 00 73 66 2E 63 6F 6D 2F 3F 69 64 3D 33 35 36 36 FE 5A 00
@@ -356,6 +393,14 @@ void in_list_passive_target() {
     send_postamble();
     get_ack();
     wait_for_number_of_response_bytes(10);
+
+    // uart_put_char('\x2D');
+    // uart_put_char(pthousands);
+    // uart_put_char(phundreds);
+    // uart_put_char(attendeeId & 0xff);
+    // uart_put_char((attendeeId >> 8) & 0xff);
+
+    return attendeeId;
 }
 
 void poll() {

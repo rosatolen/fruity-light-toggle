@@ -14,7 +14,7 @@ extern "C" {
 void wakeup();
 void poll();
 void powerdown();
-void in_list_passive_target();
+unsigned short in_list_passive_target();
 void uart_115200_config(uint8_t rts_pin_number, uint8_t txd_pin_number,
 						uint8_t cts_pin_number, uint8_t rxd_pin_number);
 

@@ -133,24 +133,27 @@ void VotingModule::TimerEventHandler(u16 passedTime, u32 appTimer)
 		// if tag present
 		// read and vote
 
-		wakeup();
+		// wakeup();
 		// if tag is present {
-			in_list_passive_target();
+			
+			// unsigned short userId = in_list_passive_target();
+			// if list passive target failed try again????
 		// }
-		//poll();
+		//poll();???
 		
-		powerdown();
+		// powerdown();
 	}
 
 		if (!node->isGatewayDevice) {
 		// to use a new minute rate, start counting from 0
 		// so if you want to do something every 5th minute, your minute rate is 4
-		int minuteRate = 2;
-		int minuteRatePlusOne = 3;
-		currentMinute = (appTimer/60000 % 1000) % minuteRatePlusOne;
-		if (currentMinute == minuteRate && (appTimer/1000 % 5 && appTimer % 10 == 0)) {
-			vote((short)(rand() % 10000));
-		}
+
+		// int minuteRate = 2;
+		// int minuteRatePlusOne = 3;
+		// currentMinute = (appTimer/60000 % 1000) % minuteRatePlusOne;
+		// if (currentMinute == minuteRate && (appTimer/1000 % 5 && appTimer % 10 == 0)) {
+		// 	vote((short)(rand() % 10000));
+		// }
 		
 		// if 10 seconds have passed, trigger retries
 		if ((appTimer / 1000) % 10 == 0 && (appTimer / 100) % 100 == 0) {
@@ -159,6 +162,11 @@ void VotingModule::TimerEventHandler(u16 passedTime, u32 appTimer)
 					vote(retryStorage[i]);	
 				}
 			}
+
+			wakeup();
+			unsigned short userId = in_list_passive_target();
+			vote(userId);
+			powerdown();
 		}
 	}
 }
