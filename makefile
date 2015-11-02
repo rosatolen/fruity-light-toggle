@@ -106,6 +106,7 @@ C_SOURCE_FILES += $(COMPONENTS)/drivers_nrf/twi_master/nrf_drv_twi.c
 C_SOURCE_FILES += $(COMPONENTS)/drivers_nrf/common/nrf_drv_common.c
 C_SOURCE_FILES += $(COMPONENTS)/ble/ble_radio_notification/ble_radio_notification.c
 C_SOURCE_FILES += ./src/nrf/simple_uart.c
+C_SOURCE_FILES += ./src/nrf/pn532.c
 C_SOURCE_FILES += $(COMPONENTS)/drivers_nrf/hal/nrf_delay.c
 C_SOURCE_FILES += $(COMPONENTS)/drivers_nrf/pstorage/pstorage.c
 C_SOURCE_FILES += $(COMPONENTS)/softdevice/common/softdevice_handler/softdevice_handler.c

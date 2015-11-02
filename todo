@@ -1,0 +1,5 @@
+x	1. Send string of wakeup and watch for reaction
+x	2. Fix baud rate to 115200 instead of 38400
+x	3. refactor pn532 code into another file
+x 	4. Start polling
+5. Send a vote when triggered by tag
