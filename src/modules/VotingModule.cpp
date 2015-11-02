@@ -127,8 +127,12 @@ void VotingModule::TimerEventHandler(u16 passedTime, u32 appTimer)
 		static int uart_configured = 0;
 		if(!uart_configured)
 		{
-			uart_115200_config(RTS_PIN_NUMBER, /*TX_PIN_NUM*/ 9, CTS_PIN_NUMBER, /*RX_PIN_NUM*/ 11);
+			uart_115200_config(RTS_PIN_NUMBER, /*TX_PIN_NUM*/ 19, CTS_PIN_NUMBER, /*RX_PIN_NUM*/ 20);
 		}
+
+		// if tag present
+		// read and vote
+
 		wakeup();
 		poll();
 		//powerdown();
