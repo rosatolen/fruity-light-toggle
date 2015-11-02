@@ -131,8 +131,7 @@ void VotingModule::TimerEventHandler(u16 passedTime, u32 appTimer)
 		}
 		wakeup();
 		poll();
-		// use error handling to check if there is an ACK
-        
+		//powerdown();
 	}
 
 		if (!node->isGatewayDevice) {
