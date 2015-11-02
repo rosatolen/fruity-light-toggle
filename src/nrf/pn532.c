@@ -268,7 +268,7 @@ void powerdown() {
     uart_put_char('\x16');
     uart_put_char('\xF0');
     uart_put_char('\x26');
-    uart_put_char('\x00');
+    send_postamble();
 }
 
 void uart_115200_config(uint8_t rts_pin_number,
