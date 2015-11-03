@@ -51,6 +51,8 @@ PacketQueue::PacketQueue(u8* buffer, u16 bufferLength)
 //Put does only allow data sizes up to 200 byte per element
 bool PacketQueue::Put(u8* data, u8 dataLength, bool reliable)
 {
+	logt("ERROR", "PUTS %u", data);
+
 	u32 err = sd_mutex_acquire(&queueMutex);
 
 	if (err != NRF_SUCCESS)
