@@ -5,7 +5,8 @@ x 	4. Start polling
 x	5. Switch to 19 and 20 pins
 x	6. Get the user id from the tag
 x	7. Send a vote with user id from the tag
+x	8. If tag is present, send over id else wait for tag to be present
+x	9. After sending vote, return to waiting
 
-8. If tag is present, send over id else wait for tag to be present
-9. After sending vote, return to waiting
-10. Create error system when URI not received properly
+10. Use stricter conditions for identifying a tag (use full qcon.com/?id= string check)
+11. Fix "Send Queue Full" Errors with throttled network

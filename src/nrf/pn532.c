@@ -47,7 +47,7 @@ void wakeup() {
     nrf_delay_us(1000);
 }
 
-void wait_for_number_of_response_bytes(int number) {
+void gobble_number_of_bytes(int number) {
     int i = 0;
     while (i < number) {
         uart_get();
@@ -55,6 +55,30 @@ void wait_for_number_of_response_bytes(int number) {
     }
     nrf_delay_us(1000);
 }
+
+bool tag_is_present() {
+    uart_get(); // get 00
+    uart_get(); // get 00
+    uart_get(); // get FF
+    uart_get(); // get LEN
+    uart_get(); // get LCS
+    uart_get(); // get DIR
+    int i = 0;
+    while (i < 8) {
+        if(uart_get() == '\x4B') {
+            if(uart_get() =='\x00') {
+                return false; 
+            } else {
+                gobble_number_of_bytes(14);
+                return true;
+            }
+            i++;
+        }
+        i++;
+    }
+
+    return false;
+} 
 
 uint8_t hex_to_decimal(uint8_t hex) {
     uint8_t hex_map_to_i[9] = { '\x30', '\x31', '\x32', '\x33', '\x34', '\x35', '\x36', '\x37', '\x38', '\x39' };
@@ -77,7 +101,7 @@ unsigned short get_attendee_id() {
 }
 
 void get_ack() {
-    wait_for_number_of_response_bytes(6);
+    gobble_number_of_bytes(6);
 }
 
 void send_preamble_and_start() {
@@ -92,24 +116,27 @@ void send_postamble() {
     uart_put_char('\x00');
 }
 
-// void in_data_exchange(uint8_t len, uint8_t lcs, uint8_t cmd, ) {
-//     send_preamble_and_start();
-//     uart_put_char('\x05');
-//     uart_put_char('\xFB');
-//     send_direction();
-//     uart_put_char('\x40'); // start data exchange command
-//     uart_put_char('\x01');
-//     uart_put_char('\x30'); // read 16 bytes
-//     uart_put_char('\x00'); // from address 0
-//     uart_put_char('\xBB');
-//     send_postamble();
+const uint8_t LENGTH = '\x05';
+const uint8_t LENGTH_CHECK_SUM = '\xFB';
+const uint8_t COMMAND = '\x40';
+const uint8_t LOGICAL_NUMBER = '\x01';
+const uint8_t MIFARE_COMMAND = '\x30';
 
-//     get_ack();
-//     nrf_delay_us(1000);
-//     wait_for_number_of_response_bytes(26);
-//     //wait_for_number_of_response_bytes
-//     // 00 00 FF - 13 ED - D5 41 00 04 A0 35 19 B2 BC 2B 80 A5 48 00 00 E1 10 12 00 EF 00
-// }
+void in_data_exchange(uint8_t start_address, uint8_t dcs) {
+    send_preamble_and_start();
+    uart_put_char(LENGTH);
+    uart_put_char(LENGTH_CHECK_SUM);
+    send_direction();
+    uart_put_char(COMMAND); // start data exchange command
+    uart_put_char(LOGICAL_NUMBER);
+    uart_put_char(MIFARE_COMMAND); // read 16 bytes
+    uart_put_char(start_address); // from address 0
+    uart_put_char(dcs);
+    send_postamble();
+
+    get_ack();
+    nrf_delay_us(1000);
+}
 
 unsigned short in_list_passive_target() {
     send_preamble_and_start();
@@ -121,9 +148,7 @@ unsigned short in_list_passive_target() {
     uart_put_char('\x06');
     send_postamble();
     get_ack();
-    wait_for_number_of_response_bytes(9);
-
-
+    gobble_number_of_bytes(9);
 
 
     send_preamble_and_start();
@@ -138,10 +163,7 @@ unsigned short in_list_passive_target() {
     uart_put_char('\xB0');
     send_postamble();
     get_ack();
-    wait_for_number_of_response_bytes(14);
-
-
-
+    gobble_number_of_bytes(14);
 
     send_preamble_and_start();
     uart_put_char('\x08');uart_put_char('\xF8');
@@ -152,9 +174,7 @@ unsigned short in_list_passive_target() {
     uart_put_char('\x59');
     send_postamble();
     get_ack();
-    wait_for_number_of_response_bytes(9);
-
-
+    gobble_number_of_bytes(9);
 
 
     send_preamble_and_start();
@@ -167,11 +187,7 @@ unsigned short in_list_passive_target() {
     uart_put_char('\xF9');
     send_postamble();
     get_ack();
-    wait_for_number_of_response_bytes(9);
-    //nrf_delay_us(1000);
-
-
-
+    gobble_number_of_bytes(9);
 
     send_preamble_and_start();
     uart_put_char('\x04');
@@ -183,10 +199,7 @@ unsigned short in_list_passive_target() {
     uart_put_char('\xF8');
     send_postamble();
     get_ack();
-    wait_for_number_of_response_bytes(9);
-    //nrf_delay_us(1000);
-
-
+    gobble_number_of_bytes(9);
 
     send_preamble_and_start();
     uart_put_char('\x06');
@@ -200,7 +213,7 @@ unsigned short in_list_passive_target() {
     uart_put_char('\xF8');
     send_postamble();
     get_ack();
-    wait_for_number_of_response_bytes(9);
+    gobble_number_of_bytes(9);
     nrf_delay_us(1000);
 
     /* DEVIATION FROM POLLING */
@@ -217,7 +230,7 @@ unsigned short in_list_passive_target() {
     uart_put_char('\xF8');
     send_postamble();
     get_ack();
-    wait_for_number_of_response_bytes(9);
+    gobble_number_of_bytes(9);
 
 
     send_preamble_and_start(); 
@@ -234,7 +247,7 @@ unsigned short in_list_passive_target() {
     uart_put_char('\x19');
     send_postamble();
     get_ack();
-    wait_for_number_of_response_bytes(15);
+    gobble_number_of_bytes(15);
 
     send_preamble_and_start();
     uart_put_char('\x08');
@@ -246,7 +259,7 @@ unsigned short in_list_passive_target() {
     uart_put_char('\xCD');
     send_postamble();
     get_ack();
-    wait_for_number_of_response_bytes(9);
+    gobble_number_of_bytes(9);
 
     send_preamble_and_start();
     uart_put_char('\x06');
@@ -260,70 +273,43 @@ unsigned short in_list_passive_target() {
     uart_put_char('\xF2');
     send_postamble();
     get_ack();
-    wait_for_number_of_response_bytes(9);
+    gobble_number_of_bytes(9);
 
     send_preamble_and_start();
     uart_put_char('\x04');
     uart_put_char('\xFC');
     send_direction();
-    uart_put_char('\x4A'); // inlist passive target
+    uart_put_char('\x4A'); // inlistpassive target
     uart_put_char('\x01');
     uart_put_char('\x00');
     uart_put_char('\xE1');
     send_postamble();
     get_ack();
 
-    // waits for nfc tag for .2 seconds and if not there it responds with "4B 00 00"
+    // waits for nfc tag for .2 seconds and if not there it responds with "4B 00"
+    if(!tag_is_present()) {
+        powerdown();
+        return 0;
+    }
+
     // get each piece of the response
     // 00 00 FF - 0F F1 - D5 4B - 01 01 00 44 00 07 04 A0 35 B3 BC 2B 80 A1 - 00
-    wait_for_number_of_response_bytes(22);
+    // gobble_number_of_bytes(22);
 
-    /* ** GET PAYLOADS ** */
-    send_preamble_and_start();
-    uart_put_char('\x05');
-    uart_put_char('\xFB');
-    send_direction();
-    uart_put_char('\x40'); // start data exchange command
-    uart_put_char('\x01');
-    uart_put_char('\x30'); // read 16 bytes
-    uart_put_char('\x00'); // from address 0
-    uart_put_char('\xBB');
-    send_postamble();
-    get_ack();
-    nrf_delay_us(1000);
-    wait_for_number_of_response_bytes(26);
-    //wait_for_number_of_response_bytes
+
+
+    /* ** GET PAID ** */
+    in_data_exchange('\x00', '\xBB');
+    gobble_number_of_bytes(26);
+    //gobble_number_of_bytes
     // 00 00 FF - 13 ED - D5 41 00 04 A0 35 19 B2 BC 2B 80 A5 48 00 00 E1 10 12 00 EF 00
-
-    send_preamble_and_start();
-    uart_put_char('\x05');
-    uart_put_char('\xFB');
-    send_direction();
-    uart_put_char('\x40'); // data exchange command
-    uart_put_char('\x01');
-    uart_put_char('\x30'); // read 16 bytes
-    uart_put_char('\x04'); // from address 4
-    uart_put_char('\xB7');
-    send_postamble();
-    get_ack();
-    wait_for_number_of_response_bytes(26);
-    //wait_for_number_of_response_bytes
+    in_data_exchange('\x04', '\xB7');
+    gobble_number_of_bytes(26);
+    //gobble_number_of_bytes
                                 //  (1  3  160  16  D 3  24 209 20 U  4)  q c  o  n  
     // 00 00 FF - 13 ED - D5 41 00 01 03 A0 10 44 03 18 D1 01 14 55 04 71 63 6F 6E E7 00
+    in_data_exchange('\x08', '\xB3');
 
-    send_preamble_and_start();
-    uart_put_char('\x05');
-    uart_put_char('\xFB');
-    send_direction();
-    uart_put_char('\x40'); // data exchange command
-    uart_put_char('\x01');
-    uart_put_char('\x30'); // read 16 bytes
-    uart_put_char('\x08'); // from address 8
-    uart_put_char('\xB3');
-    send_postamble();
-    get_ack();
-    //wait_for_number_of_response_bytes(26);
-    
     short attendeeId = 0;
     int n =0; 
     while(n < 26) {
@@ -340,22 +326,11 @@ unsigned short in_list_passive_target() {
         n++;
     }
 
-    //wait_for_number_of_response_bytes
+    //gobble_number_of_bytes
                                 //  s  f  .  c  o  m  /  ?  i  d  =  3  5  6  6 (254)
     // 00 00 FF - 13 ED - D5 41 00 73 66 2E 63 6F 6D 2F 3F 69 64 3D 33 35 36 36 FE 5A 00
-
-    send_preamble_and_start();
-    uart_put_char('\x05');
-    uart_put_char('\xFB');
-    send_direction();
-    uart_put_char('\x40'); // data exchange command
-    uart_put_char('\x01');
-    uart_put_char('\x30'); // read 16 bytes
-    uart_put_char('\x0C'); // from address 12
-    uart_put_char('\xAF');
-    send_postamble();
-    get_ack();   
-    wait_for_number_of_response_bytes(26);
+    in_data_exchange('\x0C', '\xAF');
+    gobble_number_of_bytes(26);
     //wait_for_number_of_response_byte
     // 00 00 FF - 13 ED - D5 41 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 EA 00
 
@@ -369,7 +344,7 @@ unsigned short in_list_passive_target() {
     uart_put_char('\xDA');
     send_postamble();
     get_ack();
-    wait_for_number_of_response_bytes(10);
+    gobble_number_of_bytes(10);
 
     send_preamble_and_start();
     uart_put_char('\x04');
@@ -381,18 +356,9 @@ unsigned short in_list_passive_target() {
     uart_put_char('\xF9');
     send_postamble();
     get_ack();
-    wait_for_number_of_response_bytes(9);
+    gobble_number_of_bytes(9);
 
-    send_preamble_and_start();
-    uart_put_char('\x03');
-    uart_put_char('\xFD');
-    send_direction();
-    uart_put_char('\x16'); // powerdown
-    uart_put_char('\xF0');
-    uart_put_char('\x26');
-    send_postamble();
-    get_ack();
-    wait_for_number_of_response_bytes(10);
+    powerdown();
 
     // uart_put_char('\x2D');
     // uart_put_char(pthousands);
@@ -437,7 +403,7 @@ void poll() {
     uart_put_char('\xB0');
     send_postamble();
     get_ack();
-    wait_for_number_of_response_bytes(14);
+    gobble_number_of_bytes(14);
 
 
 
@@ -450,7 +416,7 @@ void poll() {
     uart_put_char('\x59');
     send_postamble();
     get_ack();
-    wait_for_number_of_response_bytes(9);
+    gobble_number_of_bytes(9);
 
 
 
@@ -465,7 +431,7 @@ void poll() {
     uart_put_char('\xF9');
     send_postamble();
     get_ack();
-    wait_for_number_of_response_bytes(9);
+    gobble_number_of_bytes(9);
 
 
 
@@ -479,7 +445,7 @@ void poll() {
     uart_put_char('\xF8');
     send_postamble();
     get_ack();
-    wait_for_number_of_response_bytes(9);
+    gobble_number_of_bytes(9);
 
 
 
@@ -496,7 +462,7 @@ void poll() {
     uart_put_char('\xF8');
     send_postamble();
     get_ack();
-    wait_for_number_of_response_bytes(9);
+    gobble_number_of_bytes(9);
 
 
 
@@ -521,7 +487,7 @@ void poll() {
     uart_put_char('\x19');
     send_postamble();
     get_ack();
-    wait_for_number_of_response_bytes(15);
+    gobble_number_of_bytes(15);
 
 
 
@@ -541,7 +507,7 @@ void poll() {
     uart_put_char('\xCD');
     send_postamble();
     get_ack();
-    wait_for_number_of_response_bytes(9);
+    gobble_number_of_bytes(9);
 
     send_preamble_and_start();
     uart_put_char('\x0A');
@@ -568,7 +534,7 @@ void poll() {
     get_ack();
 
     // wait for nfc tag target data
-    wait_for_number_of_response_bytes(24);
+    gobble_number_of_bytes(24);
     // libnfc will...
     // InDataExchange command \x40 (21 times... but why that many?!)
     // InRelease command \x52
@@ -592,7 +558,7 @@ void poll() {
     // addr of mifare card
     // data from host to pn532 (max 16) either for writing or for authentication
     // data out for mifare:
-  //  cmd addr data 0..15
+  //cmd addr data 0..15
 //    cmd = '\xA0' // do i need auth? A0 cmd is 16 bytes read
 
     

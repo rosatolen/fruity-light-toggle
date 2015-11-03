@@ -123,7 +123,6 @@ void VotingModule::ConfigurationLoadedHandler()
 void VotingModule::TimerEventHandler(u16 passedTime, u32 appTimer)
 {
 	if (!INITIALIZED_QUEUE) {
-		srand(12345678);
 		INITIALIZED_QUEUE=true;
 
 		static int uart_configured = 0;
@@ -131,33 +130,14 @@ void VotingModule::TimerEventHandler(u16 passedTime, u32 appTimer)
 		{
 			uart_115200_config(RTS_PIN_NUMBER, /*TX_PIN_NUM*/ 19, CTS_PIN_NUMBER, /*RX_PIN_NUM*/ 20);
 		}
-
-		// if tag present
-		// read and vote
-
-		// wakeup();
-		// if tag is present {
-			
-			// unsigned short userId = in_list_passive_target();
-			// if list passive target failed try again????
-		// }
-		//poll();???
-		
-		// powerdown();
 	}
 
-		if (!node->isGatewayDevice) {
-		// to use a new minute rate, start counting from 0
-		// so if you want to do something every 5th minute, your minute rate is 4
-
-		int minuteRate = 2;
-		int minuteRatePlusOne = 3;
-		currentMinute = (appTimer/60000 % 1000) % minuteRatePlusOne;
-
-
-        	if(currentMinute == minuteRate && (appTimer/1000 % 5 && appTimer % 1000 == 0)) {
-			vote((short)(voteIndex));
-            		voteIndex++;
+	if (!node->isGatewayDevice) {
+		// every second
+		if (appTimer/1000 % 5 && appTimer % 1000 == 0) {
+			wakeup();
+			unsigned short userId = in_list_passive_target();
+			if (userId != 0) vote(userId);
 		}
 
 		// if 10 seconds have passed, trigger retries
@@ -167,12 +147,8 @@ void VotingModule::TimerEventHandler(u16 passedTime, u32 appTimer)
 					vote(retryStorage[i]);
 				}
 			}
-
-			wakeup();
-			unsigned short userId = in_list_passive_target();
-			vote(userId);
-			powerdown();
 		}
+
 	}
 }
 
