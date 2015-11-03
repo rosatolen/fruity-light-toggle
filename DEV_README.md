@@ -40,6 +40,9 @@ A node is ready to go when it is consistently blinking blue.
 
 ## How do I get the timer handler right?
 Inside the TimerEventHandler, do the following logs:
+
 logt("<yourtag>", "appTimer = %d\n", appTimer);
+
 logt("<yourtag>", "minutes = %d\n", appTimer/60000 % 1000); // find the minutes
+
 logt("<yourtag>", "seconds = %d\n", appTimer/1000 % 60);  // find the seconds
