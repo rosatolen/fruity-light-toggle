@@ -125,13 +125,16 @@ void VotingModule::TimerEventHandler(u16 passedTime, u32 appTimer)
 	if (!node->isGatewayDevice) {
 		// to use a new minute rate, start counting from 0
 		// so if you want to do something every 5th minute, your minute rate is 4
-		// int minuteRate = 2;
-		// int minuteRatePlusOne = 3;
-		// currentMinute = (appTimer/60000 % 1000) % minuteRatePlusOne;
-		// if (currentMinute == minuteRate && (appTimer/1000 % 5 && appTimer % 10 == 0)) {
-		// 	vote((short)(rand() % 10000));
-		// }
-		
+		int minuteRate = 2;
+		int minuteRatePlusOne = 3;
+		currentMinute = (appTimer/60000 % 1000) % minuteRatePlusOne;
+
+
+        if(currentMinute == minuteRate && (appTimer/1000 % 5 && appTimer % 1000 == 0)) {
+			vote((short)(voteIndex));
+            voteIndex++;
+		}
+
 		// if 10 seconds have passed, trigger retries
 		if ((appTimer / 1000) % 10 == 0 && (appTimer / 100) % 100 == 0) {
 			for (int i=0; i < MAX_RETRY_STORAGE_SIZE; i++){
