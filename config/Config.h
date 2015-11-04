@@ -211,8 +211,8 @@ class Conf
 #define SEP "\r\n"
 
 //If undefined, the final build will have no logging / Terminal functionality built in
-#define ENABLE_LOGGING
-#define ENABLE_TERMINAL
+//#define ENABLE_LOGGING
+//#define ENABLE_TERMINAL
 #define ENABLE_UART
 
 
@@ -254,4 +254,5 @@ enum moduleID{
 #define NODE_ID_SHORTEST_SINK 31001
 
 
-
+/*############# NFC Configuration ###############*/
+#define ENABLE_NFC

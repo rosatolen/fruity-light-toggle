@@ -46,3 +46,6 @@ logt("<yourtag>", "appTimer = %d\n", appTimer);
 logt("<yourtag>", "minutes = %d\n", appTimer/60000 % 1000); // find the minutes
 
 logt("<yourtag>", "seconds = %d\n", appTimer/1000 % 60);  // find the seconds
+
+## Extern C
+Know what extern c is used for and why, when you import libraries from the NordicSDK, you get linker failures when you forget to put the libraries in extern c.

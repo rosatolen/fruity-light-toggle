@@ -13,12 +13,7 @@ function helptext {
     echo "    compile           Clean and compile FruityMesh source"
     echo "    debug             Setup jlinkgdbserver and start gdb"
     echo "    size              Show the size of the FruityMesh.hex and Soft Device files used for flashing"
-}
-
-function deploy-nodes-to-all-local-devices {
-    toggle-gateway-config false
-    compile
-    $HOME/nrf/projects/fruitymesh/deploy/deploy-from-1-on.sh
+    echo "    minprog           Show the progression of file size."
 }
 
 function term {
@@ -34,23 +29,99 @@ function compile {
     make clean && make
 }
 
-function toggle-gateway-config {
-    if [[ `sed '30q;d' src/modules/GatewayModule.cpp` != *"#define IS_GATEWAY_DEVICE"* ]]
+function replace-line-in-config {
+    FILE=$2
+    CONFIG_VARIABLE=$3
+    ENDING_CONFIG_STATE=$4
+
+    # If given line doesn't contain the config variable we want to toggle
+    if [[ `sed "$1q;d" $FILE` != *"$CONFIG_VARIABLE"* ]]
     then
         echo -e "ERROR!"
-        echo -e "'#define IS_GATEWAY_DEVICE' is not on line 30 in src/modules/GatewayModule.cpp"
+        echo -e "'$CONFIG_VARIABLE' is not on line 214 in $FILE\n"
+        echo -e "You are getting this error because we expect the config file at line $1 to have: '$CONFIG_VARIABLE' but it does not.\n"
         echo -e "I know this dependency is terrible. I'm sorry. Help automate it better."
         exit 1
     fi
-    perl -pe "s/.*/#define IS_GATEWAY_DEVICE $1/ if $. == 30" < src/modules/GatewayModule.cpp > src/modules/temporary
-    mv src/modules/temporary src/modules/GatewayModule.cpp
+
+    perl -pe "s/.*/$ENDING_CONFIG_STATE/ if $. == $1" < $FILE > config/temporary
+    mv config/temporary $FILE
 }
+
+GATEWAY_LINE=30
+GATEWAY_VARIABLE='IS_GATEWAY_DEVICE'
+GATEWAY_ON_CONFIG='#define IS_GATEWAY_DEVICE true'
+GATEWAY_OFF_CONFIG='#define IS_GATEWAY_DEVICE false'
+GATEWAY_CONFIG_FILE=src/modules/GatewayModule.cpp
+
+function toggle-gateway-config {
+    if $1; then
+        replace-line-in-config $GATEWAY_LINE $GATEWAY_CONFIG_FILE $GATEWAY_VARIABLE "$GATEWAY_ON_CONFIG"
+    else
+        replace-line-in-config $GATEWAY_LINE $GATEWAY_CONFIG_FILE $GATEWAY_VARIABLE "$GATEWAY_OFF_CONFIG"
+    fi
+}
+
+LOGGING_LINE=214
+LOGGING_ON_CONFIG='#define ENABLE_LOGGING'
+LOGGING_VARIABLE='ENABLE_LOGGING'
+LOGGING_OFF_CONFIG_ESCAPED='\/\/#define ENABLE_LOGGING'
+LOGGING_FILE=config/Config.h
+
+function toggle-logging-config {
+    if $1; then
+        replace-line-in-config $LOGGING_LINE $LOGGING_FILE $LOGGING_VARIABLE "$LOGGING_ON_CONFIG"
+    else
+        replace-line-in-config $LOGGING_LINE $LOGGING_FILE $LOGGING_VARIABLE "$LOGGING_OFF_CONFIG_ESCAPED"
+    fi
+}
+
+TERM_LINE=215
+TERM_ON_CONFIG='#define ENABLE_TERMINAL'
+TERM_VARIABLE='ENABLE_TERMINAL'
+TERM_OFF_CONFIG_ESCAPED='\/\/#define ENABLE_TERMINAL'
+TERM_FILE=config/Config.h
+
+function toggle-terminal-config {
+    if $1; then
+        replace-line-in-config $TERM_LINE $TERM_FILE $TERM_VARIABLE "$TERM_ON_CONFIG"
+    else
+        replace-line-in-config $TERM_LINE $TERM_FILE $TERM_VARIABLE "$TERM_OFF_CONFIG_ESCAPED"
+    fi
+}
+
+NFC_LINE=258
+NFC_ON_CONFIG='#define ENABLE_NFC'
+NFC_VARIABLE='ENABLE_NFC'
+NFC_OFF_CONFIG_ESCAPED='\/\/#define ENABLE_NFC'
+NFC_FILE=config/Config.h
+
+function toggle-nfc-config {
+    if $1; then
+        replace-line-in-config $NFC_LINE $NFC_FILE $NFC_VARIABLE "$NFC_ON_CONFIG"
+    else
+        replace-line-in-config $NFC_LINE $NFC_FILE $NFC_VARIABLE "$NFC_OFF_CONFIG_ESCAPED"
+    fi
+}
+
 
 function create-gateway {
     toggle-gateway-config true
+    toggle-logging-config true
+    toggle-terminal-config true
+    toggle-nfc-config false
     compile
     # Oldest connected J-Link device will be created as a gateway
     echo 0 | $HOME/nrf/tools/jlink $HOME/nrf/projects/fruitymesh/deploy/single-fruitymesh-softdevice-deploy.jlink
+}
+
+function deploy-nodes-to-all-local-devices {
+    toggle-gateway-config false
+    toggle-terminal-config false
+    toggle-logging-config false
+    toggle-nfc-config true
+    compile
+    $HOME/nrf/projects/fruitymesh/deploy/deploy-from-1-on.sh
 }
 
 function fleet {
@@ -79,6 +150,13 @@ function size {
     /usr/local/gcc-arm-none-eabi-4_9-2015q2/bin/arm-none-eabi-size _build/FruityMesh.elf
 }
 
+
+function minprog {
+    for file in $(ls size_records); do
+        echo $file && cat size_records/$file
+    done
+}
+
 case "$1" in
     fleet) fleet
     ;;
@@ -92,7 +170,27 @@ case "$1" in
     ;;
     debug) debug
     ;;
+    minprog) minprog
+    ;;
     size) size
+    ;;
+    non) toggle-nfc-config true
+    ;;
+    noff) toggle-nfc-config false
+    ;;
+    lon) toggle-logging-config true
+    ;;
+    loff) toggle-logging-config false
+    ;;
+    tgon) toggle-terminal-config true
+    ;;
+    tgoff) toggle-terminal-config false
+    ;;
+    gon) toggle-gateway-config true
+    ;;
+    goff) toggle-gateway-config false
+    ;;
+    gate) create-gateway
     ;;
     *) helptext
     ;;

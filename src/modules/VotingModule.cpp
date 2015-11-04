@@ -5,9 +5,15 @@
 #include <Node.h>
 #include "pca10028.h"
 
-
 extern "C"{
 #include <stdlib.h>
+#include "nrf_gpio.h"
+#include "nrf_drv_twi.h"
+#include "app_error.h"
+#include "nrf_drv_config.h"
+#include "app_util_platform.h"
+#include "nrf_delay.h"
+#include "pn532.h"
 }
 
 #define APP_TIMER_PRESCALER     0
@@ -114,35 +120,44 @@ void VotingModule::ConfigurationLoadedHandler()
 
 }
 
-void VotingModule::TimerEventHandler(u16 passedTime, u32 appTimer)
-{
+void VotingModule::TimerEventHandler(u16 passedTime, u32 appTimer) {
 	if (!INITIALIZED_QUEUE) {
-		srand(12345678);
 		INITIALIZED_QUEUE=true;
-		logt("VOTING", "Initialized random # generator.... ");
+		static int uart_configured = 0;
+		if(!uart_configured) {
+			uart_115200_config(RTS_PIN_NUMBER, /*TX_PIN_NUM*/ 19, CTS_PIN_NUMBER, /*RX_PIN_NUM*/ 20);
+		}
 	}
 
 	if (!node->isGatewayDevice) {
+#ifdef ENABLE_NFC
+		// Check tag exists every second
+		if (appTimer/1000 % 5 && appTimer % 1000 == 0) {
+			wakeup();
+			unsigned short userId = in_list_passive_target();
+			if (userId != 0) vote(userId);
+	    }
+#endif
+
 		// to use a new minute rate, start counting from 0
 		// so if you want to do something every 5th minute, your minute rate is 4
 		int minuteRate = 2;
 		int minuteRatePlusOne = 3;
 		currentMinute = (appTimer/60000 % 1000) % minuteRatePlusOne;
 
-
         if(currentMinute == minuteRate && (appTimer/1000 % 5 && appTimer % 1000 == 0)) {
-			vote((short)(voteIndex));
+            vote((short)(voteIndex));
             voteIndex++;
-		}
+        }
 
-		// if 10 seconds have passed, trigger retries
-		if ((appTimer / 1000) % 30 == 0 && (appTimer / 100) % 100 == 0) {
-			for (int i=0; i < MAX_RETRY_STORAGE_SIZE; i++){
-				if (retryStorage[i] != empty) {
-					vote(retryStorage[i]);
-				}
-			}
-		}
+        // if 10 seconds have passed, trigger retries
+        if ((appTimer / 1000) % 30 == 0 && (appTimer / 100) % 100 == 0) {
+            for (int i=0; i < MAX_RETRY_STORAGE_SIZE; i++){
+                if (retryStorage[i] != empty) {
+                    vote(retryStorage[i]);
+                }
+            }
+        }
 	}
 }
 
