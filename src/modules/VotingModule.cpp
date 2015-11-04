@@ -24,8 +24,6 @@ extern "C"{
 
 #define MAX_RETRY_STORAGE_SIZE 30
 
-int voteIndex = 0;
-
 unsigned short empty = 0;
 unsigned short retryStorage[MAX_RETRY_STORAGE_SIZE] = {0};
 int currentMinute = 0;
@@ -133,17 +131,6 @@ void VotingModule::TimerEventHandler(u16 passedTime, u32 appTimer) {
 			unsigned short userId = in_list_passive_target();
 			if (userId != 0) vote(userId);
 	    }
-
-		// to use a new minute rate, start counting from 0
-		// so if you want to do something every 5th minute, your minute rate is 4
-		int minuteRate = 2;
-		int minuteRatePlusOne = 3;
-		currentMinute = (appTimer/60000 % 1000) % minuteRatePlusOne;
-
-        if(currentMinute == minuteRate && (appTimer/1000 % 5 && appTimer % 1000 == 0)) {
-            vote((short)(voteIndex));
-            voteIndex++;
-        }
 
         // if 10 seconds have passed, trigger retries
         if ((appTimer / 1000) % 30 == 0 && (appTimer / 100) % 100 == 0) {
