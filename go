@@ -15,6 +15,7 @@ function helptext {
     echo "    debug             Setup jlinkgdbserver and start gdb"
     echo "    size              Show the size of the FruityMesh.hex and Soft Device files used for flashing"
     echo "    minprog           Show the progression of file size."
+    echo "    pers              Create and deploy a persistor to the oldest attached device"
 }
 
 function term {
