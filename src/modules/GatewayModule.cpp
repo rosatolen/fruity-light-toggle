@@ -27,7 +27,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <GatewayModule.h>
 #include <stdlib.h>
 
-#define IS_GATEWAY_DEVICE true
+#define IS_GATEWAY_DEVICE false
 
 extern "C"{
 

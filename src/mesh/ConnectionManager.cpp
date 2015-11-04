@@ -158,11 +158,11 @@ void ConnectionManager::QueuePacket(Connection* connection, u8* data, u16 dataLe
 	bool putResult = connection->packetSendQueue->Put(data, dataLength, reliable);
 
 	if(putResult) {
-		pendingPackets++;
+        pendingPackets++;
 	} else {
-		//TODO: Error handling: What should happen when the queue is full?
-		//Currently, additional packets are dropped
-		logt("ERROR", "Send queue is already full");
+		connection->packetSendQueue->Clean();
+        pendingPackets = 0;
+        logt("ERROR", "Send queue is already full. Cleaning queue.");
 	}
 }
 
@@ -377,7 +377,6 @@ void ConnectionManager::DisconnectionHandler(ble_evt_t* bleEvent)
 
 		//remove pending packets
 		cm->pendingPackets -= connection->packetSendQueue->_numElements;
-
 		connection->isConnected = false;
 
 		//Notify the callback of the disconnection before notifying the connection

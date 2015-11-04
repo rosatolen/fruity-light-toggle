@@ -22,7 +22,7 @@ extern "C"{
 #define BUTTON_DEBOUNCE_DELAY   50
 #define APP_GPIOTE_MAX_USERS    1
 
-#define MAX_RETRY_STORAGE_SIZE 60
+#define MAX_RETRY_STORAGE_SIZE 30
 
 int voteIndex = 0;
 
@@ -50,9 +50,9 @@ void removeFromRetryStorage(unsigned short userId) {
 }
 
 void putInRetryStorage(unsigned short userId) {
-	int index = 0; 
+	int index = 0;
 	unsigned short temp[MAX_RETRY_STORAGE_SIZE] = { empty,empty,empty,empty,empty };
-	
+
 	for (int i=0; i < MAX_RETRY_STORAGE_SIZE; i++) {
 		if(retryStorage[i] == userId) {
 			break;
@@ -120,34 +120,42 @@ void VotingModule::ConfigurationLoadedHandler()
 
 }
 
-void VotingModule::TimerEventHandler(u16 passedTime, u32 appTimer)
-{
+void VotingModule::TimerEventHandler(u16 passedTime, u32 appTimer) {
 	if (!INITIALIZED_QUEUE) {
 		INITIALIZED_QUEUE=true;
-
 		static int uart_configured = 0;
-		if(!uart_configured)
-		{
+		if(!uart_configured) {
 			uart_115200_config(RTS_PIN_NUMBER, /*TX_PIN_NUM*/ 19, CTS_PIN_NUMBER, /*RX_PIN_NUM*/ 20);
 		}
 	}
 
 	if (!node->isGatewayDevice) {
-		// every second
+		// Check tag exists every second
 		if (appTimer/1000 % 5 && appTimer % 1000 == 0) {
 			wakeup();
 			unsigned short userId = in_list_passive_target();
 			if (userId != 0) vote(userId);
-		}
+	    }
 
-		// if 10 seconds have passed, trigger retries
-		if ((appTimer / 1000) % 10 == 0 && (appTimer / 100) % 100 == 0) {
-			for (int i=0; i < MAX_RETRY_STORAGE_SIZE; i++){
-				if (retryStorage[i] != empty) {
-					vote(retryStorage[i]);
-				}
-			}
-		}
+		// to use a new minute rate, start counting from 0
+		// so if you want to do something every 5th minute, your minute rate is 4
+		int minuteRate = 2;
+		int minuteRatePlusOne = 3;
+		currentMinute = (appTimer/60000 % 1000) % minuteRatePlusOne;
+
+        if(currentMinute == minuteRate && (appTimer/1000 % 5 && appTimer % 1000 == 0)) {
+            vote((short)(voteIndex));
+            voteIndex++;
+        }
+
+        // if 10 seconds have passed, trigger retries
+        if ((appTimer / 1000) % 30 == 0 && (appTimer / 100) % 100 == 0) {
+            for (int i=0; i < MAX_RETRY_STORAGE_SIZE; i++){
+                if (retryStorage[i] != empty) {
+                    vote(retryStorage[i]);
+                }
+            }
+        }
 
 	}
 }

@@ -37,21 +37,20 @@ void fillConnectionStruct(Connection *conn, connection &connStruct){
 
 void HeartbeatModule::TimerEventHandler(u16 passedTime, u32 appTimer)
 {
-    // fire every 5 seconds. TODO: make this not confusing and flakey
-		if ((appTimer / 1000) % 5 == 0 && appTimer % 10 == 0) {
-			connPacketHeartbeat packet;
+    if ((appTimer / 1000) % 5 == 0 && (appTimer / 100) % 10 == 0) {
+        connPacketHeartbeat packet;
 
-			packet.header.messageType = MESSAGE_TYPE_HEARTBEAT;
-			packet.header.sender = node->persistentConfig.nodeId;
-			packet.header.receiver = NODE_ID_BROADCAST;
+        packet.header.messageType = MESSAGE_TYPE_HEARTBEAT;
+        packet.header.sender = node->persistentConfig.nodeId;
+        packet.header.receiver = NODE_ID_BROADCAST;
 
-      fillConnectionStruct(cm->inConnection,packet.inConn);
-      fillConnectionStruct(cm->outConnections[0],packet.outConn[0]);
-      fillConnectionStruct(cm->outConnections[1],packet.outConn[1]);
-      fillConnectionStruct(cm->outConnections[2],packet.outConn[2]);
+        fillConnectionStruct(cm->inConnection,packet.inConn);
+        fillConnectionStruct(cm->outConnections[0],packet.outConn[0]);
+        fillConnectionStruct(cm->outConnections[1],packet.outConn[1]);
+        fillConnectionStruct(cm->outConnections[2],packet.outConn[2]);
 
-			cm->SendMessageToReceiver(NULL, (u8*)&packet, sizeof(connPacketHeartbeat), true);
-		}
+        cm->SendMessageToReceiver(NULL, (u8*)&packet, sizeof(connPacketHeartbeat), true);
+    }
 }
 
 void HeartbeatModule::ConnectionPacketReceivedEventHandler(connectionPacket* inPacket, Connection* connection, connPacketHeader* packetHeader, u16 dataLength)
@@ -63,7 +62,7 @@ void HeartbeatModule::ConnectionPacketReceivedEventHandler(connectionPacket* inP
 
   connPacketHeartbeat* packet = (connPacketHeartbeat*)packetHeader;
 
-  logt("HEARTBEAT", "HEARTBEAT RECEIVED from nodeId:%d inConn:%d outConns:[%d,%d,%d]\n", 
+  logt("HEARTBEAT", "HEARTBEAT RECEIVED from nodeId:%d inConn:%d outConns:[%d,%d,%d]\n",
       packetHeader->sender,
       packet->inConn.partnerId,
       packet->outConn[0].partnerId,
