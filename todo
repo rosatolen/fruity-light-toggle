@@ -1,12 +1,13 @@
-x	1. Send string of wakeup and watch for reaction
-x	2. Fix baud rate to 115200 instead of 38400
-x	3. refactor pn532 code into another file
-x 	4. Start polling
-x	5. Switch to 19 and 20 pins
-x	6. Get the user id from the tag
-x	7. Send a vote with user id from the tag
-x	8. If tag is present, send over id else wait for tag to be present
-x	9. After sending vote, return to waiting
+x    1. Send string of wakeup and watch for reaction
+x    2. Fix baud rate to 115200 instead of 38400
+x    3. refactor pn532 code into another file
+x    4. Start polling
+x    5. Switch to 19 and 20 pins
+x    6. Get the user id from the tag
+x    7. Send a vote with user id from the tag
+x    8. If tag is present, send over id else wait for tag to be present
+x    9. After sending vote, return to waiting
+x   10. Fix "Send Queue Full" Errors with throttled network
 
-10. Use stricter conditions for identifying a tag (use full qcon.com/?id= string check)
-11. Fix "Send Queue Full" Errors with throttled network
+11. Is voting crashing the device?
+12. Use stricter conditions for identifying a tag (use full qcon.com/?id= string check)
