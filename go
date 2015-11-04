@@ -8,7 +8,7 @@ function helptext {
     echo "Available commands are:"
     echo "    fleet             Create and deploy a Fleet: All connected devices become Nodes except for 1 Gateway at oldest attached device"
     echo "    nodes             Create Nodes out of all connected devices"
-    echo "    gateway           Create and deploy a Gateway to oldest attached device"
+    echo "    gate           Create and deploy a Gateway to oldest attached device"
     echo "    term <tty.file>   Open terminal to specified file"
     echo "    compile           Clean and compile FruityMesh source"
     echo "    debug             Setup jlinkgdbserver and start gdb"
@@ -162,7 +162,7 @@ case "$1" in
     ;;
     nodes) deploy-nodes-to-all-local-devices
     ;;
-    gateway) create-gateway
+    gate) create-gateway
     ;;
     term) term "$2"
     ;;
@@ -173,24 +173,6 @@ case "$1" in
     minprog) minprog
     ;;
     size) size
-    ;;
-    non) toggle-nfc-config true
-    ;;
-    noff) toggle-nfc-config false
-    ;;
-    lon) toggle-logging-config true
-    ;;
-    loff) toggle-logging-config false
-    ;;
-    tgon) toggle-terminal-config true
-    ;;
-    tgoff) toggle-terminal-config false
-    ;;
-    gon) toggle-gateway-config true
-    ;;
-    goff) toggle-gateway-config false
-    ;;
-    gate) create-gateway
     ;;
     *) helptext
     ;;

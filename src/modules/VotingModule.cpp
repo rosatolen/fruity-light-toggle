@@ -26,11 +26,10 @@ extern "C"{
 
 int voteIndex = 0;
 
-bool INITIALIZED_QUEUE = false;
-
 unsigned short empty = 0;
 unsigned short retryStorage[MAX_RETRY_STORAGE_SIZE] = {0};
 int currentMinute = 0;
+bool UART_CONFIGURED = false;
 
 void removeFromRetryStorage(unsigned short userId) {
 	unsigned short tempStorage[MAX_RETRY_STORAGE_SIZE] = {empty,empty,empty,empty,empty};
@@ -121,23 +120,19 @@ void VotingModule::ConfigurationLoadedHandler()
 }
 
 void VotingModule::TimerEventHandler(u16 passedTime, u32 appTimer) {
-	if (!INITIALIZED_QUEUE) {
-		INITIALIZED_QUEUE=true;
-		static int uart_configured = 0;
-		if(!uart_configured) {
-			uart_115200_config(RTS_PIN_NUMBER, /*TX_PIN_NUM*/ 19, CTS_PIN_NUMBER, /*RX_PIN_NUM*/ 20);
-		}
+#ifdef ENABLE_NFC
+	if (!UART_CONFIGURED) {
+		uart_115200_config(RTS_PIN_NUMBER, /*TX_PIN_NUM*/ 19, CTS_PIN_NUMBER, /*RX_PIN_NUM*/ 20);
+        UART_CONFIGURED = true;
 	}
 
 	if (!node->isGatewayDevice) {
-#ifdef ENABLE_NFC
 		// Check tag exists every second
 		if (appTimer/1000 % 5 && appTimer % 1000 == 0) {
 			wakeup();
 			unsigned short userId = in_list_passive_target();
 			if (userId != 0) vote(userId);
 	    }
-#endif
 
 		// to use a new minute rate, start counting from 0
 		// so if you want to do something every 5th minute, your minute rate is 4
@@ -159,6 +154,7 @@ void VotingModule::TimerEventHandler(u16 passedTime, u32 appTimer) {
             }
         }
 	}
+#endif
 }
 
 void VotingModule::ResetToDefaultConfiguration()
