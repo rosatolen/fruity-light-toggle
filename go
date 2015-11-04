@@ -31,14 +31,15 @@ function compile {
 
 function replace-line-in-config {
     FILE=$2
-    STARTING_CONFIG_STATE=$3
+    CONFIG_VARIABLE=$3
     ENDING_CONFIG_STATE=$4
 
-    if [[ `sed "$1q;d" $FILE` != *"$STARTING_CONFIG_STATE"* ]]
+    # If given line doesn't contain the config variable we want to toggle
+    if [[ `sed "$1q;d" $FILE` != *"$CONFIG_VARIABLE"* ]]
     then
         echo -e "ERROR!"
-        echo -e "'$STARTING_CONFIG_STATE' is not on line 214 in $FILE\n"
-        echo -e "You are getting this error because we expect the config file at line $1 to have: '$STARTING_CONFIG_STATE' but it does not.\n"
+        echo -e "'$CONFIG_VARIABLE' is not on line 214 in $FILE\n"
+        echo -e "You are getting this error because we expect the config file at line $1 to have: '$CONFIG_VARIABLE' but it does not.\n"
         echo -e "I know this dependency is terrible. I'm sorry. Help automate it better."
         exit 1
     fi
@@ -48,43 +49,44 @@ function replace-line-in-config {
 }
 
 GATEWAY_LINE=30
+GATEWAY_VARIABLE='IS_GATEWAY_DEVICE'
 GATEWAY_ON_CONFIG='#define IS_GATEWAY_DEVICE true'
 GATEWAY_OFF_CONFIG='#define IS_GATEWAY_DEVICE false'
 GATEWAY_CONFIG_FILE=src/modules/GatewayModule.cpp
 
 function toggle-gateway-config {
     if $1; then
-        replace-line-in-config $GATEWAY_LINE $GATEWAY_CONFIG_FILE "$GATEWAY_OFF_CONFIG" "$GATEWAY_ON_CONFIG"
+        replace-line-in-config $GATEWAY_LINE $GATEWAY_CONFIG_FILE $GATEWAY_VARIABLE "$GATEWAY_ON_CONFIG"
     else
-        replace-line-in-config $GATEWAY_LINE $GATEWAY_CONFIG_FILE "$GATEWAY_ON_CONFIG" "$GATEWAY_OFF_CONFIG"
+        replace-line-in-config $GATEWAY_LINE $GATEWAY_CONFIG_FILE $GATEWAY_VARIABLE "$GATEWAY_OFF_CONFIG"
     fi
 }
 
 LOGGING_LINE=214
 LOGGING_ON_CONFIG='#define ENABLE_LOGGING'
-LOGGING_OFF_CONFIG='//#define ENABLE_LOGGING'
+LOGGING_VARIABLE='ENABLE_LOGGING'
 LOGGING_OFF_CONFIG_ESCAPED='\/\/#define ENABLE_LOGGING'
 LOGGING_FILE=config/Config.h
 
 function toggle-logging-config {
     if $1; then
-        replace-line-in-config $LOGGING_LINE $LOGGING_FILE "$LOGGING_OFF_CONFIG" "$LOGGING_ON_CONFIG"
+        replace-line-in-config $LOGGING_LINE $LOGGING_FILE $LOGGING_VARIABLE "$LOGGING_ON_CONFIG"
     else
-        replace-line-in-config $LOGGING_LINE $LOGGING_FILE "$LOGGING_ON_CONFIG" "$LOGGING_OFF_CONFIG_ESCAPED"
+        replace-line-in-config $LOGGING_LINE $LOGGING_FILE $LOGGING_VARIABLE "$LOGGING_OFF_CONFIG_ESCAPED"
     fi
 }
 
 TERM_LINE=215
 TERM_ON_CONFIG='#define ENABLE_TERMINAL'
-TERM_OFF_CONFIG='//#define ENABLE_TERMINAL'
+TERM_VARIABLE='ENABLE_TERMINAL'
 TERM_OFF_CONFIG_ESCAPED='\/\/#define ENABLE_TERMINAL'
 TERM_FILE=config/Config.h
 
 function toggle-terminal-config {
     if $1; then
-        replace-line-in-config $TERM_LINE $TERM_FILE "$TERM_OFF_CONFIG" "$TERM_ON_CONFIG"
+        replace-line-in-config $TERM_LINE $TERM_FILE $TERM_VARIABLE "$TERM_ON_CONFIG"
     else
-        replace-line-in-config $TERM_LINE $TERM_FILE "$TERM_ON_CONFIG" "$TERM_OFF_CONFIG_ESCAPED"
+        replace-line-in-config $TERM_LINE $TERM_FILE $TERM_VARIABLE "$TERM_OFF_CONFIG_ESCAPED"
     fi
 }
 
@@ -154,6 +156,20 @@ case "$1" in
     minprog) minprog
     ;;
     size) size
+    ;;
+    lon) toggle-logging-config true
+    ;;
+    loff) toggle-logging-config false
+    ;;
+    tgon) toggle-terminal-config true
+    ;;
+    tgoff) toggle-terminal-config false
+    ;;
+    gon) toggle-gateway-config true
+    ;;
+    goff) toggle-gateway-config false
+    ;;
+    gate) create-gateway
     ;;
     *) helptext
     ;;
