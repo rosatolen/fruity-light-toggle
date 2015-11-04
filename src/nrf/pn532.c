@@ -91,12 +91,13 @@ uint8_t hex_to_decimal(uint8_t hex) {
 }
 
 unsigned short get_attendee_id() {
-    uint8_t attendeeId[3] = {0, 0, 0, 0};
+    uint8_t attendeeId[4] = {0};
     int i = 0;
     while (i < 4) {
         attendeeId[i] = hex_to_decimal(uart_get());
         i++;
     }
+ 
     return 1000 * attendeeId[0] + 100 * attendeeId[1] + 10 * attendeeId[2] + attendeeId[3];
 }
 
