@@ -117,7 +117,7 @@ function create-gateway {
     echo 0 | $HOME/nrf/tools/jlink $HOME/nrf/projects/fruitymesh/deploy/single-fruitymesh-softdevice-deploy.jlink
 }
 
-function create-persistor {
+function create-persistors {
     toggle-gateway-config false
     toggle-logging-config true
     toggle-terminal-config true
@@ -175,7 +175,7 @@ case "$1" in
     ;;
     nodes) deploy-nodes-to-all-local-devices
     ;;
-    pers) create-persistor
+    pers) create-persistors
     ;;
     gate) create-gateway
     ;;
