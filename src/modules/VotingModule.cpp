@@ -16,7 +16,7 @@ extern "C"{
 #define BUTTON_DEBOUNCE_DELAY   50
 #define APP_GPIOTE_MAX_USERS    1
 
-#define MAX_RETRY_STORAGE_SIZE 60
+#define MAX_RETRY_STORAGE_SIZE 30
 
 int voteIndex = 0;
 
@@ -44,9 +44,9 @@ void removeFromRetryStorage(unsigned short userId) {
 }
 
 void putInRetryStorage(unsigned short userId) {
-	int index = 0; 
+	int index = 0;
 	unsigned short temp[MAX_RETRY_STORAGE_SIZE] = { empty,empty,empty,empty,empty };
-	
+
 	for (int i=0; i < MAX_RETRY_STORAGE_SIZE; i++) {
 		if(retryStorage[i] == userId) {
 			break;
@@ -119,7 +119,7 @@ void VotingModule::TimerEventHandler(u16 passedTime, u32 appTimer)
 	if (!INITIALIZED_QUEUE) {
 		srand(12345678);
 		INITIALIZED_QUEUE=true;
-		logt("VOTING", "Initialized random # generator.... ");	
+		logt("VOTING", "Initialized random # generator.... ");
 	}
 
 	if (!node->isGatewayDevice) {
@@ -136,7 +136,7 @@ void VotingModule::TimerEventHandler(u16 passedTime, u32 appTimer)
 		}
 
 		// if 10 seconds have passed, trigger retries
-		if ((appTimer / 1000) % 10 == 0 && (appTimer / 100) % 100 == 0) {
+		if ((appTimer / 1000) % 30 == 0 && (appTimer / 100) % 100 == 0) {
 			for (int i=0; i < MAX_RETRY_STORAGE_SIZE; i++){
 				if (retryStorage[i] != empty) {
 					vote(retryStorage[i]);

@@ -37,7 +37,6 @@ void fillConnectionStruct(Connection *conn, connection &connStruct){
 
 void HeartbeatModule::TimerEventHandler(u16 passedTime, u32 appTimer)
 {
-
     if ((appTimer / 1000) % 5 == 0 && (appTimer / 100) % 10 == 0) {
         connPacketHeartbeat packet;
 

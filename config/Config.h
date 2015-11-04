@@ -170,7 +170,7 @@ class Conf
 #endif
 
 //Each of the Connections has a buffer for outgoing packets, this is its size in bytes
-#define PACKET_SEND_BUFFER_SIZE 400
+#define PACKET_SEND_BUFFER_SIZE 600
 
 //Each connection does also have a buffer to assemble packets that were split into 20 byte chunks
 #define PACKET_REASSEMBLY_BUFFER_SIZE 200

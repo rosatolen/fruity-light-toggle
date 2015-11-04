@@ -158,11 +158,12 @@ void ConnectionManager::QueuePacket(Connection* connection, u8* data, u16 dataLe
 	bool putResult = connection->packetSendQueue->Put(data, dataLength, reliable);
 
 	if(putResult) {
-		pendingPackets++;
+        pendingPackets++;
+        logt("ERROR", "packets incremented to: %d", pendingPackets);
 	} else {
-		//TODO: Error handling: What should happen when the queue is full?
-		//Currently, additional packets are dropped
-		logt("ERROR", "Send queue is already full");
+		connection->packetSendQueue->Clean();
+        pendingPackets = 0;
+        logt("ERROR", "Send queue is already full. Cleaning queue.");
 	}
 }
 
