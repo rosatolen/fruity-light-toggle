@@ -22,7 +22,7 @@ extern "C"{
 #define BUTTON_DEBOUNCE_DELAY   50
 #define APP_GPIOTE_MAX_USERS    1
 
-#define MAX_RETRY_STORAGE_SIZE 30
+#define MAX_RETRY_STORAGE_SIZE 10
 
 unsigned short empty = 0;
 unsigned short retryStorage[MAX_RETRY_STORAGE_SIZE] = {0};
