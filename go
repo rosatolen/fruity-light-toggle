@@ -111,7 +111,17 @@ function create-gateway {
     toggle-terminal-config true
     toggle-nfc-config false
     compile
-    # Oldest connected J-Link device will be created as a gateway
+    # Oldest connected J-Link device will become a gateway
+    echo 0 | $HOME/nrf/tools/jlink $HOME/nrf/projects/fruitymesh/deploy/single-fruitymesh-softdevice-deploy.jlink
+}
+
+function create-persistor {
+    toggle-gateway-config false
+    toggle-logging-config true
+    toggle-terminal-config true
+    toggle-nfc-config false
+    compile
+    # Oldest connected J-Link device will become a persistor
     echo 0 | $HOME/nrf/tools/jlink $HOME/nrf/projects/fruitymesh/deploy/single-fruitymesh-softdevice-deploy.jlink
 }
 
@@ -164,15 +174,17 @@ case "$1" in
     ;;
     gate) create-gateway
     ;;
+    pers) create-persistor
+    ;;
     term) term "$2"
     ;;
     compile) compile
     ;;
     debug) debug
     ;;
-    minprog) minprog
-    ;;
     size) size
+    ;;
+    minprog) minprog
     ;;
     *) helptext
     ;;
