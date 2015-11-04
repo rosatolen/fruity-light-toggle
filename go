@@ -8,7 +8,8 @@ function helptext {
     echo "Available commands are:"
     echo "    fleet             Create and deploy a Fleet: All connected devices become Nodes except for 1 Gateway at oldest attached device"
     echo "    nodes             Create Nodes out of all connected devices"
-    echo "    gate           Create and deploy a Gateway to oldest attached device"
+    echo "    pers              Creates Persistors out of all connected devices"
+    echo "    gate              Create and deploy a Gateway to oldest attached device"
     echo "    term <tty.file>   Open terminal to specified file"
     echo "    compile           Clean and compile FruityMesh source"
     echo "    debug             Setup jlinkgdbserver and start gdb"
@@ -122,7 +123,8 @@ function create-persistor {
     toggle-nfc-config false
     compile
     # Oldest connected J-Link device will become a persistor
-    echo 0 | $HOME/nrf/tools/jlink $HOME/nrf/projects/fruitymesh/deploy/single-fruitymesh-softdevice-deploy.jlink
+    $HOME/nrf/projects/fruitymesh/deploy/deploy-from-1-on.sh
+    #echo 0 | $HOME/nrf/tools/jlink $HOME/nrf/projects/fruitymesh/deploy/single-fruitymesh-softdevice-deploy.jlink
 }
 
 function deploy-nodes-to-all-local-devices {
@@ -172,9 +174,9 @@ case "$1" in
     ;;
     nodes) deploy-nodes-to-all-local-devices
     ;;
-    gate) create-gateway
-    ;;
     pers) create-persistor
+    ;;
+    gate) create-gateway
     ;;
     term) term "$2"
     ;;
