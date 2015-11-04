@@ -254,4 +254,5 @@ enum moduleID{
 #define NODE_ID_SHORTEST_SINK 31001
 
 
-
+/*############# NFC Configuration ###############*/
+#define ENABLE_NFC

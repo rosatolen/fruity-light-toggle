@@ -90,10 +90,26 @@ function toggle-terminal-config {
     fi
 }
 
+NFC_LINE=258
+NFC_ON_CONFIG='#define ENABLE_NFC'
+NFC_VARIABLE='ENABLE_NFC'
+NFC_OFF_CONFIG_ESCAPED='\/\/#define ENABLE_NFC'
+NFC_FILE=config/Config.h
+
+function toggle-nfc-config {
+    if $1; then
+        replace-line-in-config $NFC_LINE $NFC_FILE $NFC_VARIABLE "$NFC_ON_CONFIG"
+    else
+        replace-line-in-config $NFC_LINE $NFC_FILE $NFC_VARIABLE "$NFC_OFF_CONFIG_ESCAPED"
+    fi
+}
+
+
 function create-gateway {
     toggle-gateway-config true
     toggle-logging-config true
     toggle-terminal-config true
+    toggle-nfc-config false
     compile
     # Oldest connected J-Link device will be created as a gateway
     echo 0 | $HOME/nrf/tools/jlink $HOME/nrf/projects/fruitymesh/deploy/single-fruitymesh-softdevice-deploy.jlink
@@ -103,6 +119,7 @@ function deploy-nodes-to-all-local-devices {
     toggle-gateway-config false
     toggle-terminal-config false
     toggle-logging-config false
+    toggle-nfc-config true
     compile
     $HOME/nrf/projects/fruitymesh/deploy/deploy-from-1-on.sh
 }
@@ -156,6 +173,10 @@ case "$1" in
     minprog) minprog
     ;;
     size) size
+    ;;
+    non) toggle-nfc-config true
+    ;;
+    noff) toggle-nfc-config false
     ;;
     lon) toggle-logging-config true
     ;;

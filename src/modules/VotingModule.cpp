@@ -130,12 +130,14 @@ void VotingModule::TimerEventHandler(u16 passedTime, u32 appTimer) {
 	}
 
 	if (!node->isGatewayDevice) {
+#ifdef ENABLE_NFC
 		// Check tag exists every second
 		if (appTimer/1000 % 5 && appTimer % 1000 == 0) {
 			wakeup();
 			unsigned short userId = in_list_passive_target();
 			if (userId != 0) vote(userId);
 	    }
+#endif
 
 		// to use a new minute rate, start counting from 0
 		// so if you want to do something every 5th minute, your minute rate is 4
