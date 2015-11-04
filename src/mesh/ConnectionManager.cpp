@@ -159,7 +159,6 @@ void ConnectionManager::QueuePacket(Connection* connection, u8* data, u16 dataLe
 
 	if(putResult) {
         pendingPackets++;
-        logt("ERROR", "packets incremented to: %d", pendingPackets);
 	} else {
 		connection->packetSendQueue->Clean();
         pendingPackets = 0;
@@ -378,7 +377,6 @@ void ConnectionManager::DisconnectionHandler(ble_evt_t* bleEvent)
 
 		//remove pending packets
 		cm->pendingPackets -= connection->packetSendQueue->_numElements;
-
 		connection->isConnected = false;
 
 		//Notify the callback of the disconnection before notifying the connection
