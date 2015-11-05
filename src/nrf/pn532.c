@@ -305,17 +305,41 @@ unsigned short in_list_passive_target() {
     short attendeeId = 0;
     int n =0; 
     while(n < 26) {
-        if(uart_get() == 'i') {
-            if(uart_get() =='d') {
-                if(uart_get() == '=') {
-                    attendeeId = get_attendee_id();
-                    break;
-                }
-                n++;
-            }
-            n++;
-        }
-        n++;
+	if (uart_get() == 's') {
+		if (uart_get() == 'f') {
+			if (uart_get() == '.') {
+				if (uart_get() == 'c') {
+					if (uart_get() == 'o') {
+						if (uart_get() == 'm') {
+							if (uart_get() == '/') {
+								if (uart_get() == '?') {
+									if (uart_get() == 'i') {
+										if (uart_get() == 'd') {
+											if (uart_get() == '=') {
+												attendeeId = get_attendee_id();
+												break;
+											}
+											n++;
+										}
+										n++;
+									}
+									n++;
+								}
+								n++;
+							}
+							n++;
+						}
+						n++;
+					}
+					n++;
+				}
+				n++;
+			}
+			n++;
+		}
+		n++;
+	}
+	n++;
     }
 
     //gobble_number_of_bytes
