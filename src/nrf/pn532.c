@@ -97,12 +97,7 @@ unsigned short get_attendee_id() {
         attendeeId[i] = hex_to_decimal(uart_get());
         i++;
     }
-    uart_put_char('\x2A');
-    uart_put_char('\x3A');
-    uart_put_char(attendeeId[0]);
-    uart_put_char(attendeeId[1]);
-    uart_put_char(attendeeId[2]);
-    uart_put_char(attendeeId[3]); 
+    
     return 1000 * attendeeId[0] + 100 * attendeeId[1] + 10 * attendeeId[2] + attendeeId[3];
 }
 
