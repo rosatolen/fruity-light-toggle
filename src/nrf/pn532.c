@@ -97,8 +97,56 @@ unsigned short get_attendee_id() {
         attendeeId[i] = hex_to_decimal(uart_get());
         i++;
     }
- 
+    uart_put_char('\x2A');
+    uart_put_char('\x3A');
+    uart_put_char(attendeeId[0]);
+    uart_put_char(attendeeId[1]);
+    uart_put_char(attendeeId[2]);
+    uart_put_char(attendeeId[3]); 
     return 1000 * attendeeId[0] + 100 * attendeeId[1] + 10 * attendeeId[2] + attendeeId[3];
+}
+
+unsigned short find_attendee_id() {
+	int n = 0;
+	short attendeeId = 0;
+        while (n < 26) {
+		if (uart_get() == 's') {
+			if (uart_get() == 'f') {
+				if (uart_get() == '.') {
+					if (uart_get() == 'c') {
+						if (uart_get() == 'o') {
+							if (uart_get() == 'm') {
+								if (uart_get() == '/') {
+									if (uart_get() == '?') {
+										if (uart_get() == 'i') {
+											if (uart_get() == 'd') {
+												if (uart_get() == '=') {
+													attendeeId = get_attendee_id();
+													break;
+												}
+												n++;
+											}
+											n++;
+										}
+										n++;
+									}
+									n++;
+								}
+								n++;
+							}
+							n++;
+						}
+						n++;
+					}
+					n++;
+				}
+				n++;
+			}
+			n++;
+		}
+		n++;
+	}
+    return attendeeId;
 }
 
 void get_ack() {
@@ -303,45 +351,7 @@ unsigned short in_list_passive_target() {
     in_data_exchange('\x08', '\xB3');
 
     short attendeeId = 0;
-    int n =0; 
-    while(n < 26) {
-	if (uart_get() == 's') {
-		if (uart_get() == 'f') {
-			if (uart_get() == '.') {
-				if (uart_get() == 'c') {
-					if (uart_get() == 'o') {
-						if (uart_get() == 'm') {
-							if (uart_get() == '/') {
-								if (uart_get() == '?') {
-									if (uart_get() == 'i') {
-										if (uart_get() == 'd') {
-											if (uart_get() == '=') {
-												attendeeId = get_attendee_id();
-												break;
-											}
-											n++;
-										}
-										n++;
-									}
-									n++;
-								}
-								n++;
-							}
-							n++;
-						}
-						n++;
-					}
-					n++;
-				}
-				n++;
-			}
-			n++;
-		}
-		n++;
-	}
-	n++;
-    }
-
+    attendeeId = find_attendee_id(); 
     //gobble_number_of_bytes
                                 //  s  f  .  c  o  m  /  ?  i  d  =  3  5  6  6 (254)
     // 00 00 FF - 13 ED - D5 41 00 73 66 2E 63 6F 6D 2F 3F 69 64 3D 33 35 36 36 FE 5A 00
