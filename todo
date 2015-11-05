@@ -9,5 +9,9 @@ x    8. If tag is present, send over id else wait for tag to be present
 x    9. After sending vote, return to waiting
 x   10. Fix "Send Queue Full" Errors with throttled network
 
-11. Is voting crashing the device?
-12. Use stricter conditions for identifying a tag (use full qcon.com/?id= string check)
+11. WHAT IS CRASHING THE DEVICES (gateway and nodes)!? - Tom
+13. Use stricter conditions for identifying a tag (use full qcon.com/?id= string check) and make system reliable - Ashley
+14. Gateway: Transform votes to POST request for C4Media and have a system for sending votes
+15. Gateway: Add Configuration setup process
+16. Gateway: Visualize the connections in a better graph on the Gateway
+16. Gateway: Visualize the gateway mesh packet queue
