@@ -142,15 +142,13 @@ unsigned short find_attendee_id() {
         i++;
         while(i < 16) {
             if(uart_get() != success_response[i]) {
-                i = 0;
+                break;
              }
              i++;
         }
         if(i > 15) {
             attendeeId = get_attendee_id();
         }
-    } else {
-        return 0;
     }
     uart_get(); // nom \xFE
     uart_get(); // nom \x5b
