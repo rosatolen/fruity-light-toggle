@@ -97,33 +97,32 @@ unsigned short get_attendee_id() {
         attendeeId[i] = hex_to_decimal(uart_get());
         i++;
     }
-    
+
     return 1000 * attendeeId[0] + 100 * attendeeId[1] + 10 * attendeeId[2] + attendeeId[3];
 }
 
 unsigned short find_attendee_id() {
-    int n = 0;
     int i = 0;
     short attendeeId = 0;
-    uint8_t success_response[11] = {'s', 'f', '.', 'c', 'o', 'm', '/', '?', 'i', 'd', '='};
-    while (n < 26) {
-        if(uart_get() == success_response[i]) {
-            i++;
-            n++;
-            while(i < 11) {
-                if(uart_get() != success_response[i]) {
-                    i = 0;
-                    n++;
-                 }
-                 i++;
-                 n++;
-            }
-            if(i > 10) {
-                attendeeId = get_attendee_id();
-            }
+    uint8_t success_response[16] = {'\x13', '\xED', '\xD5', '\x41', '\x00', 's', 'f', '.', 'c', 'o', 'm', '/', '?', 'i', 'd', '='};
+    uart_get(); // nom \x00
+    uart_get(); // nom \x00
+    uart_get(); // nom \xFF
+    if(uart_get() == success_response[i]) {
+        i++;
+        while(i < 16) {
+            if(uart_get() != success_response[i]) {
+                i = 0;
+             }
+             i++;
         }
-        n++;
-    }    
+        if(i > 15) {
+            attendeeId = get_attendee_id();
+        }
+    }
+    uart_get(); // nom \xFE
+    uart_get(); // nom \x5b
+    uart_get(); // nom \00
     return attendeeId;
 }
 
