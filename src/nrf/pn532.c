@@ -58,7 +58,6 @@ bool gobble_number_of_bytes_with_timeout(int number) {
         if (uart_get_with_timeout() == false) return false;
         i++;
     }
-    nrf_delay_us(1000);
     return true;
 }
 
