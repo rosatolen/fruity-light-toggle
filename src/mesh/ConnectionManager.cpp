@@ -56,6 +56,7 @@ ConnectionManager::ConnectionManager(){
 
 	//init vars
 	pendingPackets = 0;
+    queueOverflowCount = 0;
 	pendingConnection = NULL;
 	freeOutConnections = Config->meshMaxOutConnections;
 	freeInConnections = Config->meshMaxInConnections;
@@ -163,7 +164,12 @@ void ConnectionManager::QueuePacket(Connection* connection, u8* data, u16 dataLe
 		connection->packetSendQueue->Clean();
         pendingPackets = 0;
         logt("ERROR", "Send queue is already full. Cleaning queue.");
-	}
+        queueOverflowCount++;
+        if (queueOverflowCount == 2) {
+            logt("ERROR", "Send queue size exceeded over 2 times. Restarting machine.");
+            NVIC_SystemReset();
+        }
+    }
 }
 
 

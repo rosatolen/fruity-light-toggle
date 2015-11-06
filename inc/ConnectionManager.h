@@ -79,6 +79,8 @@ class ConnectionManager
 
 		//Keep track of outgoing packets and the transmit buffers
 		u16 pendingPackets;
+        //Keeps track of number of times queue overflows
+		u8 queueOverflowCount;
 
 		u8 txBuffersPerLink;
 
