@@ -31,10 +31,40 @@ uint8_t uart_get(void)
     return (uint8_t)NRF_UART0->RXD;
 }
 
+bool uart_get_with_timeout()
+{
+    int32_t timeout = 1;
+    bool succeeded = true;
+    while (NRF_UART0->EVENTS_RXDRDY != 1)
+    {
+        // Wait for RXD data to be received
+        if (timeout-- >= 0) {
+            nrf_delay_us(100);
+        } else {
+            succeeded = false;
+            break;
+        }
+    }
+
+    NRF_UART0->EVENTS_RXDRDY = 0;
+    uint8_t *rx_data = (uint8_t)NRF_UART0->RXD;
+
+    return succeeded;
+}
+
+bool gobble_number_of_bytes_with_timeout(int number) {
+    int i = 0;
+    while (i < number) {
+        if (uart_get_with_timeout() == false) return false;
+        i++;
+    }
+    nrf_delay_us(1000);
+    return true;
+}
 
 void wakeup() {
     uart_put_char('\x55');uart_put_char('\x55');
-    
+
     uart_put_char('\x00');uart_put_char('\x00');uart_put_char('\x00');uart_put_char('\x00');
     uart_put_char('\x00');uart_put_char('\x00');uart_put_char('\x00');uart_put_char('\x00');
     uart_put_char('\x00');uart_put_char('\x00');uart_put_char('\x00');uart_put_char('\x00');
@@ -69,7 +99,7 @@ bool tag_is_present() {
             if(uart_get() =='\x00') {
                 return false; 
             } else {
-                gobble_number_of_bytes(14);
+                if (gobble_number_of_bytes_with_timeout(14) == false) return false;
                 return true;
             }
             i++;
