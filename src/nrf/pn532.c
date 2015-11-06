@@ -102,45 +102,28 @@ unsigned short get_attendee_id() {
 }
 
 unsigned short find_attendee_id() {
-	int n = 0;
-	short attendeeId = 0;
-        while (n < 26) {
-		if (uart_get() == 's') {
-			if (uart_get() == 'f') {
-				if (uart_get() == '.') {
-					if (uart_get() == 'c') {
-						if (uart_get() == 'o') {
-							if (uart_get() == 'm') {
-								if (uart_get() == '/') {
-									if (uart_get() == '?') {
-										if (uart_get() == 'i') {
-											if (uart_get() == 'd') {
-												if (uart_get() == '=') {
-													attendeeId = get_attendee_id();
-													break;
-												}
-												n++;
-											}
-											n++;
-										}
-										n++;
-									}
-									n++;
-								}
-								n++;
-							}
-							n++;
-						}
-						n++;
-					}
-					n++;
-				}
-				n++;
-			}
-			n++;
-		}
-		n++;
-	}
+    int n = 0;
+    int i = 0;
+    short attendeeId = 0;
+    uint8_t success_response[11] = {'s', 'f', '.', 'c', 'o', 'm', '/', '?', 'i', 'd', '='};
+    while (n < 26) {
+        if(uart_get() == success_response[i]) {
+            i++;
+            n++;
+            while(i < 11) {
+                if(uart_get() != success_response[i]) {
+                    i = 0;
+                    n++;
+                 }
+                 i++;
+                 n++;
+            }
+            if(i > 10) {
+                attendeeId = get_attendee_id();
+            }
+        }
+        n++;
+    }    
     return attendeeId;
 }
 
