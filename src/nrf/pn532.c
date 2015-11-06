@@ -119,6 +119,8 @@ unsigned short find_attendee_id() {
         if(i > 15) {
             attendeeId = get_attendee_id();
         }
+    } else {
+        return 0;
     }
     uart_get(); // nom \xFE
     uart_get(); // nom \x5b
@@ -328,7 +330,8 @@ unsigned short in_list_passive_target() {
     in_data_exchange('\x08', '\xB3');
 
     short attendeeId = 0;
-    attendeeId = find_attendee_id(); 
+    attendeeId = find_attendee_id();
+    if (attendeeId == 0) return 0;
     //gobble_number_of_bytes
                                 //  s  f  .  c  o  m  /  ?  i  d  =  3  5  6  6 (254)
     // 00 00 FF - 13 ED - D5 41 00 73 66 2E 63 6F 6D 2F 3F 69 64 3D 33 35 36 36 FE 5A 00
