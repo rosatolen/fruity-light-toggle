@@ -220,7 +220,7 @@ extern "C"
 		{
 			if (error_code == NRF_ERROR_INVALID_STATE)
 			{
-
+                NVIC_SystemReset();
 				return;
 			}
 		}
