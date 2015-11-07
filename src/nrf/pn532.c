@@ -110,49 +110,68 @@ bool tag_is_present() {
     return false;
 } 
 
-uint8_t hex_to_decimal(uint8_t hex) {
-    uint8_t hex_map_to_i[9] = { '\x30', '\x31', '\x32', '\x33', '\x34', '\x35', '\x36', '\x37', '\x38', '\x39' };
-    for (int i=0; i < 9; i++) {
+uint8_t hex_to_char(uint8_t hex) {
+    uint8_t hex_map_to_i[10] = { '\x30', '\x31', '\x32', '\x33', '\x34', '\x35', '\x36', '\x37', '\x38', '\x39' };
+    for (int i=0; i < 10; i++) {
         if (hex_map_to_i[i] == hex) return i;
     }
 
     // Pretty on the inside RETURN
     return -1;
 }
-
-unsigned short get_attendee_id() {
-    uint8_t attendeeId[4] = {0};
-    int i = 0;
-    while (i < 4) {
-        attendeeId[i] = hex_to_decimal(uart_get());
-        i++;
+int hex_to_dec(uint8_t hex) {
+    uint8_t hex_map_to_dec[51] = {'\x00', '\x01', '\x02', '\x03', '\x04', '\x05', '\x06', '\x07', '\x08', '\x09', '\x0A', '\x0B', '\x0C', '\x0D', '\x0E', '\x0F', '\x10', '\x11', '\x12', '\x13', '\x14', '\x15', '\x16', '\x17', '\x18', '\x19', '\x1A', '\x1B', '\x1C', '\x1D', '\x1E', '\x1F', '\x20', '\x21', '\x22', '\x23', '\x24', '\x25', '\x26', '\x27', '\x28', '\x29', '\x2A', '\x2B', '\x2C', '\x2D', '\x2E', '\x2F', '\x30', '\x31', '\x32'};
+    for (int i=0; i < 51; i++) {
+        if(hex_map_to_dec[i] == hex) return i;
     }
+    return -1;
+}
+
+unsigned short get_attendee_id(uint8_t a, uint8_t b, uint8_t c, uint8_t d) {
+    uint8_t attendeeId[4] = {0};
+    attendeeId[0] = hex_to_char(a);
+    attendeeId[1] = hex_to_char(b);
+    attendeeId[2] = hex_to_char(c);
+    attendeeId[3] = hex_to_char(d);
 
     return 1000 * attendeeId[0] + 100 * attendeeId[1] + 10 * attendeeId[2] + attendeeId[3];
 }
 
-unsigned short find_attendee_id() {
-    int i = 0;
-    short attendeeId = 0;
-    uint8_t success_response[16] = {'\x13', '\xED', '\xD5', '\x41', '\x00', 's', 'f', '.', 'c', 'o', 'm', '/', '?', 'i', 'd', '='};
+int get_packet_length_from_preamble() {
     uart_get(); // nom \x00
     uart_get(); // nom \x00
     uart_get(); // nom \xFF
-    if(uart_get() == success_response[i]) {
-        i++;
-        while(i < 16) {
-            if(uart_get() != success_response[i]) {
-                break;
-             }
-             i++;
-        }
-        if(i > 15) {
-            attendeeId = get_attendee_id();
-        }
+    return  hex_to_dec(uart_get());
+}
+
+unsigned short find_attendee_id() {
+    short attendeeId = 0;
+    int packet_length = 0;
+    uint8_t success_response[11] = {'s', 'f', '.', 'c', 'o', 'm', '/', '?', 'i', 'd', '='};
+    packet_length = get_packet_length_from_preamble();
+
+    uint8_t packet[packet_length];
+
+    for (int i = 0; i < packet_length; i++ ){
+        packet[i] = uart_get();
     }
-    uart_get(); // nom \xFE
-    uart_get(); // nom \x5b
-    uart_get(); // nom \00
+
+    int found_index = 0;
+    for(int i = 0; i < packet_length; i++) {
+        if(success_response[0] == packet[i]) found_index = i;
+    }
+
+    for(int i = 0; i < 10; i++) {
+        if(success_response[i] != packet[found_index]) {
+           return 0;
+        }
+        found_index++;
+    }
+
+    get_attendee_id(packet[found_index+1], packet[found_index+2], packet[found_index+3], packet[found_index+4]);
+
+    // nom postamble
+    gobble_number_of_bytes(3);
     return attendeeId;
 }
 
