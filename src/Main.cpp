@@ -202,6 +202,7 @@ extern "C"
 	{
 		//We want to debug DEADBEEF => Endless loop.
 		if(error_code == 0xDEADBEEF){
+            NVIC_SystemReset();
 			while(1){
 
 			}
@@ -229,13 +230,11 @@ extern "C"
 		//FIXME: above statement is not true
 		if (error_code == NRF_ERROR_BUSY)
 		{
+            NVIC_SystemReset();
 			return;
 		}
 
-		//All other errors will run into endless loop for debugging
-		while(1){
-
-		}
+        NVIC_SystemReset();
 	}
 
 	//Called when the softdevice crashes
