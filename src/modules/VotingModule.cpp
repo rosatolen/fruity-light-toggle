@@ -128,11 +128,12 @@ void VotingModule::TimerEventHandler(u16 passedTime, u32 appTimer) {
     if (!node->isGatewayDevice) {
         // Check tag exists every second
         if (appTimer/1000 % 5 && appTimer % 1000 == 0) {
-//            wakeup();
-//            unsigned short userId = in_list_passive_target();
-//            if (userId != 0) {
-//                vote(userId);
-//            }
+            wakeup();
+            unsigned short userId = in_list_passive_target();
+            if (userId != 0) {
+                vote(userId);
+
+            }
         }
 
         // if 10 seconds have passed, trigger retries
