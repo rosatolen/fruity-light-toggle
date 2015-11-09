@@ -132,14 +132,6 @@ void VotingModule::TimerEventHandler(u16 passedTime, u32 appTimer) {
             unsigned short userId = in_list_passive_target();
             if (userId != 0) {
                 vote(userId);
-
-                LedWrapper* LedRed = new LedWrapper(BSP_LED_0, INVERT_LEDS);
-                LedWrapper* LedGreen = new LedWrapper(BSP_LED_1, INVERT_LEDS);
-                LedWrapper* LedBlue = new LedWrapper(BSP_LED_2, INVERT_LEDS);
-
-                LedBlue->On();
-                LedGreen->On();
-                LedRed->On();
             }
         }
 
