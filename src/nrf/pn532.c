@@ -96,7 +96,7 @@ bool tag_is_present() {
     while (i < 8) {
         if(uart_get() == '\x4B') {
             if(uart_get() =='\x00') {
-                return false; 
+                return false;
             } else {
                 if (gobble_number_of_bytes_with_timeout(14) == false) return false;
                 return true;
@@ -107,7 +107,7 @@ bool tag_is_present() {
     }
 
     return false;
-} 
+}
 
 uint8_t hex_to_char(uint8_t hex) {
     uint8_t hex_map_to_i[10] = { '\x30', '\x31', '\x32', '\x33', '\x34', '\x35', '\x36', '\x37', '\x38', '\x39' };
@@ -218,7 +218,7 @@ unsigned short in_list_passive_target() {
     uart_put_char('\xFD');
     send_direction();
     uart_put_char('\x12'); // set parameter command
-    uart_put_char('\x14');  
+    uart_put_char('\x14');
     uart_put_char('\x06');
     send_postamble();
     get_ack();
@@ -305,7 +305,7 @@ unsigned short in_list_passive_target() {
     gobble_number_of_bytes(9);
 
 
-    send_preamble_and_start(); 
+    send_preamble_and_start();
     uart_put_char('\x0E');
     uart_put_char('\xF2');
     send_direction();
@@ -371,7 +371,7 @@ unsigned short in_list_passive_target() {
     in_data_exchange('\x04', '\xB7');
     gobble_number_of_bytes(26);
     //gobble_number_of_bytes
-                                //  (1  3  160  16  D 3  24 209 20 U  4)  q c  o  n  
+                                //  (1  3  160  16  D 3  24 209 20 U  4)  q c  o  n
     // 00 00 FF - 13 ED - D5 41 00 01 03 A0 10 44 03 18 D1 01 14 55 04 71 63 6F 6E E7 00
     in_data_exchange('\x08', '\xB3');
 
