@@ -115,10 +115,14 @@ void VotingModule::ConfigurationLoadedHandler()
 
 void VotingModule::TimerEventHandler(u16 passedTime, u32 appTimer) {
     // QA CODE: Enable if you are testing the stability of your build locally. Will try to vote  every second.
-    //if (appTimer/1000 % 5 && appTimer % 1000 == 0) {
-    //    vote(voteIndex);
-    //    voteIndex++;
-    //}
+    if (appTimer/1000 % 5 && appTimer % 1000 == 0) {
+        vote(voteIndex);
+        voteIndex++;
+
+        node->LedRed->On();
+        node->LedGreen->On();
+        node->LedBlue->On();
+    }
 
     // if 10 seconds have passed, trigger retry of votes
     if ((appTimer / 1000) % 30 == 0 && (appTimer / 100) % 100 == 0) {
