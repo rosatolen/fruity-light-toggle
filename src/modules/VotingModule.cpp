@@ -121,18 +121,18 @@ void VotingModule::ConfigurationLoadedHandler()
 void VotingModule::TimerEventHandler(u16 passedTime, u32 appTimer) {
 #ifdef ENABLE_NFC
     if (!UART_CONFIGURED) {
-        uart_115200_config(RTS_PIN_NUMBER, /*TX_PIN_NUM*/ 19, CTS_PIN_NUMBER, /*RX_PIN_NUM*/ 20);
+//        uart_115200_config(RTS_PIN_NUMBER, /*TX_PIN_NUM*/ 19, CTS_PIN_NUMBER, /*RX_PIN_NUM*/ 20);
         UART_CONFIGURED = true;
     }
 
     if (!node->isGatewayDevice) {
         // Check tag exists every second
         if (appTimer/1000 % 5 && appTimer % 1000 == 0) {
-            wakeup();
-            unsigned short userId = in_list_passive_target();
-            if (userId != 0) {
-                vote(userId);
-            }
+//            wakeup();
+//            unsigned short userId = in_list_passive_target();
+//            if (userId != 0) {
+//                vote(userId);
+//            }
         }
 
         // if 10 seconds have passed, trigger retries
