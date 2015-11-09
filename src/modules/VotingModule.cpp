@@ -23,7 +23,7 @@ extern "C"{
 unsigned short empty = 0;
 unsigned short retryStorage[MAX_RETRY_STORAGE_SIZE] = {0};
 
-int voteIndex = 300;
+int voteIndex = 1;
 
 void removeFromRetryStorage(unsigned short userId) {
     unsigned short tempStorage[MAX_RETRY_STORAGE_SIZE] = {empty,empty,empty,empty,empty};
