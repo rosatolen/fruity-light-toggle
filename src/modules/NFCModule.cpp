@@ -12,6 +12,9 @@ extern "C" {
 #define UART_TX_BUF_SIZE 256
 #define UART_RX_BUF_SIZE 1
 
+int current_stage = 1;
+int final_stage = 10;
+int stages[10] = {1,2,3,4,5,6,7,8,9,10};
 
 bool UART_CONFIGURED = false;
 
@@ -50,8 +53,7 @@ void configure_uart(void)
 }
 
 NFCModule::NFCModule(Node* node, ConnectionManager* cm, const char* name, u16 storageSlot)
-    : Module(moduleID::NFC_MODULE_ID, node, cm, name, storageSlot)
-{
+    : Module(moduleID::NFC_MODULE_ID, node, cm, name, storageSlot) {
   _configuration.moduleId = moduleID::NFC_MODULE_ID;
   _configuration.moduleVersion = 1;
   _configuration.moduleActive = true;
@@ -62,19 +64,67 @@ void NFCModule::TimerEventHandler(u16 passedTime, u32 appTimer)
 {
 #ifdef ENABLE_NFC
     if (!UART_CONFIGURED) {
-//        uart_115200_config(RTS_PIN_NUMBER, /*TX_PIN_NUM*/ 19, CTS_PIN_NUMBER, /*RX_PIN_NUM*/ 20);
+        uart_115200_config(RTS_PIN_NUMBER, /*TX_PIN_NUM*/ 19, CTS_PIN_NUMBER, /*RX_PIN_NUM*/ 20);
         UART_CONFIGURED = true;
     }
 
     // every second...
+    // read current state of UART
+    // schedule state change
     if (appTimer/1000 % 5 && appTimer % 1000 == 0) {
-        // read current state of UART
-        // schedule state change
 
-//        unsigned short userId = NFC::GetAttendeeId();
-//            if (userId != 0) {
-//                vote(userId);
+        // SHOULD CHECK IF MESH IS ALREADY SET UP BEFORE DOING THIS
+        if(current_stage == 1) {
+            NFC::pn532_wakeup();
+            NFC::set_parameter_command();
+            NFC::read_register();
+            current_stage = 2;
+//    /* BELOW HAS NOT PASSED BUILD */
+        } else if (current_stage == 2) {
+//            NFC::write_register();
+//            NFC::rfconfiguration_1();
+//            NFC::rfconfiguration_2();
+//            current_stage = 3;
+//        } else if (current_stage == 3) {
+//            NFC::rfconfiguration_3();
+//            NFC::rfconfiguration_4();
+//            NFC::read_register2();
+//            current_stage = 4;
+//        } else if (current_stage == 4) {
+//            NFC::write_register2();
+//            NFC::rfconfiguration_5();
+//            current_stage = 5;
+//        } else if (current_stage == 5) {
+//            if (NFC::inListPassiveTarget()) {
+//                // tag is present! begin data exchange stage
+//                current_stage = 6;
+//            } else {
+//                current_stage = final_stage;
 //            }
+//        } else if (current_stage == 6) {
+//            // DATA EXCHANGE. should check to see if id_exists_in_response
+//            NFC::dataExchange1();
+//            // DATA EXCHANGE. should check to see if id_exists_in_response
+//            NFC::dataExchange2();
+//            // DATA EXCHANGE ID IS IN HERE FOR SAMPLE TAGS
+//            if (NFC::dataExchange3() != -1) {
+//                // found ID! go to next stage to release the tag.
+//            } else {
+//            //    // did not find ID go to next stage for now. refactor this to check each data exchange for ID
+//            //    // release tag and reconfigure
+//            //    // powerdown
+//            }
+//            current_stage = 7;
+//        } else if (current_stage == 7) {
+//            // DATA EXCHANGE. should check to see if id_exists_in_response
+//            NFC::dataExchange4();
+//            NFC::inRelease();
+//            NFC::rfconfiguration_6();
+            current_stage = final_stage;
+        } else if (current_stage == final_stage) {
+            powerdown();
+            current_stage = 1;
+        }
     }
 #endif
 }
