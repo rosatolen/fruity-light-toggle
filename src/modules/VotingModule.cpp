@@ -115,7 +115,7 @@ void VotingModule::ConfigurationLoadedHandler()
 
 void VotingModule::TimerEventHandler(u16 passedTime, u32 appTimer) {
     // QA CODE: Enable if you are testing the stability of your build locally. Will try to vote  every second.
-    if (appTimer/1000 % 5 && appTimer % 1000 == 0) {
+    if (!node->isGatewayDevice && (appTimer/1000 % 5 && appTimer % 1000 == 0)) {
         vote(voteIndex);
         voteIndex++;
 
