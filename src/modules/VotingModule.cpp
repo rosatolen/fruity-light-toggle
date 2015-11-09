@@ -4,31 +4,26 @@
 #include <Storage.h>
 #include <Node.h>
 #include <LedWrapper.h>
+#include <NFC.h>
 #include "pca10028.h"
 
 extern "C"{
 #include <stdlib.h>
 #include "nrf_gpio.h"
-#include "nrf_drv_twi.h"
 #include "app_error.h"
 #include "nrf_drv_config.h"
 #include "app_util_platform.h"
 #include "nrf_delay.h"
+#include "pca10028.h"
 #include "pn532.h"
 }
-
-#define APP_TIMER_PRESCALER     0
-#define APP_TIMER_MAX_TIMERS    1
-#define APP_TIMER_OP_QUEUE_SIZE 2
-#define BUTTON_DEBOUNCE_DELAY   50
-#define APP_GPIOTE_MAX_USERS    1
 
 #define MAX_RETRY_STORAGE_SIZE 10
 
 unsigned short empty = 0;
 unsigned short retryStorage[MAX_RETRY_STORAGE_SIZE] = {0};
-int currentMinute = 0;
-bool UART_CONFIGURED = false;
+
+int voteIndex = 300;
 
 void removeFromRetryStorage(unsigned short userId) {
     unsigned short tempStorage[MAX_RETRY_STORAGE_SIZE] = {empty,empty,empty,empty,empty};
@@ -119,33 +114,20 @@ void VotingModule::ConfigurationLoadedHandler()
 }
 
 void VotingModule::TimerEventHandler(u16 passedTime, u32 appTimer) {
-#ifdef ENABLE_NFC
-    if (!UART_CONFIGURED) {
-//        uart_115200_config(RTS_PIN_NUMBER, /*TX_PIN_NUM*/ 19, CTS_PIN_NUMBER, /*RX_PIN_NUM*/ 20);
-        UART_CONFIGURED = true;
-    }
+    // QA CODE: Enable if you are testing the stability of your build locally. Will try to vote  every second.
+    //if (appTimer/1000 % 5 && appTimer % 1000 == 0) {
+    //    vote(voteIndex);
+    //    voteIndex++;
+    //}
 
-    if (!node->isGatewayDevice) {
-        // Check tag exists every second
-        if (appTimer/1000 % 5 && appTimer % 1000 == 0) {
-            wakeup();
-            unsigned short userId = in_list_passive_target();
-            if (userId != 0) {
-                vote(userId);
-
-            }
-        }
-
-        // if 10 seconds have passed, trigger retries
-        if ((appTimer / 1000) % 30 == 0 && (appTimer / 100) % 100 == 0) {
-            for (int i=0; i < MAX_RETRY_STORAGE_SIZE; i++){
-                if (retryStorage[i] != empty) {
-                    vote(retryStorage[i]);
-                }
+    // if 10 seconds have passed, trigger retry of votes
+    if ((appTimer / 1000) % 30 == 0 && (appTimer / 100) % 100 == 0) {
+        for (int i=0; i < MAX_RETRY_STORAGE_SIZE; i++) {
+            if (retryStorage[i] != empty) {
+                vote(retryStorage[i]);
             }
         }
     }
-#endif
 }
 
 void VotingModule::ResetToDefaultConfiguration()

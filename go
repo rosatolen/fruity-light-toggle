@@ -39,7 +39,7 @@ function replace-line-in-config {
     if [[ `sed "$1q;d" $FILE` != *"$CONFIG_VARIABLE"* ]]
     then
         echo -e "ERROR!"
-        echo -e "'$CONFIG_VARIABLE' is not on line 214 in $FILE\n"
+        echo -e "'$CONFIG_VARIABLE' is not on line $1 in $FILE\n"
         echo -e "You are getting this error because we expect the config file at line $1 to have: '$CONFIG_VARIABLE' but it does not.\n"
         echo -e "I know this dependency is terrible. I'm sorry. Help automate it better."
         exit 1
@@ -91,7 +91,7 @@ function toggle-terminal-config {
     fi
 }
 
-NFC_LINE=258
+NFC_LINE=228
 NFC_ON_CONFIG='#define ENABLE_NFC'
 NFC_VARIABLE='ENABLE_NFC'
 NFC_OFF_CONFIG_ESCAPED='\/\/#define ENABLE_NFC'

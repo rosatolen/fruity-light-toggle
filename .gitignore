@@ -9,3 +9,5 @@ _build/
 */.DS_Store
 .idea/
 CMakeLists.txt
+
+unit_tests/a.out

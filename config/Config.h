@@ -224,6 +224,8 @@ class Conf
 #define MESH_SERVICE_INITIAL_CHARACTERISTIC_VALUE {1,2,3}
 #define MESH_SERVICE_CHARACTERISTIC_DESCRIPTOR_UUID  0x1525
 
+/*############# NFC Configuration ###############*/
+#define ENABLE_NFC
 
 /*############ MODULES ################*/
 //The module ids are used to identify a module over the network, these must fit in two bytes
@@ -241,6 +243,7 @@ enum moduleID{
 	//Custom modules
 	VOTING_MODULE_ID=30020,
 	HEARTBEAT_MODULE_ID=30021,
+	NFC_MODULE_ID=30022,
 	GATEWAY_MODULE_ID=30999,
 	DEBUG_MODULE_ID=30000
 };
@@ -252,7 +255,3 @@ enum moduleID{
 #define NODE_ID_GROUP_BASE 20000
 #define NODE_ID_HOPS_BASE 30000
 #define NODE_ID_SHORTEST_SINK 31001
-
-
-/*############# NFC Configuration ###############*/
-#define ENABLE_NFC

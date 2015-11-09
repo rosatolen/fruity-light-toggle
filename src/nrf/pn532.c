@@ -4,6 +4,10 @@
 #include "pn532.h"
 #include "nrf_delay.h"
 #include "nrf_gpio.h"
+#include "app_util_platform.h"
+#include "pca10028.h"
+
+#define UART_BUF_SIZE 10
 
 void uart_put_char(uint8_t cr)
 {
