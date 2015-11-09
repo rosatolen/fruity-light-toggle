@@ -934,7 +934,8 @@ void Node::TimerTickHandler(u16 timerMs)
 	{
 		if (appTimerMs > 25000)
 		{
-			NVIC_SystemReset();
+            // NVIC_SystemReset();
+            return;
 		}
 	}
 

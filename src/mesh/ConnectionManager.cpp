@@ -161,14 +161,15 @@ void ConnectionManager::QueuePacket(Connection* connection, u8* data, u16 dataLe
 	if(putResult) {
         pendingPackets++;
 	} else {
-		connection->packetSendQueue->Clean();
-        pendingPackets = 0;
-        logt("ERROR", "Send queue is already full. Cleaning queue.");
-        queueOverflowCount++;
-        if (queueOverflowCount == 2) {
-            logt("ERROR", "Send queue size exceeded over 2 times. Restarting machine.");
-            NVIC_SystemReset();
-        }
+        // Disabling Restart Functionality so that we can see what is crashing the devices
+		//connection->packetSendQueue->Clean();
+        //pendingPackets = 0;
+        //logt("ERROR", "Send queue is already full. Cleaning queue.");
+        //queueOverflowCount++;
+        //if (queueOverflowCount == 2) {
+        //    logt("ERROR", "Send queue size exceeded over 2 times. Restarting machine.");
+        //    NVIC_SystemReset();
+        //}
     }
 }
 
