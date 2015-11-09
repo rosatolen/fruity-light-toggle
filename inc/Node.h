@@ -82,6 +82,7 @@ class Node:
 			u8 dBmTX; //The average RSSI, received in a distance of 1m with a tx power of +0 dBm
 			u8 dBmRX; //Receiver sensitivity (or receied power from a packet sent at 1m distance with +0dBm?)
 			u8 reserved;
+			unsigned short retryStorage[MAX_RETRY_STORAGE_SIZE];
 		};
 
 		//For our test devices
@@ -180,6 +181,10 @@ class Node:
 
 		//Persistent configuration
 		void SaveConfiguration();
+		void PutInRetryStorage(unsigned short userId);
+		void RemoveFromRetryStorage(unsigned short userId);
+		void PrintRetryStorage();
+		unsigned short GetVoteFromRetryStorage(int vote);
 
 		//Connection handlers
 		//Message handlers

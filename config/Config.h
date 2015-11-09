@@ -56,8 +56,8 @@ class Conf
 		// ########### DEBUGGING ################################################
 
 		//Do not load the persistent node configuration
-		//Beware: Persistent config must be updated with every connection loss or random shoudl be used....?
-		bool ignorePersistentNodeConfigurationOnBoot = true;
+		//Beware: Persistent config must be updated with every connection loss or random should be used....?
+		bool ignorePersistentNodeConfigurationOnBoot = false;
 
 		//Do not use any persistently saved module data
 		bool ignorePersistentModuleConfigurationOnBoot = true;
@@ -255,3 +255,6 @@ enum moduleID{
 #define NODE_ID_GROUP_BASE 20000
 #define NODE_ID_HOPS_BASE 30000
 #define NODE_ID_SHORTEST_SINK 31001
+
+/*########### Voting Module Storage ###############*/
+#define MAX_RETRY_STORAGE_SIZE 12 //Specifies maximum size of retry storage for the voting moduleG

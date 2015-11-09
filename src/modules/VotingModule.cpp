@@ -18,48 +18,8 @@ extern "C"{
 #include "pn532.h"
 }
 
-#define MAX_RETRY_STORAGE_SIZE 10
-
-unsigned short empty = 0;
-unsigned short retryStorage[MAX_RETRY_STORAGE_SIZE] = {0};
-
 int voteIndex = 1;
 
-void removeFromRetryStorage(unsigned short userId) {
-    unsigned short tempStorage[MAX_RETRY_STORAGE_SIZE] = {empty,empty,empty,empty,empty};
-    for (int i=0, j=0; i < MAX_RETRY_STORAGE_SIZE; i++) {
-        if (retryStorage[i] != userId) {
-            tempStorage[j] = retryStorage[i];
-            j++;
-        }
-    }
-    for (int i=0; i < MAX_RETRY_STORAGE_SIZE; i++) {
-        if(tempStorage[i] != empty){
-            retryStorage[i] = tempStorage[i];
-        } else {
-            retryStorage[i] = empty;
-        }
-    }
-}
-
-void putInRetryStorage(unsigned short userId) {
-    int index = 0;
-    unsigned short temp[MAX_RETRY_STORAGE_SIZE] = { empty,empty,empty,empty,empty };
-
-    for (int i=0; i < MAX_RETRY_STORAGE_SIZE; i++) {
-        if(retryStorage[i] == userId) {
-            break;
-        }
-        if (retryStorage[i] == empty) {
-            retryStorage[i] = userId;
-            break;
-        }
-        if(i == MAX_RETRY_STORAGE_SIZE-1) {
-            removeFromRetryStorage(retryStorage[0]);
-            retryStorage[i] = userId;
-        }
-    }
-}
 
 static void vote(unsigned short uID) {
     ConnectionManager *cm = ConnectionManager::getInstance();
@@ -75,7 +35,8 @@ static void vote(unsigned short uID) {
     packet.actionType = 0; // hardcoded from the reference VotingModule.h
     packet.data[0] = uID & 0xff;
     packet.data[1] = (uID >> 8) & 0xff;
-    putInRetryStorage(uID);
+
+    node->PutInRetryStorage(uID);
     cm->SendMessageToReceiver(NULL, (u8*)&packet, SIZEOF_CONN_PACKET_MODULE + 3 + 1, true);
     logt("VOTING", "Sending vote with id: %d\n", uID);
 }
@@ -114,21 +75,35 @@ void VotingModule::ConfigurationLoadedHandler()
 }
 
 void VotingModule::TimerEventHandler(u16 passedTime, u32 appTimer) {
-    // QA CODE: Enable if you are testing the stability of your build locally. Will try to vote  every second.
-    if (appTimer/1000 % 5 && appTimer % 1000 == 0) {
-        vote(voteIndex);
-        voteIndex++;
+    if (!node->isGatewayDevice) {
 
-        node->LedRed->On();
-        node->LedGreen->On();
-        node->LedBlue->On();
-    }
+        // QA CODE: Enable if you are testing the stability of your build locally. Will try to vote  every second.
+        if (appTimer / 1000 % 5 && appTimer % 1000 == 0) {
 
-    // if 10 seconds have passed, trigger retry of votes
-    if ((appTimer / 1000) % 30 == 0 && (appTimer / 100) % 100 == 0) {
-        for (int i=0; i < MAX_RETRY_STORAGE_SIZE; i++) {
-            if (retryStorage[i] != empty) {
-                vote(retryStorage[i]);
+            logt("VOTING", "------BEFORE VOTING AHHH-----");
+            node->PrintRetryStorage();
+
+            vote(voteIndex);
+            voteIndex++;
+
+            logt("VOTING", "------AFTER VOTING AHHH-----");
+            node->PrintRetryStorage();
+
+            node->LedRed->On();
+            node->LedGreen->On();
+            node->LedBlue->On();
+
+            //Read and write to Node persistent configuration
+            //Storage::getInstance().QueuedWrite((u8*) &persistentConfig, sizeof(NodeConfiguration), 0, this);
+            //Storage::getInstance().QueuedRead((u8*) &persistentConfig, sizeof(NodeConfiguration), 0, this);
+        }
+
+        // if 10 seconds have passed, trigger retry of votes
+        if ((appTimer / 1000) % 30 == 0 && (appTimer / 100) % 100 == 0) {
+            for (int i = 0; i < MAX_RETRY_STORAGE_SIZE; i++) {
+                if (node->GetVoteFromRetryStorage(i) != 0) {
+                    vote(node->GetVoteFromRetryStorage(i));
+                }
             }
         }
     }
@@ -189,7 +164,7 @@ void VotingModule::ConnectionPacketReceivedEventHandler(connectionPacket* inPack
             {
                 //logt("VOTING", "Voter received acknowledgement from Gateway with userId %u \n", packet->data[0]);
                 unsigned short userId = (( (short)packet->data[1] ) << 8) | packet->data[0];
-                removeFromRetryStorage(userId);
+                node->RemoveFromRetryStorage(userId);
             }
         }
     }

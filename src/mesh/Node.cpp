@@ -86,7 +86,7 @@ Node::Node(networkID networkId)
 
 	ledBlinkPosition = 0;
 
-
+	Logger::getInstance().enableTag("RETRY");
 
 	//Register terminal listener
 	Terminal::AddTerminalCommandListener(this);
@@ -767,6 +767,58 @@ void Node::SaveConfiguration()
 	Storage::getInstance().QueuedWrite((u8*) &persistentConfig, sizeof(NodeConfiguration), 0, this);
 }
 
+void Node::PutInRetryStorage(unsigned short userId) {
+	int index = 0;
+	unsigned short temp[MAX_RETRY_STORAGE_SIZE] = {0};
+
+	for (int i = 0; i < MAX_RETRY_STORAGE_SIZE; i++) {
+		if (this->persistentConfig.retryStorage[i] == userId) {
+			break;
+		}
+		if (this->persistentConfig.retryStorage[i] == 0) {
+			memcpy(&persistentConfig.retryStorage[i], &userId, sizeof(userId));
+			//this->persistentConfig.retryStorage[i] = userId;
+			break;
+		}
+		if (i == MAX_RETRY_STORAGE_SIZE - 1) {
+			this->RemoveFromRetryStorage(this->persistentConfig.retryStorage[0]);
+			memcpy(&persistentConfig.retryStorage[i], &userId, sizeof(userId));
+			//this->persistentConfig.retryStorage[i] = userId;
+		}
+	}
+	this->SaveConfiguration();
+}
+
+void Node::RemoveFromRetryStorage(unsigned short userId) {
+	unsigned short tempStorage[MAX_RETRY_STORAGE_SIZE] = {0};
+
+	for (int i = 0, j = 0; i < MAX_RETRY_STORAGE_SIZE; i++) {
+		if (this->persistentConfig.retryStorage[i] != userId) {
+			tempStorage[j] = this->persistentConfig.retryStorage[i];
+			j++;
+		}
+	}
+	for (int i = 0; i < MAX_RETRY_STORAGE_SIZE; i++) {
+		if (tempStorage[i] != 0) {
+			// Save persistent config
+			memcpy(&persistentConfig.retryStorage[i], &tempStorage[i], sizeof(tempStorage[i]));
+//			this->persistentConfig.retryStorage[i] = tempStorage[i];
+		} else {
+			this->persistentConfig.retryStorage[i] = 0;
+		}
+	}
+	this->SaveConfiguration();
+}
+
+void Node::PrintRetryStorage() {
+	for(int i =0; i < MAX_RETRY_STORAGE_SIZE; i++) {
+		logt("RETRY", "Storage: %d\n",  this->persistentConfig.retryStorage[i]);
+	}
+}
+
+unsigned short Node::GetVoteFromRetryStorage(int vote) {
+	return this->persistentConfig.retryStorage[vote];
+}
 
 #pragma endregion configuration
 
