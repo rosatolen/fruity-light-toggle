@@ -74,22 +74,6 @@ void NFC::set_parameter_command() {
     gobble_number_of_bytes(9);
 }
 
-void NFC::read_register() {
-    send_preamble_and_start();
-    uart_put_char('\x0C');uart_put_char('\xF4');
-    send_direction();
-    uart_put_char('\x06'); // read register
-    uart_put_char('\x63');uart_put_char('\x02');
-    uart_put_char('\x63');uart_put_char('\x03');
-    uart_put_char('\x63');uart_put_char('\x0D');
-    uart_put_char('\x63');uart_put_char('\x38');
-    uart_put_char('\x63');uart_put_char('\x3D');
-    uart_put_char('\xB0');
-    send_postamble();
-    get_ack();
-    gobble_number_of_bytes(14);
-}
-
 void NFC::write_register() {
     send_preamble_and_start();
     uart_put_char('\x08');uart_put_char('\xF8');
@@ -98,20 +82,6 @@ void NFC::write_register() {
     uart_put_char('\x63');uart_put_char('\x02');uart_put_char('\x80');
     uart_put_char('\x63');uart_put_char('\x03');uart_put_char('\x80');
     uart_put_char('\x59');
-    send_postamble();
-    get_ack();
-    gobble_number_of_bytes(9);
-}
-
-void NFC::rfconfiguration_1() {
-    send_preamble_and_start();
-    uart_put_char('\x04');
-    uart_put_char('\xFC');
-    send_direction();
-    uart_put_char('\x32'); // rfconfiguration
-    uart_put_char('\x01');
-    uart_put_char('\x00');
-    uart_put_char('\xF9');
     send_postamble();
     get_ack();
     gobble_number_of_bytes(9);
@@ -131,57 +101,6 @@ void NFC::rfconfiguration_2() {
     // CRASHES HERE
     get_ack();
     gobble_number_of_bytes(9);
-}
-
-void NFC::rfconfiguration_3() {
-    send_preamble_and_start();
-    uart_put_char('\x06');
-    uart_put_char('\xFA');
-    send_direction();
-    uart_put_char('\x32'); // rfconfiguration
-    uart_put_char('\x05');
-    uart_put_char('\xFF');
-    uart_put_char('\xFF');
-    uart_put_char('\xFF');
-    uart_put_char('\xF8');
-    send_postamble();
-    get_ack();
-    gobble_number_of_bytes(9);
-    nrf_delay_us(1000);
-}
-
-void NFC::rfconfiguration_4() {
-    send_preamble_and_start();
-    uart_put_char('\x06');
-    uart_put_char('\xFA');
-    send_direction();
-    uart_put_char('\x32'); // rf config
-    uart_put_char('\x05');
-    uart_put_char('\xFF');
-    uart_put_char('\xFF');
-    uart_put_char('\xFF');
-    uart_put_char('\xF8');
-    send_postamble();
-    get_ack();
-    gobble_number_of_bytes(9);
-}
-
-void NFC::read_register2() {
-    send_preamble_and_start();
-    uart_put_char('\x0E');
-    uart_put_char('\xF2');
-    send_direction();
-    uart_put_char('\x06'); // read register
-    uart_put_char('\x63');uart_put_char('\x02');
-    uart_put_char('\x63');uart_put_char('\x03');
-    uart_put_char('\x63');uart_put_char('\x05');
-    uart_put_char('\x63');uart_put_char('\x38');
-    uart_put_char('\x63');uart_put_char('\x3C');
-    uart_put_char('\x63');uart_put_char('\x3D');
-    uart_put_char('\x19');
-    send_postamble();
-    get_ack();
-    gobble_number_of_bytes(15);
 }
 
 void NFC::write_register2() {
@@ -254,20 +173,6 @@ void NFC::inRelease() {
     send_postamble();
     get_ack();
     gobble_number_of_bytes(10);
-}
-
-void NFC::rfconfiguration_6() {
-    send_preamble_and_start();
-    uart_put_char('\x04');
-    uart_put_char('\xFC');
-    send_direction();
-    uart_put_char('\x32'); // rf config
-    uart_put_char('\x01');
-    uart_put_char('\x00');
-    uart_put_char('\xF9');
-    send_postamble();
-    get_ack();
-    gobble_number_of_bytes(9);
 }
 
 

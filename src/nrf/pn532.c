@@ -86,7 +86,6 @@ void gobble_number_of_bytes(int number) {
         uart_get();
         i++;
     }
-    nrf_delay_us(1000);
 }
 
 bool tag_is_present() {
