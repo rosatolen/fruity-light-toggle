@@ -6,6 +6,7 @@ function helptext {
     echo "Usage: ./go <command>"
     echo ""
     echo "Available commands are:"
+    echo "    d1                Deploy currently compiled code to a device I choose"
     echo "    fleet             Create and deploy a Fleet: All connected devices become Nodes except for 1 Gateway at oldest attached device"
     echo "    nodes             Create Nodes out of all connected devices"
     echo "    pers              Creates Persistors out of all connected devices"
@@ -169,7 +170,13 @@ function minprog {
     done
 }
 
+function deploy-to-device-i-choose {
+    $HOME/nrf/tools/jlink deploy/single-fruitymesh-softdevice-deploy.jlink
+}
+
 case "$1" in
+    d1) deploy-to-device-i-choose
+    ;;
     fleet) fleet
     ;;
     nodes) deploy-nodes-to-all-local-devices
