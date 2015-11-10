@@ -16,6 +16,7 @@ extern "C"{
 #include "nrf_delay.h"
 #include "pca10028.h"
 #include "pn532.h"
+#include <app_timer.h>
 }
 
 int voteIndex = 1;
@@ -114,21 +115,25 @@ void VotingModule::ResetToDefaultConfiguration() {
 
 bool VotingModule::TerminalCommandHandler(string commandName, vector<string> commandArgs)
 {
-    //React on commands, return true if handled, false otherwise
-    if(commandArgs.size() >= 2 && commandArgs[1] == moduleName)
-    {
-        if(commandName == "uart_module_trigger_action")
-        {
-            if(commandArgs[1] != moduleName) return false;
-            if(commandArgs.size() == 3 && commandArgs[2] == "argument_a")
-            {
+    if(commandArgs.size() >= 2 && commandArgs[1] == moduleName) {
+        if(commandName == "action") {
+            nodeID destinationNode = (commandArgs[0] == "this") ? node->persistentConfig.nodeId : atoi(commandArgs[0].c_str());
+            if(commandArgs.size() == 4 && commandArgs[2] == "set_time") {
+                u64 timeStamp = (atoi(commandArgs[3].c_str()) * (u64)APP_TIMER_CLOCK_FREQ);
+
+                node->globalTime = timeStamp;
+                app_timer_cnt_get(&node->globalTimeSetAt);
+
+                connPacketUpdateTimestamp packet;
+
+                packet.header.messageType = MESSAGE_TYPE_UPDATE_TIMESTAMP;
+                packet.header.sender = node->persistentConfig.nodeId;
+                packet.header.receiver = 0;
+
+                cm->SendMessageToReceiver(NULL, (u8*)&packet, SIZEOF_CONN_PACKET_UPDATE_TIMESTAMP, true);
+
                 return true;
             }
-            else if(commandArgs.size() == 3 && commandArgs[2] == "argument_b")
-            {
-                return true;
-            }
-            return true;
         }
     }
 
@@ -142,8 +147,6 @@ void VotingModule::ConnectionPacketReceivedEventHandler(connectionPacket* inPack
     //Must call superclass for handling
     Module::ConnectionPacketReceivedEventHandler(inPacket, connection, packetHeader, dataLength);
 
-    // TODO when i receive an acknowledgement, check off vote from queue
-    // Voter Receives acknowledgement from Gateway
     if(packetHeader->messageType == MESSAGE_TYPE_MODULE_ACTION_RESPONSE){
         connPacketModule* packet = (connPacketModule*)packetHeader;
         if(packet->moduleId == moduleId)
