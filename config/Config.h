@@ -257,4 +257,4 @@ enum moduleID{
 #define NODE_ID_SHORTEST_SINK 31001
 
 /*########### Voting Module Storage ###############*/
-#define MAX_RETRY_STORAGE_SIZE 12 //Specifies maximum size of retry storage for the voting moduleG
+#define MAX_RETRY_STORAGE_SIZE 20 //Specifies maximum size of retry storage for the voting moduleG

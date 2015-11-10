@@ -149,6 +149,7 @@ void Node::ConfigurationLoadedHandler()
 		memcpy(&persistentConfig.networkKey, &Config->meshNetworkKey, 16);
 		persistentConfig.dBmRX = 10;
 		persistentConfig.dBmTX = 10;
+		memset(persistentConfig.retryStorage, 0, sizeof(persistentConfig.retryStorage));
 
 		//Get an id for our testdevices when not working with persistent storage
 		InitWithTestDeviceSettings();
@@ -777,13 +778,11 @@ void Node::PutInRetryStorage(unsigned short userId) {
 		}
 		if (this->persistentConfig.retryStorage[i] == 0) {
 			memcpy(&persistentConfig.retryStorage[i], &userId, sizeof(userId));
-			//this->persistentConfig.retryStorage[i] = userId;
 			break;
 		}
 		if (i == MAX_RETRY_STORAGE_SIZE - 1) {
 			this->RemoveFromRetryStorage(this->persistentConfig.retryStorage[0]);
 			memcpy(&persistentConfig.retryStorage[i], &userId, sizeof(userId));
-			//this->persistentConfig.retryStorage[i] = userId;
 		}
 	}
 	this->SaveConfiguration();
@@ -800,9 +799,7 @@ void Node::RemoveFromRetryStorage(unsigned short userId) {
 	}
 	for (int i = 0; i < MAX_RETRY_STORAGE_SIZE; i++) {
 		if (tempStorage[i] != 0) {
-			// Save persistent config
 			memcpy(&persistentConfig.retryStorage[i], &tempStorage[i], sizeof(tempStorage[i]));
-//			this->persistentConfig.retryStorage[i] = tempStorage[i];
 		} else {
 			this->persistentConfig.retryStorage[i] = 0;
 		}

@@ -75,43 +75,28 @@ void VotingModule::ConfigurationLoadedHandler()
 }
 
 void VotingModule::TimerEventHandler(u16 passedTime, u32 appTimer) {
+    // QA CODE: Enable if you are testing the stability of your build locally. Will try to vote  every second.
+    if (!node->isGatewayDevice && (appTimer / 1000 % 5 && appTimer % 1000 == 0)) {
+        vote(voteIndex);
+        voteIndex++;
 
-    if (!node->isGatewayDevice) {
+        node->LedRed->On();
+        node->LedGreen->On();
+        node->LedBlue->On();
+    }
 
-        // QA CODE: Enable if you are testing the stability of your build locally. Will try to vote  every second.
-        if (!node->isGatewayDevice && (appTimer/1000 % 5 && appTimer % 1000 == 0)) {
-
-            logt("VOTING", "------BEFORE VOTING AHHH-----");
-            node->PrintRetryStorage();
-
-            vote(voteIndex);
-            voteIndex++;
-
-            logt("VOTING", "------AFTER VOTING AHHH-----");
-            node->PrintRetryStorage();
-
-            node->LedRed->On();
-            node->LedGreen->On();
-            node->LedBlue->On();
-
-            //Read and write to Node persistent configuration
-            //Storage::getInstance().QueuedWrite((u8*) &persistentConfig, sizeof(NodeConfiguration), 0, this);
-            //Storage::getInstance().QueuedRead((u8*) &persistentConfig, sizeof(NodeConfiguration), 0, this);
-        }
-
-        // if 10 seconds have passed, trigger retry of votes
-        if ((appTimer / 1000) % 30 == 0 && (appTimer / 100) % 100 == 0) {
-            for (int i = 0; i < MAX_RETRY_STORAGE_SIZE; i++) {
-                if (node->GetVoteFromRetryStorage(i) != 0) {
-                    vote(node->GetVoteFromRetryStorage(i));
-                }
+    // if 10 seconds have passed, trigger retry of votes
+    if ((appTimer / 1000) % 30 == 0 && (appTimer / 100) % 100 == 0) {
+        for (int i = 0; i < MAX_RETRY_STORAGE_SIZE; i++) {
+            if (node->GetVoteFromRetryStorage(i) != 0) {
+                vote(node->GetVoteFromRetryStorage(i));
             }
         }
     }
+
 }
 
-void VotingModule::ResetToDefaultConfiguration()
-{
+void VotingModule::ResetToDefaultConfiguration() {
     //Set default configuration values
     configuration.moduleId = moduleId;
     configuration.moduleActive = true;
