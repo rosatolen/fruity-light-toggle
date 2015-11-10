@@ -181,10 +181,13 @@ class Node:
 
 		//Persistent configuration
 		void SaveConfiguration();
-		void PutInRetryStorage(unsigned short userId);
+		bool PutInRetryStorage(unsigned short userId);
 		void RemoveFromRetryStorage(unsigned short userId);
 		void PrintRetryStorage();
 		unsigned short GetVoteFromRetryStorage(int vote);
+		bool RetryStorageIsFull();
+		bool RetryStorageContains(unsigned short userId);
+
 
 		//Connection handlers
 		//Message handlers

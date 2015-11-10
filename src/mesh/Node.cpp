@@ -768,24 +768,47 @@ void Node::SaveConfiguration()
 	Storage::getInstance().QueuedWrite((u8*) &persistentConfig, sizeof(NodeConfiguration), 0, this);
 }
 
-void Node::PutInRetryStorage(unsigned short userId) {
+bool Node::PutInRetryStorage(unsigned short userId) {
 	int index = 0;
 	unsigned short temp[MAX_RETRY_STORAGE_SIZE] = {0};
 
+	if(this->RetryStorageContains(userId)) {
+		this->LedRed->On();
+		this->LedGreen->On();
+		this->LedBlue->On();
+		return true;
+	}
+
+	if(this->RetryStorageIsFull()) {
+		this->LedRed->On();
+		this->LedGreen->On();
+		this->LedBlue->Off();
+		return false;
+	}
+
 	for (int i = 0; i < MAX_RETRY_STORAGE_SIZE; i++) {
-		if (this->persistentConfig.retryStorage[i] == userId) {
-			break;
-		}
 		if (this->persistentConfig.retryStorage[i] == 0) {
 			memcpy(&persistentConfig.retryStorage[i], &userId, sizeof(userId));
 			break;
 		}
-		if (i == MAX_RETRY_STORAGE_SIZE - 1) {
-			this->RemoveFromRetryStorage(this->persistentConfig.retryStorage[0]);
-			memcpy(&persistentConfig.retryStorage[i], &userId, sizeof(userId));
+	}
+
+	this->LedRed->On();
+	this->LedGreen->On();
+	this->LedBlue->On();
+
+	this->SaveConfiguration();
+
+	return true;
+}
+
+bool Node::RetryStorageContains(unsigned short userId) {
+	for (int i = 0; i < MAX_RETRY_STORAGE_SIZE; i++) {
+		if (this->persistentConfig.retryStorage[i] == userId) {
+			return true;
 		}
 	}
-	this->SaveConfiguration();
+	return false;
 }
 
 void Node::RemoveFromRetryStorage(unsigned short userId) {
@@ -811,6 +834,14 @@ void Node::PrintRetryStorage() {
 	for(int i =0; i < MAX_RETRY_STORAGE_SIZE; i++) {
 		logt("RETRY", "Storage: %d\n",  this->persistentConfig.retryStorage[i]);
 	}
+}
+
+bool Node::RetryStorageIsFull() {
+	if(this->persistentConfig.retryStorage[MAX_RETRY_STORAGE_SIZE-1] != 0) {
+		return true;
+	}
+
+	return false;
 }
 
 unsigned short Node::GetVoteFromRetryStorage(int vote) {

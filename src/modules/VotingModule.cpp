@@ -36,9 +36,14 @@ static void vote(unsigned short uID) {
     packet.data[0] = uID & 0xff;
     packet.data[1] = (uID >> 8) & 0xff;
 
-    node->PutInRetryStorage(uID);
-    cm->SendMessageToReceiver(NULL, (u8*)&packet, SIZEOF_CONN_PACKET_MODULE + 3 + 1, true);
-    logt("VOTING", "Sending vote with id: %d\n", uID);
+    bool success = node->PutInRetryStorage(uID);
+    if(success) {
+        cm->SendMessageToReceiver(NULL, (u8 * ) & packet, SIZEOF_CONN_PACKET_MODULE + 3 + 1, true);
+
+        logt("VOTING", "Sending vote with id: %d\n", uID);
+    } else {
+        logt("VOTING", "Queue full, unable to send vote with id: %d\n", uID);
+    }
 }
 
     VotingModule::VotingModule(u16 moduleId, Node* node, ConnectionManager* cm, const char* name, u16 storageSlot)
@@ -76,17 +81,14 @@ void VotingModule::ConfigurationLoadedHandler()
 
 void VotingModule::TimerEventHandler(u16 passedTime, u32 appTimer) {
     // QA CODE: Enable if you are testing the stability of your build locally. Will try to vote  every second.
-    if (!node->isGatewayDevice && (appTimer / 1000 % 5 && appTimer % 1000 == 0)) {
+    if (!node->isGatewayDevice && (appTimer / 1000 % 5 && appTimer % 2000 == 0)) {
         vote(voteIndex);
         voteIndex++;
-
-        node->LedRed->On();
-        node->LedGreen->On();
-        node->LedBlue->On();
     }
 
     // if 10 seconds have passed, trigger retry of votes
-    if ((appTimer / 1000) % 30 == 0 && (appTimer / 100) % 100 == 0) {
+    if (!node->isGatewayDevice && (appTimer / 1000) % 30 == 0 && (appTimer / 100) % 100 == 0) {
+        logt("VOTING", "Triggering retry of votes");
         for (int i = 0; i < MAX_RETRY_STORAGE_SIZE; i++) {
             if (node->GetVoteFromRetryStorage(i) != 0) {
                 vote(node->GetVoteFromRetryStorage(i));
