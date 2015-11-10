@@ -215,7 +215,7 @@ void in_data_exchange(uint8_t start_address, uint8_t dcs) {
     nrf_delay_us(1000);
 }
 
-unsigned short in_list_passive_target() {
+void setup_mifare_ultralight() {
     send_preamble_and_start();
     uart_put_char('\x03');
     uart_put_char('\xFD');
@@ -226,21 +226,6 @@ unsigned short in_list_passive_target() {
     send_postamble();
     get_ack();
     gobble_number_of_bytes(9);
-
-
-    send_preamble_and_start();
-    uart_put_char('\x0C');uart_put_char('\xF4');
-    send_direction();
-    uart_put_char('\x06'); // read register
-    uart_put_char('\x63');uart_put_char('\x02');
-    uart_put_char('\x63');uart_put_char('\x03');
-    uart_put_char('\x63');uart_put_char('\x0D');
-    uart_put_char('\x63');uart_put_char('\x38');
-    uart_put_char('\x63');uart_put_char('\x3D');
-    uart_put_char('\xB0');
-    send_postamble();
-    get_ack();
-    gobble_number_of_bytes(14);
 
     send_preamble_and_start();
     uart_put_char('\x08');uart_put_char('\xF8');
@@ -253,19 +238,6 @@ unsigned short in_list_passive_target() {
     get_ack();
     gobble_number_of_bytes(9);
 
-
-    send_preamble_and_start();
-    uart_put_char('\x04');
-    uart_put_char('\xFC');
-    send_direction();
-    uart_put_char('\x32'); // rfconfiguration
-    uart_put_char('\x01');
-    uart_put_char('\x00');
-    uart_put_char('\xF9');
-    send_postamble();
-    get_ack();
-    gobble_number_of_bytes(9);
-
     send_preamble_and_start();
     uart_put_char('\x04');
     uart_put_char('\xFC');
@@ -277,52 +249,6 @@ unsigned short in_list_passive_target() {
     send_postamble();
     get_ack();
     gobble_number_of_bytes(9);
-
-    send_preamble_and_start();
-    uart_put_char('\x06');
-    uart_put_char('\xFA');
-    send_direction();
-    uart_put_char('\x32'); // rfconfiguration
-    uart_put_char('\x05');
-    uart_put_char('\xFF');
-    uart_put_char('\xFF');
-    uart_put_char('\xFF');
-    uart_put_char('\xF8');
-    send_postamble();
-    get_ack();
-    gobble_number_of_bytes(9);
-    nrf_delay_us(1000);
-
-    send_preamble_and_start();
-    uart_put_char('\x06');
-    uart_put_char('\xFA');
-    send_direction();
-    uart_put_char('\x32'); // rf config
-    uart_put_char('\x05');
-    uart_put_char('\xFF');
-    uart_put_char('\xFF');
-    uart_put_char('\xFF');
-    uart_put_char('\xF8');
-    send_postamble();
-    get_ack();
-    gobble_number_of_bytes(9);
-
-
-    send_preamble_and_start();
-    uart_put_char('\x0E');
-    uart_put_char('\xF2');
-    send_direction();
-    uart_put_char('\x06'); // read register
-    uart_put_char('\x63');uart_put_char('\x02');
-    uart_put_char('\x63');uart_put_char('\x03');
-    uart_put_char('\x63');uart_put_char('\x05');
-    uart_put_char('\x63');uart_put_char('\x38');
-    uart_put_char('\x63');uart_put_char('\x3C');
-    uart_put_char('\x63');uart_put_char('\x3D');
-    uart_put_char('\x19');
-    send_postamble();
-    get_ack();
-    gobble_number_of_bytes(15);
 
     send_preamble_and_start();
     uart_put_char('\x08');
@@ -349,7 +275,9 @@ unsigned short in_list_passive_target() {
     send_postamble();
     get_ack();
     gobble_number_of_bytes(9);
+}
 
+unsigned short in_list_passive_target() {
     send_preamble_and_start();
     uart_put_char('\x04');
     uart_put_char('\xFC');
@@ -388,32 +316,6 @@ unsigned short in_list_passive_target() {
     gobble_number_of_bytes(26);
     //wait_for_number_of_response_byte
     // 00 00 FF - 13 ED - D5 41 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 EA 00
-
-
-    send_preamble_and_start();
-    uart_put_char('\x03');
-    uart_put_char('\xFD');
-    send_direction();
-    uart_put_char('\x52'); // in release
-    uart_put_char('\x00');
-    uart_put_char('\xDA');
-    send_postamble();
-    get_ack();
-    gobble_number_of_bytes(10);
-
-    send_preamble_and_start();
-    uart_put_char('\x04');
-    uart_put_char('\xFC');
-    send_direction();
-    uart_put_char('\x32'); // rf config
-    uart_put_char('\x01');
-    uart_put_char('\x00');
-    uart_put_char('\xF9');
-    send_postamble();
-    get_ack();
-    gobble_number_of_bytes(9);
-
-    powerdown();
 
     return attendeeId;
 }

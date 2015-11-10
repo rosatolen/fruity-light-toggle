@@ -51,23 +51,6 @@ NFCModule::NFCModule(Node* node, ConnectionManager* cm, const char* name, u16 st
 //    }
 //}
 
-void module_wakeup() {
-    uint8_t wakeup[26] = {
-        '\x55','\x55',
-        '\x00','\x00','\x00','\x00',
-        '\x00','\x00','\x00','\x00',
-        '\x00','\x00','\x00','\x00',
-        '\x00','\x00','\x00','\x00',
-        '\xFF','\x03','\xFD','\xD4',
-        '\x14','\x01','\x17','\x00'};
-
-    for (int i=0; i < 26; i++) {
-        uart_put_char(wakeup[i]);
-    }
-    get_ack();
-}
-
-
 void NFCModule::TimerEventHandler(u16 passedTime, u32 appTimer)
 {
 #ifdef ENABLE_NFC
@@ -111,12 +94,7 @@ void NFCModule::TimerEventHandler(u16 passedTime, u32 appTimer)
     // schedule state change
     if (appTimer/1000 % 5 && appTimer % 1000 == 0) {
         if (!PN532_IS_SETUP) {
-            NFC::pn532_wakeup();
-            NFC::set_parameter_command();
-            NFC::write_register();
-            NFC::rfconfiguration_2();
-            NFC::write_register2();
-            NFC::rfconfiguration_5();
+            setup_mifare_ultralight();
             PN532_IS_SETUP = true;
         }
 
