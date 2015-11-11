@@ -26,6 +26,7 @@ static void vote(unsigned short uID) {
     ConnectionManager *cm = ConnectionManager::getInstance();
     Node *node = Node::getInstance();
     Conf *config = Conf::getInstance();
+    u32 time = (node->globalTime) / APP_TIMER_CLOCK_FREQ;
 
     nodeID everyone = 0;
     connPacketModule packet;
@@ -34,14 +35,19 @@ static void vote(unsigned short uID) {
     packet.header.receiver = everyone;
     packet.moduleId = moduleID::VOTING_MODULE_ID;
     packet.actionType = 0; // hardcoded from the reference VotingModule.h
+
     packet.data[0] = uID & 0xff;
     packet.data[1] = (uID >> 8) & 0xff;
+    packet.data[2] = (int)(time >> 24) & 0xff;
+    packet.data[3] = (int)(time >> 16) & 0xff;
+    packet.data[4] = (int)(time >> 8) & 0xff;
+    packet.data[5] = (int)time & 0xff;
 
     bool success = node->PutInRetryStorage(uID);
     if(success) {
-        cm->SendMessageToReceiver(NULL, (u8 * ) & packet, SIZEOF_CONN_PACKET_MODULE + 3 + 1, true);
+        cm->SendMessageToReceiver(NULL, (u8 * ) &packet, SIZEOF_CONN_PACKET_MODULE + 10, true);
+        logt("VOTING", "Sending vote with id: %d and time: %d\n", uID, time);
 
-        logt("VOTING", "Sending vote with id: %d\n", uID);
     } else {
         logt("VOTING", "Queue full, unable to send vote with id: %d\n", uID);
     }
@@ -166,7 +172,14 @@ void VotingModule::ConnectionPacketReceivedEventHandler(connectionPacket* inPack
             if(packet->moduleId == moduleId){
                 if(packet->actionType == VotingModuleTriggerActionMessages::TRIGGER_MESSAGE){
                     unsigned short uID = (( (unsigned short)packet->data[1] ) << 8) | packet->data[0];
-                    logt("VOTING", "Gateway %d received voter message from %d with userId %d \n", node->persistentConfig.nodeId, packetHeader->sender, uID);
+
+                    u32 timeSent =  (
+                                    + (packet->data[2] << 24)
+                                    + (packet->data[3] << 16)
+                                    + (packet->data[4] << 8 )
+                                    + (packet->data[5] ));
+
+                    logt("VOTING", "Gateway %d received voter message from %d with userId %d and time %d\n", node->persistentConfig.nodeId, packetHeader->sender, uID, timeSent);
 
                     //Send Response acknowledgement
                     connPacketModule outPacket;
