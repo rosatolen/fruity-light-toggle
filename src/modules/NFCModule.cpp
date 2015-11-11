@@ -5,25 +5,69 @@
 
 extern "C" {
 #include "app_util_platform.h"
-#include "app_uart.h"
+#include "app_error.h"
 #include "pn532.h"
 }
 
-#define UART_TX_BUF_SIZE 256
+#define UART_TX_BUF_SIZE 1
 #define UART_RX_BUF_SIZE 1
 
-int current_stage = 1;
-int final_stage = 10;
-int stages[10] = {1,2,3,4,5,6,7,8,9,10};
 bool UART_CONFIGURED = false;
 bool PN532_IS_SETUP = false;
 
-void UART0_IRQHandler(void) {
-    short attendeeId = NFC::GetAttendeeId();
-}
+typedef enum {
+    SETUP,
+    CHECK_TAG,
+    READ_TAG,
+    ERROR
+} nfc_state_t;
 
-void configure_uart(void)
-{
+typedef enum {
+    DOWN,
+    NO_PARAM,
+    NOT_WRITTEN_80,
+    RF_NOT_CONFIG,
+    NOT_WRITTEN_40_10,
+    RF_MAX_NOT_CONFIG,
+    SETUP_DONE
+} setup_state_t;
+
+nfc_state_t current_state = SETUP;
+setup_state_t current_setup_state = DOWN;
+
+void setup() {
+    switch(current_setup_state)
+    {
+        case DOWN:
+        wakeup();
+        current_setup_state = NO_PARAM;
+        break;
+
+        case NO_PARAM:
+        set_parameter();
+        current_setup_state = NOT_WRITTEN_80;
+        break;
+
+        case NOT_WRITTEN_80:
+        write_80();
+        current_setup_state = RF_NOT_CONFIG;
+        break;
+
+        case RF_NOT_CONFIG:
+        config_rf();
+        current_setup_state = NOT_WRITTEN_40_10;
+        break;
+
+        case NOT_WRITTEN_40_10:
+        write_40_10();
+        current_setup_state = RF_MAX_NOT_CONFIG;
+        break;
+
+        case RF_MAX_NOT_CONFIG:
+        config_rf_max();
+        current_setup_state = SETUP_DONE;
+        break;
+    }
 }
 
 NFCModule::NFCModule(Node* node, ConnectionManager* cm, const char* name, u16 storageSlot)
@@ -34,70 +78,46 @@ NFCModule::NFCModule(Node* node, ConnectionManager* cm, const char* name, u16 st
   configurationPointer = &_configuration;
 }
 
-//*app_uart_event_handler_t nfcEventHandler() {
-//    static char input[6] = {0};
-//
-//    if (simple_uart_get_with_timeout(0, (uint8_t*) input)) {
-//        ReadNFCResponse(input, 6, 1);
-//
-//        if (is_ack(input, 6)) {
-//            //proceed with gobbling
-//            // does this return a bool for when it failed?
-//            Pn532InterruptListener(input);
-//
-//        } else {
-//            // error state :( start over
-//        }
-//    }
-//}
+void nfcEventHandler(uart_event *event) {
+    Node *node = Node::getInstance();
+    node->LedRed->On();
+    node->LedGreen->On();
+    node->LedBlue->On();
+
+    //app_uart_put(wakeup sequence)
+    //    app_uart_get - will trigger event handler to handle the ACK and send the next message
+    //static char input[6] = {0};
+    //if (simple_uart_get_with_timeout(0, (uint8_t*) input)) {
+    //    ReadNFCResponse(input, 6, 1);
+    //    if (is_ack(input, 6)) {
+    //        //proceed with gobbling
+    //        // does this return a bool for when it failed?
+    //        Pn532InterruptListener(input);
+    //    } else {
+    //        // error state :( start over
+    //    }
+    //}
+
+    return;
+}
+
+
 
 void NFCModule::TimerEventHandler(u16 passedTime, u32 appTimer)
 {
 #ifdef ENABLE_NFC
     if (!UART_CONFIGURED) {
-        uart_115200_config(RTS_PIN_NUMBER, /*TX_PIN_NUM*/ 19, CTS_PIN_NUMBER, /*RX_PIN_NUM*/ 20);
-        //////// Setup with APP_UART_INIT
-        //    Declare an app_uart_event_handler_t and place it in initialization below
-        //const app_uart_comm_params_t uart_params {
-        //    20,
-        //    19,
-        //    RTS_PIN_NUMBER,
-        //    CTS_PIN_NUMBER,
-        //    false,
-        //    UART_BAUDRATE_BAUDRATE_Baud115200
-        //};
-
-        //uint8_t receiver[1] = {0};
-        //uint8_t transmit[256] = {0};
-        //const app_uart_buffers_t uart_buffers {
-        //    uart_buffers.rx_buf = receiver;
-        //    uart_buffers.rx_buf_size = 1;
-        //    uart_buffers.tx_buf = transmit;
-        //    uart_buffers.tx_buf_size = 256;
-        //};
-
-        // Do I need this?
-        //NRF_UART0->INTENSET = UART_INTENSET_RXDRDY_Enabled << UART_INTENSET_RXDRDY_Pos;
-        //NVIC_SetPriority(UART0_IRQn, APP_IRQ_PRIORITY_LOW);
-        //NVIC_EnableIRQ(UART0_IRQn);
-
-        //ret_code_t ret_code;
-
-        //APP_UART_INIT(&uart_params, nfcEventHandler, APP_IRQ_PRIORITY_LOW, ret_code);
-        //APP_ERROR_CHECK(ret_code);
-
-        //app_uart_put(wakeup sequence)
-        //    app_uart_get - will trigger event handler to handle the ACK and send the next message
+        uart_115200_config(RTS_PIN_NUMBER, 19, CTS_PIN_NUMBER, 20, nfcEventHandler);
         UART_CONFIGURED = true;
+    }
+
+    if (appTimer % 100 == 0) {
+        if (current_setup_state != SETUP_DONE) setup();
     }
 
     // schedule state change
     if (appTimer/1000 % 5 && appTimer % 1000 == 0) {
-        if (!PN532_IS_SETUP) {
-            setup_mifare_ultralight();
-            PN532_IS_SETUP = true;
-        }
-
+        //powerdown();
     /* BELOW HAS NOT PASSED BUILD */
     //    if (NFC::inListPassiveTarget()) {
     //        // DATA EXCHANGE. should check to see if id_exists_in_response
@@ -110,6 +130,6 @@ void NFCModule::TimerEventHandler(u16 passedTime, u32 appTimer)
     //       NFC::dataExchange4();
     //       // NFC::inRelease(); - using release would allow people to register themselves more than once
     //    }
-}
+    }
 #endif
 }

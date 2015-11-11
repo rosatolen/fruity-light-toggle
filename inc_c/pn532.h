@@ -10,13 +10,30 @@ extern "C" {
 #include <stdbool.h>
 #include <stdint.h>
 
+typedef enum {
+    UART_ERROR,
+    UART_RECEIVED
+} uart_event_t;
+
+typedef struct {
+    uart_event_t event_t;
+    uint8_t data;
+} uart_event;
+
+typedef void (* uart_event_handler) (uart_event *uart_event);
+
+void set_parameter();
+void write_80();
+void config_rf();
+void write_40_10();
+void config_rf_max();
 
 void wakeup();
 void powerdown();
 void setup_mifare_ultralight();
 unsigned short in_list_passive_target();
 void uart_115200_config(uint8_t rts_pin_number, uint8_t txd_pin_number,
-						uint8_t cts_pin_number, uint8_t rxd_pin_number);
+						uint8_t cts_pin_number, uint8_t rxd_pin_number, uart_event_handler event_handler);
 void uart_put_char(uint8_t character);
 void gobble_number_of_bytes(int number);
 void send_preamble_and_start();

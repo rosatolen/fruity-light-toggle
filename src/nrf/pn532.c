@@ -9,20 +9,11 @@
 
 #define UART_BUF_SIZE 10
 
-void uart_put_char(uint8_t cr)
-{
+uint8_t current_rx_byte;
 
-    NRF_UART0->TXD = (uint8_t)cr;
+typedef void (* app_uart_event_handler_t) (uart_event_t * p_app_uart_event);
 
-
-    while (NRF_UART0->EVENTS_TXDRDY != 1)
-    {
-        // Wait for TXD data to be sent
-        // should setup error feedback sending char fails :(
-    }
-
-    NRF_UART0->EVENTS_TXDRDY = 0;
-}
+static app_uart_event_handler_t m_event_handler;
 
 uint8_t uart_get(void)
 {
@@ -66,19 +57,86 @@ bool gobble_number_of_bytes_with_timeout(int number) {
 }
 
 void wakeup() {
-    uart_put_char('\x55');uart_put_char('\x55');
-
-    uart_put_char('\x00');uart_put_char('\x00');uart_put_char('\x00');uart_put_char('\x00');
-    uart_put_char('\x00');uart_put_char('\x00');uart_put_char('\x00');uart_put_char('\x00');
-    uart_put_char('\x00');uart_put_char('\x00');uart_put_char('\x00');uart_put_char('\x00');
-    uart_put_char('\x00');uart_put_char('\x00');uart_put_char('\x00');uart_put_char('\x00');
-
-    uart_put_char('\xFF');uart_put_char('\x03');uart_put_char('\xFD');uart_put_char('\xD4');
-    uart_put_char('\x14');uart_put_char('\x01');uart_put_char('\x17');uart_put_char('\x00');
-
-    get_ack();
-    nrf_delay_us(1000);
+    simple_uart_put('\x55');simple_uart_put('\x55');
+    simple_uart_put('\x00');simple_uart_put('\x00');simple_uart_put('\x00');simple_uart_put('\x00');
+    simple_uart_put('\x00');simple_uart_put('\x00');simple_uart_put('\x00');simple_uart_put('\x00');
+    simple_uart_put('\x00');simple_uart_put('\x00');simple_uart_put('\x00');simple_uart_put('\x00');
+    simple_uart_put('\x00');simple_uart_put('\x00');simple_uart_put('\x00');simple_uart_put('\x00');
+    simple_uart_put('\xFF');simple_uart_put('\x03');simple_uart_put('\xFD');simple_uart_put('\xD4');
+    simple_uart_put('\x14');simple_uart_put('\x01');simple_uart_put('\x17');simple_uart_put('\x00');
+    //get_ack();
 }
+
+void set_parameter() {
+    send_preamble_and_start();
+    simple_uart_put('\x03');
+    simple_uart_put('\xFD');
+    send_direction();
+    simple_uart_put('\x12'); // set parameter command
+    simple_uart_put('\x14');
+    simple_uart_put('\x06');
+    send_postamble();
+    //get_ack();
+    //gobble_number_of_bytes(9);
+}
+
+void write_80() {
+    send_preamble_and_start();
+    simple_uart_put('\x08');simple_uart_put('\xF8');
+    send_direction();
+    simple_uart_put('\x08'); // write register
+    simple_uart_put('\x63');simple_uart_put('\x02');simple_uart_put('\x80');
+    simple_uart_put('\x63');simple_uart_put('\x03');simple_uart_put('\x80');
+    simple_uart_put('\x59');
+    send_postamble();
+    //get_ack();
+    //gobble_number_of_bytes(9);
+}
+
+void config_rf() {
+    send_preamble_and_start();
+    simple_uart_put('\x04');
+    simple_uart_put('\xFC');
+    send_direction();
+    simple_uart_put('\x32'); // rfconfiguration
+    simple_uart_put('\x01');
+    simple_uart_put('\x01');
+    simple_uart_put('\xF8');
+    send_postamble();
+    //get_ack();
+    //gobble_number_of_bytes(9);
+}
+
+void write_40_10() {
+    send_preamble_and_start();
+    simple_uart_put('\x08');
+    simple_uart_put('\xF8');
+    send_direction();
+    simple_uart_put('\x08'); // write register
+    simple_uart_put('\x63');simple_uart_put('\x05');simple_uart_put('\x40');
+    simple_uart_put('\x63');simple_uart_put('\x3C');simple_uart_put('\x10');
+    simple_uart_put('\xCD');
+    send_postamble();
+    //get_ack();
+    //gobble_number_of_bytes(9);
+}
+
+void config_rf_max() {
+    send_preamble_and_start();
+    simple_uart_put('\x06');
+    simple_uart_put('\xFA');
+    send_direction();
+    simple_uart_put('\x32'); // rf configuration
+    simple_uart_put('\x05');
+    simple_uart_put('\x00');
+    simple_uart_put('\x01');
+    simple_uart_put('\x02');
+    simple_uart_put('\xF2');
+    send_postamble();
+    //get_ack();
+    //gobble_number_of_bytes(9);
+}
+
 
 void gobble_number_of_bytes(int number) {
     int i = 0;
@@ -182,15 +240,15 @@ void get_ack() {
 }
 
 void send_preamble_and_start() {
-    uart_put_char('\x00');uart_put_char('\x00');uart_put_char('\xFF');
+    simple_uart_put('\x00');simple_uart_put('\x00');simple_uart_put('\xFF');
 }
 
 void send_direction() {
-    uart_put_char('\xD4');
+    simple_uart_put('\xD4');
 }
 
 void send_postamble() {
-    uart_put_char('\x00');
+    simple_uart_put('\x00');
 }
 
 const uint8_t LENGTH = '\x05';
@@ -201,91 +259,29 @@ const uint8_t MIFARE_COMMAND = '\x30';
 
 void in_data_exchange(uint8_t start_address, uint8_t dcs) {
     send_preamble_and_start();
-    uart_put_char(LENGTH);
-    uart_put_char(LENGTH_CHECK_SUM);
+    simple_uart_put(LENGTH);
+    simple_uart_put(LENGTH_CHECK_SUM);
     send_direction();
-    uart_put_char(COMMAND);
-    uart_put_char(LOGICAL_NUMBER);
-    uart_put_char(MIFARE_COMMAND);
-    uart_put_char(start_address);
-    uart_put_char(dcs);
+    simple_uart_put(COMMAND);
+    simple_uart_put(LOGICAL_NUMBER);
+    simple_uart_put(MIFARE_COMMAND);
+    simple_uart_put(start_address);
+    simple_uart_put(dcs);
     send_postamble();
 
     get_ack();
     nrf_delay_us(1000);
 }
 
-void setup_mifare_ultralight() {
-    send_preamble_and_start();
-    uart_put_char('\x03');
-    uart_put_char('\xFD');
-    send_direction();
-    uart_put_char('\x12'); // set parameter command
-    uart_put_char('\x14');
-    uart_put_char('\x06');
-    send_postamble();
-    get_ack();
-    gobble_number_of_bytes(9);
-
-    send_preamble_and_start();
-    uart_put_char('\x08');uart_put_char('\xF8');
-    send_direction();
-    uart_put_char('\x08'); // write register
-    uart_put_char('\x63');uart_put_char('\x02');uart_put_char('\x80');
-    uart_put_char('\x63');uart_put_char('\x03');uart_put_char('\x80');
-    uart_put_char('\x59');
-    send_postamble();
-    get_ack();
-    gobble_number_of_bytes(9);
-
-    send_preamble_and_start();
-    uart_put_char('\x04');
-    uart_put_char('\xFC');
-    send_direction();
-    uart_put_char('\x32'); // rfconfiguration
-    uart_put_char('\x01');
-    uart_put_char('\x01');
-    uart_put_char('\xF8');
-    send_postamble();
-    get_ack();
-    gobble_number_of_bytes(9);
-
-    send_preamble_and_start();
-    uart_put_char('\x08');
-    uart_put_char('\xF8');
-    send_direction();
-    uart_put_char('\x08'); // write register
-    uart_put_char('\x63');uart_put_char('\x05');uart_put_char('\x40');
-    uart_put_char('\x63');uart_put_char('\x3C');uart_put_char('\x10');
-    uart_put_char('\xCD');
-    send_postamble();
-    get_ack();
-    gobble_number_of_bytes(9);
-
-    send_preamble_and_start();
-    uart_put_char('\x06');
-    uart_put_char('\xFA');
-    send_direction();
-    uart_put_char('\x32'); // rf configuration
-    uart_put_char('\x05');
-    uart_put_char('\x00');
-    uart_put_char('\x01');
-    uart_put_char('\x02');
-    uart_put_char('\xF2');
-    send_postamble();
-    get_ack();
-    gobble_number_of_bytes(9);
-}
-
 unsigned short in_list_passive_target() {
     send_preamble_and_start();
-    uart_put_char('\x04');
-    uart_put_char('\xFC');
+    simple_uart_put('\x04');
+    simple_uart_put('\xFC');
     send_direction();
-    uart_put_char('\x4A'); // inlistpassive target
-    uart_put_char('\x01');
-    uart_put_char('\x00');
-    uart_put_char('\xE1');
+    simple_uart_put('\x4A'); // inlistpassive target
+    simple_uart_put('\x01');
+    simple_uart_put('\x00');
+    simple_uart_put('\xE1');
     send_postamble();
     get_ack();
 
@@ -322,27 +318,94 @@ unsigned short in_list_passive_target() {
 
 void powerdown () {
     send_preamble_and_start();
-    uart_put_char('\x03');
-    uart_put_char('\xFD');
-    uart_put_char('\xD4');
-    uart_put_char('\x16');
-    uart_put_char('\xF0');
-    uart_put_char('\x26');
+    simple_uart_put('\x03');
+    simple_uart_put('\xFD');
+    simple_uart_put('\xD4');
+    simple_uart_put('\x16');
+    simple_uart_put('\xF0');
+    simple_uart_put('\x26');
     send_postamble();
+}
+
+void UART0_IRQHandler(void)
+{
+    // Handle reception
+    if ((NRF_UART0->EVENTS_RXDRDY != 0) && (NRF_UART0->INTENSET & UART_INTENSET_RXDRDY_Msk))
+    {
+        //tell the handler to change state?
+        uart_event event;
+
+        // Clear UART RX event flag
+        NRF_UART0->EVENTS_RXDRDY  = 0;
+        current_rx_byte                 = (uint8_t)NRF_UART0->RXD;
+
+        m_event_handler(&event);
+    }
+
+    // Handle transmission.
+    if ((NRF_UART0->EVENTS_TXDRDY != 0) && (NRF_UART0->INTENSET & UART_INTENSET_TXDRDY_Msk))
+    {
+        // Clear UART TX event flag.
+        NRF_UART0->EVENTS_TXDRDY = 0;
+        //change state? if so , call m_event_handler
+    }
+
+    // Handle errors.
+    if ((NRF_UART0->EVENTS_ERROR != 0) && (NRF_UART0->INTENSET & UART_INTENSET_ERROR_Msk))
+    {
+        uint32_t       error_source;
+        uart_event event;
+
+        // Clear UART ERROR event flag.
+        NRF_UART0->EVENTS_ERROR = 0;
+
+        // Clear error source.
+        error_source        = NRF_UART0->ERRORSRC;
+        NRF_UART0->ERRORSRC = error_source;
+
+        event.event_t = UART_ERROR;
+        m_event_handler(&event);
+    }
 }
 
 void uart_115200_config(uint8_t rts_pin_number,
                         uint8_t txd_pin_number,
                         uint8_t cts_pin_number,
-                        uint8_t rxd_pin_number) {
+                        uint8_t rxd_pin_number,
+                        uart_event_handler event_handler) {
+    m_event_handler = event_handler;
+
+    //?? needed? nrf_gpio_pin_set(txd_pin_number);
     nrf_gpio_cfg_output(txd_pin_number);
-    nrf_gpio_cfg_input(rxd_pin_number, NRF_GPIO_PIN_NOPULL);
+    nrf_gpio_cfg_input(rxd_pin_number, NRF_GPIO_PIN_PULLUP);
+    // old - nrf_gpio_cfg_input(rxd_pin_number, NRF_GPIO_PIN_NOPULL);
 
     NRF_UART0->PSELTXD = txd_pin_number;
     NRF_UART0->PSELRXD = rxd_pin_number;
     NRF_UART0->BAUDRATE      = (UART_BAUDRATE_BAUDRATE_Baud115200);
-    NRF_UART0->ENABLE        = (UART_ENABLE_ENABLE_Enabled);
+    //NRF_UART0->ENABLE        = (UART_ENABLE_ENABLE_Enabled);
+
+    // parity excluded
+    //?? needed?
+    NRF_UART0->CONFIG = (UART_CONFIG_PARITY_Excluded << UART_CONFIG_PARITY_Pos);
+
+    // flow control disabled
+    NRF_UART0->ENABLE        = (UART_ENABLE_ENABLE_Enabled << UART_ENABLE_ENABLE_Pos);
+    NRF_UART0->EVENTS_RXDRDY = 0;
+    NRF_UART0->EVENTS_TXDRDY = 0;
+    //?? needed?
+    NRF_UART0->CONFIG &= ~(UART_CONFIG_HWFC_Enabled << UART_CONFIG_HWFC_Pos);
     NRF_UART0->TASKS_STARTTX = 1;
     NRF_UART0->TASKS_STARTRX = 1;
-    NRF_UART0->EVENTS_RXDRDY = 0;
+
+    // enable uart interrupt
+    NRF_UART0->INTENCLR = 0xffffffffUL;
+    NRF_UART0->INTENSET = (UART_INTENSET_RXDRDY_Set << UART_INTENSET_RXDRDY_Pos);
+    //    WHY DOES THIS CAUSE HANGING?????
+    //    | (UART_INTENSET_TXDRDY_Set << UART_INTENSET_TXDRDY_Pos) |
+    //    (UART_INTENSET_ERROR_Set << UART_INTENSET_ERROR_Pos);
+
+    NVIC_ClearPendingIRQ(UART0_IRQn);
+    NVIC_SetPriority(UART0_IRQn, APP_IRQ_PRIORITY_LOW);
+    NVIC_EnableIRQ(UART0_IRQn);
 }

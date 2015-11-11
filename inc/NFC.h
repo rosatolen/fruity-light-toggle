@@ -8,7 +8,6 @@ class NFC {
         static short GetAttendeeId();
         static void CheckPn532Response();
 
-        static void pn532_wakeup();
         static void set_parameter_command();
         static void write_register();
         static void rfconfiguration_2();

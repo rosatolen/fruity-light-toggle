@@ -87,7 +87,6 @@ bool NFC::inListPassiveTarget() {
 }
 
 short NFC::GetAttendeeId() {
-    NFC::pn532_wakeup();
     set_parameter_command();
 
     short attendeeId = inListPassiveTarget();
