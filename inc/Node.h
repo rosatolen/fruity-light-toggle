@@ -83,6 +83,7 @@ class Node:
 			u8 dBmRX; //Receiver sensitivity (or receied power from a packet sent at 1m distance with +0dBm?)
 			u8 reserved;
 			unsigned short retryStorage[MAX_RETRY_STORAGE_SIZE];
+			u32 timeStorage[MAX_RETRY_STORAGE_SIZE];
 		};
 
 		//For our test devices
@@ -180,6 +181,8 @@ class Node:
 		void Stop();
 
 		//Persistent configuration
+		void PutInTimeStorage(int timeIndex);
+		void RemoveFromTimeStorage(int timeIndex);
 		void SaveConfiguration();
 		bool PutInRetryStorage(unsigned short userId);
 		void RemoveFromRetryStorage(unsigned short userId);
@@ -187,6 +190,7 @@ class Node:
 		unsigned short GetVoteFromRetryStorage(int vote);
 		bool RetryStorageIsFull();
 		bool RetryStorageContains(unsigned short userId);
+		u32 GetTimeFor(unsigned short uID);
 
 
 		//Connection handlers

@@ -26,26 +26,26 @@ static void vote(unsigned short uID) {
     ConnectionManager *cm = ConnectionManager::getInstance();
     Node *node = Node::getInstance();
     Conf *config = Conf::getInstance();
-    u32 time = (node->globalTime) / APP_TIMER_CLOCK_FREQ;
-
-    nodeID everyone = 0;
-    connPacketModule packet;
-    packet.header.messageType = MESSAGE_TYPE_MODULE_TRIGGER_ACTION;
-    packet.header.sender = node->persistentConfig.nodeId;
-    packet.header.receiver = everyone;
-    packet.moduleId = moduleID::VOTING_MODULE_ID;
-    packet.actionType = 0; // hardcoded from the reference VotingModule.h
-
-    packet.data[0] = uID & 0xff;
-    packet.data[1] = (uID >> 8) & 0xff;
-    packet.data[2] = (int)(time >> 24) & 0xff;
-    packet.data[3] = (int)(time >> 16) & 0xff;
-    packet.data[4] = (int)(time >> 8) & 0xff;
-    packet.data[5] = (int)time & 0xff;
 
     bool success = node->PutInRetryStorage(uID);
-    if(success) {
-        cm->SendMessageToReceiver(NULL, (u8 * ) &packet, SIZEOF_CONN_PACKET_MODULE + 10, true);
+    if (success) {
+        nodeID everyone = 0;
+        u32 time = node->GetTimeFor(uID);
+        connPacketModule packet;
+        packet.header.messageType = MESSAGE_TYPE_MODULE_TRIGGER_ACTION;
+        packet.header.sender = node->persistentConfig.nodeId;
+        packet.header.receiver = everyone;
+        packet.moduleId = moduleID::VOTING_MODULE_ID;
+        packet.actionType = 0; // hardcoded from the reference VotingModule.h
+
+        packet.data[0] = uID & 0xff;
+        packet.data[1] = (uID >> 8) & 0xff;
+        packet.data[2] = (int) (time >> 24) & 0xff;
+        packet.data[3] = (int) (time >> 16) & 0xff;
+        packet.data[4] = (int) (time >> 8) & 0xff;
+        packet.data[5] = (int) time & 0xff;
+
+        cm->SendMessageToReceiver(NULL, (u8 * ) & packet, SIZEOF_CONN_PACKET_MODULE + 10, true);
         logt("VOTING", "Sending vote with id: %d and time: %d\n", uID, time);
 
     } else {
@@ -159,7 +159,6 @@ void VotingModule::ConnectionPacketReceivedEventHandler(connectionPacket* inPack
         {
             if(packet->actionType == VotingModuleActionResponseMessages::RESPONSE_MESSAGE)
             {
-                //logt("VOTING", "Voter received acknowledgement from Gateway with userId %u \n", packet->data[0]);
                 unsigned short userId = (( (short)packet->data[1] ) << 8) | packet->data[0];
                 node->RemoveFromRetryStorage(userId);
             }

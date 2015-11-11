@@ -150,6 +150,7 @@ void Node::ConfigurationLoadedHandler()
 		persistentConfig.dBmRX = 10;
 		persistentConfig.dBmTX = 10;
 		memset(persistentConfig.retryStorage, 0, sizeof(persistentConfig.retryStorage));
+		memset(persistentConfig.timeStorage, 0, sizeof(persistentConfig.timeStorage));
 
 		//Get an id for our testdevices when not working with persistent storage
 		InitWithTestDeviceSettings();
@@ -768,6 +769,20 @@ void Node::SaveConfiguration()
 	Storage::getInstance().QueuedWrite((u8*) &persistentConfig, sizeof(NodeConfiguration), 0, this);
 }
 
+void Node::PutInTimeStorage(int timeIndex) {
+	u32 time = (this->globalTime) / APP_TIMER_CLOCK_FREQ;
+	this->persistentConfig.timeStorage[timeIndex] = time;
+}
+
+void Node::RemoveFromTimeStorage(int timeIndex) {
+	this->persistentConfig.timeStorage[timeIndex] = 0;
+
+	for(int n = timeIndex; n < MAX_RETRY_STORAGE_SIZE - 1; n++) {
+		memcpy(&persistentConfig.timeStorage[n], &persistentConfig.timeStorage[n+1], sizeof(&persistentConfig.timeStorage[n+1]));
+	}
+
+}
+
 bool Node::PutInRetryStorage(unsigned short userId) {
 	int index = 0;
 	unsigned short temp[MAX_RETRY_STORAGE_SIZE] = {0};
@@ -789,6 +804,7 @@ bool Node::PutInRetryStorage(unsigned short userId) {
 	for (int i = 0; i < MAX_RETRY_STORAGE_SIZE; i++) {
 		if (this->persistentConfig.retryStorage[i] == 0) {
 			memcpy(&persistentConfig.retryStorage[i], &userId, sizeof(userId));
+			this->PutInTimeStorage(i);
 			break;
 		}
 	}
@@ -818,8 +834,12 @@ void Node::RemoveFromRetryStorage(unsigned short userId) {
 		if (this->persistentConfig.retryStorage[i] != userId) {
 			tempStorage[j] = this->persistentConfig.retryStorage[i];
 			j++;
+		} else {
+			// when the element is being removed, also remove the time stamp associated with it
+			this->RemoveFromTimeStorage(i);
 		}
 	}
+
 	for (int i = 0; i < MAX_RETRY_STORAGE_SIZE; i++) {
 		if (tempStorage[i] != 0) {
 			memcpy(&persistentConfig.retryStorage[i], &tempStorage[i], sizeof(tempStorage[i]));
@@ -846,6 +866,16 @@ bool Node::RetryStorageIsFull() {
 
 unsigned short Node::GetVoteFromRetryStorage(int vote) {
 	return this->persistentConfig.retryStorage[vote];
+}
+
+u32 Node::GetTimeFor(unsigned short userId) {
+	for(int i =0; i < MAX_RETRY_STORAGE_SIZE; i++) {
+		if(this->persistentConfig.retryStorage[i] == userId) {
+			return this->persistentConfig.timeStorage[i];
+		}
+	}
+
+	return 0;
 }
 
 #pragma endregion configuration
