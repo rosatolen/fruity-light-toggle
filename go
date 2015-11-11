@@ -6,6 +6,7 @@ function helptext {
     echo "Usage: ./go <command>"
     echo ""
     echo "Available commands are:"
+    echo "    cn                Compile node code"
     echo "    d1                Deploy currently compiled code to a device I choose"
     echo "    fleet             Create and deploy a Fleet: All connected devices become Nodes except for 1 Gateway at oldest attached device"
     echo "    nodes             Create Nodes out of all connected devices"
@@ -128,6 +129,14 @@ function create-persistors {
     #echo 0 | $HOME/nrf/tools/jlink $HOME/nrf/projects/fruitymesh/deploy/single-fruitymesh-softdevice-deploy.jlink
 }
 
+function compile-node {
+    toggle-gateway-config false
+    toggle-terminal-config false
+    toggle-logging-config false
+    toggle-nfc-config true
+    compile
+}
+
 function deploy-nodes-to-all-local-devices {
     toggle-gateway-config false
     toggle-terminal-config false
@@ -175,6 +184,8 @@ function deploy-to-device-i-choose {
 }
 
 case "$1" in
+    cn) compile-node
+    ;;
     d1) deploy-to-device-i-choose
     ;;
     fleet) fleet
