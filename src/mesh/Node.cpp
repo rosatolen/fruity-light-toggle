@@ -821,6 +821,7 @@ bool Node::PutInRetryStorage(unsigned short userId) {
 bool Node::RetryStorageContains(unsigned short userId) {
 	for (int i = 0; i < MAX_RETRY_STORAGE_SIZE; i++) {
 		if (this->persistentConfig.retryStorage[i] == userId) {
+			this->PutInTimeStorage(i);
 			return true;
 		}
 	}
