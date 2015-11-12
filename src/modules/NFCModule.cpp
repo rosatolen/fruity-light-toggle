@@ -124,7 +124,7 @@ void process_response(uint8_t rx_byte) {
             break;
 
         case TO_HOST:
-            else if (rx_byte == 1) current_response_state = ONE_TAG_EXISTS;
+            if (rx_byte == 1) current_response_state = ONE_TAG_EXISTS;
             else if (rx_byte == 2) current_response_state = TWO_TAGS_EXIST;
             else current_response_state = NOT_EXPECTED_RESPONSE;
             break;
