@@ -20,7 +20,22 @@ typedef struct {
     uint8_t data;
 } uart_event;
 
-typedef void (* uart_event_handler) (uart_event *uart_event);
+typedef void (* uart_event_handler) (uint8_t rx_byte);
+
+typedef enum {
+    DOWN,
+    NO_PARAM,
+    NOT_WRITTEN_80,
+    RF_NOT_CONFIG,
+    NOT_WRITTEN_40_10,
+    RF_MAX_NOT_CONFIG,
+    SETUP_DONE
+} setup_state_t;
+
+setup_state_t get_setup_state();
+void setup();
+
+void nfcEventHandler(uart_event *event);
 
 void set_parameter();
 void write_80();

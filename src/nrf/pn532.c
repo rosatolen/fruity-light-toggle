@@ -11,9 +11,49 @@
 
 uint8_t current_rx_byte;
 
-typedef void (* app_uart_event_handler_t) (uart_event_t * p_app_uart_event);
+static uart_event_handler m_event_handler;
 
-static app_uart_event_handler_t m_event_handler;
+setup_state_t current_setup_state = DOWN;
+
+void setup() {
+    switch(current_setup_state)
+    {
+        case DOWN:
+        wakeup();
+        current_setup_state = NO_PARAM;
+        break;
+
+        case NO_PARAM:
+        set_parameter();
+        current_setup_state = NOT_WRITTEN_80;
+        break;
+
+        case NOT_WRITTEN_80:
+        write_80();
+        current_setup_state = RF_NOT_CONFIG;
+        break;
+
+        case RF_NOT_CONFIG:
+        config_rf();
+        current_setup_state = NOT_WRITTEN_40_10;
+        break;
+
+        case NOT_WRITTEN_40_10:
+        write_40_10();
+        current_setup_state = RF_MAX_NOT_CONFIG;
+        break;
+
+        case RF_MAX_NOT_CONFIG:
+        config_rf_max();
+        current_setup_state = SETUP_DONE;
+        break;
+    }
+}
+
+setup_state_t get_setup_state(){
+    return current_setup_state;
+}
+
 
 uint8_t uart_get(void)
 {
@@ -64,7 +104,6 @@ void wakeup() {
     simple_uart_put('\x00');simple_uart_put('\x00');simple_uart_put('\x00');simple_uart_put('\x00');
     simple_uart_put('\xFF');simple_uart_put('\x03');simple_uart_put('\xFD');simple_uart_put('\xD4');
     simple_uart_put('\x14');simple_uart_put('\x01');simple_uart_put('\x17');simple_uart_put('\x00');
-    //get_ack();
 }
 
 void set_parameter() {
@@ -76,8 +115,6 @@ void set_parameter() {
     simple_uart_put('\x14');
     simple_uart_put('\x06');
     send_postamble();
-    //get_ack();
-    //gobble_number_of_bytes(9);
 }
 
 void write_80() {
@@ -89,8 +126,6 @@ void write_80() {
     simple_uart_put('\x63');simple_uart_put('\x03');simple_uart_put('\x80');
     simple_uart_put('\x59');
     send_postamble();
-    //get_ack();
-    //gobble_number_of_bytes(9);
 }
 
 void config_rf() {
@@ -103,8 +138,6 @@ void config_rf() {
     simple_uart_put('\x01');
     simple_uart_put('\xF8');
     send_postamble();
-    //get_ack();
-    //gobble_number_of_bytes(9);
 }
 
 void write_40_10() {
@@ -117,8 +150,6 @@ void write_40_10() {
     simple_uart_put('\x63');simple_uart_put('\x3C');simple_uart_put('\x10');
     simple_uart_put('\xCD');
     send_postamble();
-    //get_ack();
-    //gobble_number_of_bytes(9);
 }
 
 void config_rf_max() {
@@ -133,8 +164,6 @@ void config_rf_max() {
     simple_uart_put('\x02');
     simple_uart_put('\xF2');
     send_postamble();
-    //get_ack();
-    //gobble_number_of_bytes(9);
 }
 
 
@@ -268,9 +297,6 @@ void in_data_exchange(uint8_t start_address, uint8_t dcs) {
     simple_uart_put(start_address);
     simple_uart_put(dcs);
     send_postamble();
-
-    get_ack();
-    nrf_delay_us(1000);
 }
 
 unsigned short in_list_passive_target() {
@@ -283,38 +309,39 @@ unsigned short in_list_passive_target() {
     simple_uart_put('\x00');
     simple_uart_put('\xE1');
     send_postamble();
-    get_ack();
+}
 
-    if(!tag_is_present()) {
-        powerdown();
-        return 0;
-    }
+
+    //if(!tag_is_present()) {
+    //    powerdown();
+    //    return 0;
+    //}
 
     /* ** GET PAID ** */
-    in_data_exchange('\x00', '\xBB');
-    gobble_number_of_bytes(26);
-    //gobble_number_of_bytes
-    // 00 00 FF - 13 ED - D5 41 00 04 A0 35 19 B2 BC 2B 80 A5 48 00 00 E1 10 12 00 EF 00
-    in_data_exchange('\x04', '\xB7');
-    gobble_number_of_bytes(26);
-    //gobble_number_of_bytes
-                                //  (1  3  160  16  D 3  24 209 20 U  4)  q c  o  n
-    // 00 00 FF - 13 ED - D5 41 00 01 03 A0 10 44 03 18 D1 01 14 55 04 71 63 6F 6E E7 00
-    in_data_exchange('\x08', '\xB3');
+    //in_data_exchange('\x00', '\xBB');
+    //
+    //gobble_number_of_bytes(26);
+    ////gobble_number_of_bytes
+    //// 00 00 FF - 13 ED - D5 41 00 04 A0 35 19 B2 BC 2B 80 A5 48 00 00 E1 10 12 00 EF 00
+    //in_data_exchange('\x04', '\xB7');
+    //gobble_number_of_bytes(26);
+    ////gobble_number_of_bytes
+    //                            //  (1  3  160  16  D 3  24 209 20 U  4)  q c  o  n
+    //// 00 00 FF - 13 ED - D5 41 00 01 03 A0 10 44 03 18 D1 01 14 55 04 71 63 6F 6E E7 00
+    //in_data_exchange('\x08', '\xB3');
 
-    short attendeeId = 0;
-    attendeeId = find_attendee_id();
-    if (attendeeId == 0) return 0;
-    //gobble_number_of_bytes
-                                //  s  f  .  c  o  m  /  ?  i  d  =  3  5  6  6 (254)
-    // 00 00 FF - 13 ED - D5 41 00 73 66 2E 63 6F 6D 2F 3F 69 64 3D 33 35 36 36 FE 5A 00
-    in_data_exchange('\x0C', '\xAF');
-    gobble_number_of_bytes(26);
+    //short attendeeId = 0;
+    //attendeeId = find_attendee_id();
+    //if (attendeeId == 0) return 0;
+    ////gobble_number_of_bytes
+    //                            //  s  f  .  c  o  m  /  ?  i  d  =  3  5  6  6 (254)
+    //// 00 00 FF - 13 ED - D5 41 00 73 66 2E 63 6F 6D 2F 3F 69 64 3D 33 35 36 36 FE 5A 00
+    //in_data_exchange('\x0C', '\xAF');
+    //gobble_number_of_bytes(26);
     //wait_for_number_of_response_byte
     // 00 00 FF - 13 ED - D5 41 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 EA 00
 
-    return attendeeId;
-}
+    //return attendeeId;
 
 void powerdown () {
     send_preamble_and_start();
@@ -332,14 +359,10 @@ void UART0_IRQHandler(void)
     // Handle reception
     if ((NRF_UART0->EVENTS_RXDRDY != 0) && (NRF_UART0->INTENSET & UART_INTENSET_RXDRDY_Msk))
     {
-        //tell the handler to change state?
-        uart_event event;
-
         // Clear UART RX event flag
         NRF_UART0->EVENTS_RXDRDY  = 0;
-        current_rx_byte                 = (uint8_t)NRF_UART0->RXD;
 
-        m_event_handler(&event);
+        m_event_handler((uint8_t)NRF_UART0->RXD);
     }
 
     // Handle transmission.
@@ -347,24 +370,23 @@ void UART0_IRQHandler(void)
     {
         // Clear UART TX event flag.
         NRF_UART0->EVENTS_TXDRDY = 0;
-        //change state? if so , call m_event_handler
     }
 
     // Handle errors.
     if ((NRF_UART0->EVENTS_ERROR != 0) && (NRF_UART0->INTENSET & UART_INTENSET_ERROR_Msk))
     {
-        uint32_t       error_source;
-        uart_event event;
+        //uint32_t       error_source;
+        //uart_event event;
 
-        // Clear UART ERROR event flag.
-        NRF_UART0->EVENTS_ERROR = 0;
+        //// Clear UART ERROR event flag.
+        //NRF_UART0->EVENTS_ERROR = 0;
 
-        // Clear error source.
-        error_source        = NRF_UART0->ERRORSRC;
-        NRF_UART0->ERRORSRC = error_source;
+        //// Clear error source.
+        //error_source        = NRF_UART0->ERRORSRC;
+        //NRF_UART0->ERRORSRC = error_source;
 
-        event.event_t = UART_ERROR;
-        m_event_handler(&event);
+        //event.event_t = UART_ERROR;
+        //m_event_handler(&event);
     }
 }
 
