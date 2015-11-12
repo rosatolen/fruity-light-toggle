@@ -110,12 +110,11 @@ Node::Node(networkID networkId)
     activeModules[3] = new ScanningModule(moduleID::SCANNING_MODULE_ID, this, cm, "scan", 4);
     activeModules[4] = new EnrollmentModule(moduleID::ENROLLMENT_MODULE_ID, this, cm, "enroll", 5);
     activeModules[5] = new IoModule(moduleID::IO_MODULE_ID, this, cm, "io", 6);
-    activeModules[6] = new GatewayModule(moduleID::GATEWAY_MODULE_ID, this, cm, "gateway", 7);
-    activeModules[7] = new VotingModule(moduleID::VOTING_MODULE_ID, this, cm, "voting", 8);
-    activeModules[8] = new HeartbeatModule(this, cm, "heartbeat", 9);
-    activeModules[9] = new NFCModule(this, cm, "nfc", 10);
+    activeModules[6] = new VotingModule(moduleID::VOTING_MODULE_ID, this, cm, "voting", 7);
+    activeModules[7] = new HeartbeatModule(this, cm, "heartbeat", 8);
+    activeModules[8] = new NFCModule(this, cm, "nfc", 9);
 
-    isGatewayDevice = ((GatewayModule*)activeModules[6])->IsGatewayDevice();
+    isGatewayDevice = IS_GATEWAY_DEVICE;
 
 	//Register a pre/post transmit hook for radio events
 	if(Config->enableRadioNotificationHandler){
