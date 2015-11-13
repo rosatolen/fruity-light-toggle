@@ -45,7 +45,8 @@ static void vote(unsigned short uID) {
         packet.data[5] = (int) time & 0xff;
 
         cm->SendMessageToReceiver(NULL, (u8 * ) & packet, SIZEOF_CONN_PACKET_MODULE + 10, true);
-        logt("VOTING", "Sending vote with id: %d and time: %d\n", uID, time);
+        logt("VOTING", "Sending vote with id: %d", uID);
+        //logt("VOTING", "Sending vote with id: %d and time: %d\n", uID, time);
 
     } else {
         logt("VOTING", "Queue full, unable to send vote with id: %d\n", uID);
@@ -177,7 +178,8 @@ void VotingModule::ConnectionPacketReceivedEventHandler(connectionPacket* inPack
                                     + (packet->data[4] << 8 )
                                     + (packet->data[5] ));
 
-                    logt("VOTING", "Gateway %d received voter message from %d with userId %d and time %d\n", node->persistentConfig.nodeId, packetHeader->sender, uID, timeSent);
+                    logt("VOTING", "Gateway %d received voter message from %d with userId %d\n", node->persistentConfig.nodeId, packetHeader->sender, uID);
+                    //logt("VOTING", "Gateway %d received voter message from %d with userId %d and time %d\n", node->persistentConfig.nodeId, packetHeader->sender, uID, timeSent);
 
                     //Send Response acknowledgement
                     connPacketModule outPacket;
