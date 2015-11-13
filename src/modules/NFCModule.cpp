@@ -1,12 +1,13 @@
 #include <NFCModule.h>
-#include <NFC.h>
 
 #include <Node.h>
 
 extern "C" {
 #include "app_util_platform.h"
 #include "app_error.h"
+#include "stdlib.h"
 #include "pn532.h"
+#include "simple_uart.h"
 }
 
 #define UART_TX_BUF_SIZE 1
@@ -36,6 +37,7 @@ typedef enum {
 ack_state current_ack_state = ACK_START;
 
 void process_ack(uint8_t rx_byte) {
+    Node *node = Node::getInstance();
 
     switch (current_ack_state)
     {
@@ -77,12 +79,8 @@ typedef enum {
     START1,
     START2,
     LEN,
-    LCS,
-    TO_HOST,
-    COMMAND_RESPONSE,
     NO_TAG_EXISTS,
-    ONE_TAG_EXISTS,
-    TWO_TAGS_EXIST,
+    TAG_EXISTS,
     NOT_EXPECTED_RESPONSE
 } response_state;
 
@@ -108,44 +106,271 @@ void process_response(uint8_t rx_byte) {
             break;
 
         case START2:
-            if (rx_byte == 3) current_response_state = NO_TAG_EXISTS;
-            if (rx_byte == 15) current_response_state = LEN;
-            else current_response_state = NOT_EXPECTED_RESPONSE;
-            break;
-
-        case LEN:
-            if (rx_byte == 241) current_response_state = LCS;
-            else current_response_state = NOT_EXPECTED_RESPONSE;
-            break;
-
-        case LCS:
-            if (rx_byte == 213) current_response_state = TO_HOST;
-            else current_response_state = NOT_EXPECTED_RESPONSE;
-            break;
-
-        case TO_HOST:
-            if (rx_byte == 1) current_response_state = ONE_TAG_EXISTS;
-            else if (rx_byte == 2) current_response_state = TWO_TAGS_EXIST;
+            if (rx_byte == 3) {
+                current_response_state = NO_TAG_EXISTS;
+                //node->LedRed->On();
+                //node->LedBlue->On();
+            }
+            else if (rx_byte == 15) current_response_state = TAG_EXISTS;
             else current_response_state = NOT_EXPECTED_RESPONSE;
             break;
     }
 }
 
 typedef enum {
+    START_PROCESSING_REST_OF_RESPONSE,
+    LCS,
+    TO_HOST,
+    COMMAND_RESPONSE,
+    TAG_NUMBER,
+    BAUDRATE,
+    DATA2,
+    DATA3,
+    DATA4,
+    DATA5,
+    DATA6,
+    DATA7,
+    DATA8,
+    DATA9,
+    DATA10,
+    DATA11,
+    DATA12,
+    DATA13,
+    POSTAMBLE,
+    GOING_TO_END,
+    REST_OF_RESPONSE_PROCESSED,
+    NOT_EXPECTED_REST_OF_RESPONSE
+} rest_of_response_state_t;
+
+rest_of_response_state_t rest_of_response_state = START_PROCESSING_REST_OF_RESPONSE;
+
+int number_of_tags = 0;
+int hard_coded_len_with_bytes = 15;
+int bytes_left = hard_coded_len_with_bytes - 2 + 1 ; // minus to_host and TAG_NUMBER plus 1 for postamble
+
+void process_rest_of_tag_exists_response(uint8_t rx_byte) {
+    Node *node = Node::getInstance();
+
+    switch(rest_of_response_state)
+    {
+        case START_PROCESSING_REST_OF_RESPONSE:
+            if (rx_byte == 241) rest_of_response_state = LCS;
+            else rest_of_response_state = NOT_EXPECTED_REST_OF_RESPONSE;
+            break;
+
+            // could be any number
+        case LCS:
+            if (rx_byte == 213) rest_of_response_state = TO_HOST;
+            else rest_of_response_state = NOT_EXPECTED_REST_OF_RESPONSE;
+            break;
+
+        case TO_HOST:
+            if (rx_byte == 75) {
+                rest_of_response_state = TAG_NUMBER;
+            }
+            else rest_of_response_state = NOT_EXPECTED_REST_OF_RESPONSE;
+            break;
+
+        case TAG_NUMBER:
+            if (rx_byte == 1){
+                number_of_tags = 1;
+                rest_of_response_state = BAUDRATE;
+            } else {
+                // two tags at once is not supported
+                rest_of_response_state = NOT_EXPECTED_REST_OF_RESPONSE;
+            }
+            break;
+
+        case BAUDRATE:
+            if (rx_byte == 1) {
+                rest_of_response_state = DATA2;
+            }
+            else {
+                rest_of_response_state = NOT_EXPECTED_REST_OF_RESPONSE;
+            }
+            break;
+
+        // data bytes i don't care about
+        case DATA2:
+            if (rx_byte < 255){
+                rest_of_response_state = DATA3;
+            }
+            else rest_of_response_state = NOT_EXPECTED_REST_OF_RESPONSE;
+            break;
+
+        case DATA3:
+            //if (rx_byte == 68) {
+            if (rx_byte < 255) {
+                rest_of_response_state = DATA4;
+            }
+            else rest_of_response_state = NOT_EXPECTED_REST_OF_RESPONSE;
+            break;
+
+            // data byte i don't care about
+        case DATA4:
+            //if (rx_byte == 0) rest_of_response_state = DATA5;
+            if (rx_byte < 255) {
+                rest_of_response_state = DATA5;
+
+            }
+            else rest_of_response_state = NOT_EXPECTED_REST_OF_RESPONSE;
+            break;
+
+        case DATA5:
+            //if (rx_byte == 7) rest_of_response_state = DATA6;
+            if (rx_byte < 255) rest_of_response_state = DATA6;
+            else rest_of_response_state = NOT_EXPECTED_REST_OF_RESPONSE;
+            break;
+
+        case DATA6:
+            if (rx_byte < 255) rest_of_response_state = DATA7;
+            //if (rx_byte == 4) rest_of_response_state = DATA7;
+            else rest_of_response_state = NOT_EXPECTED_REST_OF_RESPONSE;
+            break;
+
+        case DATA7:
+            if (rx_byte < 255) rest_of_response_state = DATA8;
+            //if (rx_byte == 160) rest_of_response_state = DATA8;
+            else rest_of_response_state = NOT_EXPECTED_REST_OF_RESPONSE;
+            break;
+
+        case DATA8:
+            if (rx_byte < 255) rest_of_response_state = DATA9;
+            //if (rx_byte == 53) rest_of_response_state = DATA9;
+            else rest_of_response_state = NOT_EXPECTED_REST_OF_RESPONSE;
+            break;
+
+        case DATA9:
+            if (rx_byte < 255) rest_of_response_state = DATA10;
+            //if (rx_byte == 178) rest_of_response_state = DATA10;
+            else rest_of_response_state = NOT_EXPECTED_REST_OF_RESPONSE;
+            break;
+
+        case DATA10:
+            if (rx_byte < 255) rest_of_response_state = DATA11;
+            //if (rx_byte == 188) rest_of_response_state = DATA11;
+            else rest_of_response_state = NOT_EXPECTED_REST_OF_RESPONSE;
+            break;
+
+        case DATA11:
+            if (rx_byte < 255) rest_of_response_state = DATA12;
+            //if (rx_byte == 43) rest_of_response_state = DATA12;
+            else rest_of_response_state = NOT_EXPECTED_REST_OF_RESPONSE;
+            break;
+
+        case DATA12:
+            if (rx_byte < 255) rest_of_response_state = DATA13;
+            //if (rx_byte == 128) rest_of_response_state = DATA13;
+            else rest_of_response_state = NOT_EXPECTED_REST_OF_RESPONSE;
+            break;
+
+        case DATA13:
+            if (rx_byte < 255) rest_of_response_state = POSTAMBLE;
+            //if (rx_byte == 161) rest_of_response_state = POSTAMBLE;
+            else rest_of_response_state = NOT_EXPECTED_REST_OF_RESPONSE;
+            break;
+
+        case POSTAMBLE:
+            //if (rx_byte == 0) {
+            if (rx_byte < 255) {
+                rest_of_response_state = REST_OF_RESPONSE_PROCESSED;
+            }
+            else rest_of_response_state = NOT_EXPECTED_REST_OF_RESPONSE;
+            break;
+            // 00 00 FF 0F F1 D5 4B 01 01 00 44 00 07 04 A0 35 B2 BC 2B 80 A1 00 - tag exists
+    }
+}
+
+typedef enum {
+    start_grabbing,
+    end_grabbing
+} data_grab_state_t;
+
+data_grab_state_t grab_state = start_grabbing;
+
+uint8_t data_dump1[20] = {0};
+
+int count = 0;
+void grab_bytes(uint8_t rx_byte) {
+    Node *node = Node::getInstance();
+    switch(grab_state)
+    {
+        case start_grabbing:
+            if (count < 18) {
+                data_dump1[count] = rx_byte;
+                count++;
+                grab_state = start_grabbing;
+            } else {
+                count = 0;
+                grab_state = end_grabbing;
+            }
+        break;
+    }
+}
+
+bool id_exists_in_response(uint8_t *response, int response_length) {
+    std::string response_string(response, response+response_length);
+
+    if (response_string.find("id=") == std::string::npos) {
+        return false;
+    } else {
+        return true;
+    }
+}
+
+short get_id(uint8_t *packet, int packet_length) {
+    std::string response_string;
+    int checksum_and_postamble_size = 3;
+    for (int i=0; i< packet_length - checksum_and_postamble_size; ++i) {
+        if (isprint(packet[i])) response_string = response_string + static_cast<char>(packet[i]);
+    }
+
+    std::size_t found = response_string.find("=");
+    std::string id = response_string.substr(found+1, 4);
+
+    //CHECK NUMERIC LIMITS WITH std::numeric_limits<short>::lowest() std::numeric_limits<short>::max()
+
+    return (short) atoi(id.c_str());
+}
+
+typedef enum {
     SETUP,
-    TAG_PRESENCE_UNKNOWN, // check if tag exists
-    TAG_EXISTS, // read tag
     NEEDS_RETRY,
-    ERROR
+    ERROR,
+    TAG_PRESENCE_UNKNOWN, // check if tag exists
+    IN_LIST_ACK_PROCESSING,
+    PROCESSING_REST_OF_RESPONSE,
+    READ_TAG_ACK,
+    SECOND_READ_ACK,
+    THIRD_READ_ACK,
+    GET_PAID_1,
+    GET_PAID_2,
+    GET_PAID_3,
+    GET_PAID_4,
+    FOURTH_READ_ACK,
+    FIFTH_READ_ACK,
+    ID_TAKEN
 } nfc_state_t;
 
 nfc_state_t current_nfc_state = SETUP;
 
+short attendeeId = 0;
+bool found_id = false;
+
 void nfcEventHandler(uint8_t rx_byte) {
     Node *node = Node::getInstance();
 
+
     switch(current_nfc_state)
     {
+        case ID_TAKEN:
+            // too bad ass to keep going
+        break;
+
+        case NEEDS_RETRY:
+            // do nothing until we need to search for tag again
+        break;
+
         case ERROR:
             // do nothing until we need to search for tag again
             //node->LedRed->On();
@@ -157,44 +382,155 @@ void nfcEventHandler(uint8_t rx_byte) {
         case TAG_PRESENCE_UNKNOWN:
             // Handle Ack
             if (current_ack_state != ack_processed) process_ack(rx_byte);
-            if (current_ack_state == ack_error) break;
+            if (current_ack_state == ack_error) current_nfc_state = NEEDS_RETRY;
+            if (current_ack_state == ack_processed) current_nfc_state = IN_LIST_ACK_PROCESSING;
+            break;
 
-            // Handle Response
-            process_response(rx_byte);
+        case IN_LIST_ACK_PROCESSING:
+            if (current_response_state != NO_TAG_EXISTS || current_response_state != TAG_EXISTS) process_response(rx_byte);
 
-            if (current_response_state == NOT_EXPECTED_RESPONSE) break;
+            if (current_response_state == NOT_EXPECTED_RESPONSE) current_nfc_state = NEEDS_RETRY;
             if (current_response_state == NO_TAG_EXISTS) current_nfc_state = NEEDS_RETRY;
-            if (current_response_state == ONE_TAG_EXISTS) current_nfc_state = TAG_EXISTS;
-            if (current_response_state == TWO_TAGS_EXIST) current_nfc_state = NEEDS_RETRY;
-                // two tags at once is not supported at this time
+            // two tags at once is not supported at this time
+
+            if (current_response_state == TAG_EXISTS) current_nfc_state = PROCESSING_REST_OF_RESPONSE;
         break;
 
-        case TAG_EXISTS:
-            // GET PAID //
-            //        // DATA EXCHANGE. should check to see if id_exists_in_response
-            //       NFC::dataExchange1();
-            //in_data_exchange('\x00', '\xBB');
-            // process ack
-            //
-            //       // DATA EXCHANGE. should check to see if id_exists_in_response
-            //       NFC::dataExchange2();
-            //
-            //       // DATA EXCHANGE ID IS IN HERE FOR SAMPLE TAGS
-            //       NFC::dataExchange3();
-            //
-            //       // DATA EXCHANGE. should check to see if id_exists_in_response
-            //       NFC::dataExchange4();
-            //
-            //       // NFC::inRelease(); - using release would allow people to register themselves rapidly more than once but i don't want that right now...
-            //    }
+        case PROCESSING_REST_OF_RESPONSE:
+            if (rest_of_response_state != REST_OF_RESPONSE_PROCESSED) process_rest_of_tag_exists_response(rx_byte);
+            if (rest_of_response_state == NOT_EXPECTED_REST_OF_RESPONSE) current_nfc_state = NEEDS_RETRY;
+
+            if (rest_of_response_state == REST_OF_RESPONSE_PROCESSED) {
+                in_data_exchange('\x00', '\xBB');
+                current_nfc_state = SECOND_READ_ACK;
+            }
         break;
+
+        case SECOND_READ_ACK:
+            if (rx_byte == 65) {
+                // \x41
+                current_nfc_state = GET_PAID_1;
+            }
+        break;
+
+        case GET_PAID_1:
+            grab_state = start_grabbing;
+            if (grab_state != end_grabbing) grab_bytes(rx_byte);
+
+            if (grab_state == end_grabbing) {
+                if (id_exists_in_response(data_dump1, 20)) {
+                    attendeeId = get_id(data_dump1, 20);
+
+                    node->PutInRetryStorage(attendeeId);
+                    node->LedRed->On();
+                    node->LedBlue->On();
+                    node->LedGreen->On();
+                    current_nfc_state = ID_TAKEN;
+                }
+                else {
+                    in_data_exchange('\x04', '\xB7');
+                    current_nfc_state = THIRD_READ_ACK;
+                }
+            }
+        // try to search in all
+        //        && id_exists_in_response(data_dump1, 20)) {
+        //        attendeeId = get_id(data_dump1, 20);
+        //    } else {
+        //    }
+        break;
+
+        case THIRD_READ_ACK:
+            if (rx_byte == 65) {
+                // \x41
+                current_nfc_state = GET_PAID_2;
+            }
+        break;
+
+        case GET_PAID_2:
+            grab_state = start_grabbing;
+            if (grab_state != end_grabbing) grab_bytes(rx_byte);
+
+            if (grab_state == end_grabbing) {
+                if (id_exists_in_response(data_dump1, 20)) {
+                    attendeeId = get_id(data_dump1, 20);
+
+                    node->PutInRetryStorage(attendeeId);
+                    node->LedRed->On();
+                    node->LedBlue->On();
+                    node->LedGreen->On();
+                    current_nfc_state = ID_TAKEN;
+                } else {
+                    in_data_exchange('\x08', '\xB3');
+                    current_nfc_state = FOURTH_READ_ACK;
+                }
+            }
+        break;
+
+        case FOURTH_READ_ACK:
+            // \x41
+            if (rx_byte == 65) {
+                current_nfc_state = GET_PAID_3;
+            }
+        break;
+
+        case GET_PAID_3:
+            grab_state = start_grabbing;
+            if (grab_state != end_grabbing) grab_bytes(rx_byte);
+
+            if (grab_state == end_grabbing) {
+                if (id_exists_in_response(data_dump1, 20)) {
+                    attendeeId = get_id(data_dump1, 20);
+
+                    node->PutInRetryStorage(attendeeId);
+                    node->LedRed->On();
+                    node->LedBlue->On();
+                    node->LedGreen->On();
+                    current_nfc_state = ID_TAKEN;
+                } else {
+                    in_data_exchange('\x0C', '\xAF');
+                    current_nfc_state = FIFTH_READ_ACK;
+                }
+            }
+        break;
+
+        case FIFTH_READ_ACK:
+            // \x41
+            if (rx_byte == 65)
+                current_nfc_state = GET_PAID_4;
+            break;
+
+        case GET_PAID_4:
+            grab_state = start_grabbing;
+            if (grab_state != end_grabbing) grab_bytes(rx_byte);
+
+            if (grab_state == end_grabbing) {
+                if (id_exists_in_response(data_dump1, 20)) {
+                    attendeeId = get_id(data_dump1, 20);
+
+                    node->PutInRetryStorage(attendeeId);
+                    node->LedRed->On();
+                    node->LedBlue->On();
+                    node->LedGreen->On();
+                    current_nfc_state = ID_TAKEN;
+                } else {
+                    current_nfc_state = NEEDS_RETRY;
+                }
+            }
+            break;
     }
 }
 
 void setup_state_machine() {
     current_response_state = RESPONSE_NEEDS_PROCESSING;
+    rest_of_response_state = START_PROCESSING_REST_OF_RESPONSE;
     current_nfc_state = TAG_PRESENCE_UNKNOWN;
     current_ack_state = ACK_START;
+    number_of_tags = 0;
+    attendeeId = 0;
+    found_id = false;
+    for (int i=0; i<20; i++) {
+        data_dump1[i] = 0;
+    }
 }
 
 void NFCModule::TimerEventHandler(u16 passedTime, u32 appTimer)
@@ -205,15 +541,14 @@ void NFCModule::TimerEventHandler(u16 passedTime, u32 appTimer)
         UART_CONFIGURED = true;
     }
 
-    if (appTimer % 100 == 0) {
+    if (appTimer % 10 == 0) {
         if (get_setup_state() != SETUP_DONE) setup();
         if (get_setup_state() == SETUP_DONE) current_nfc_state = TAG_PRESENCE_UNKNOWN;
     }
 
-    if (appTimer/1000 % 5 && appTimer % 1000 == 0) {
+    if (get_setup_state() == SETUP_DONE && (appTimer/1000 % 5 && appTimer % 1000 == 0)) {
         setup_state_machine();
         in_list_passive_target();
-        if (current_nfc_state == ERROR) current_nfc_state = TAG_PRESENCE_UNKNOWN;
     }
 #endif
 }

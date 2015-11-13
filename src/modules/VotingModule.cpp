@@ -4,7 +4,6 @@
 #include <Storage.h>
 #include <Node.h>
 #include <LedWrapper.h>
-#include <NFC.h>
 #include "pca10028.h"
 
 extern "C"{

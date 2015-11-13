@@ -45,6 +45,7 @@ void setup() {
 
         case RF_MAX_NOT_CONFIG:
         config_rf_max();
+        nrf_delay_us(1000);
         current_setup_state = SETUP_DONE;
         break;
     }
@@ -310,38 +311,6 @@ unsigned short in_list_passive_target() {
     simple_uart_put('\xE1');
     send_postamble();
 }
-
-
-    //if(!tag_is_present()) {
-    //    powerdown();
-    //    return 0;
-    //}
-
-    /* ** GET PAID ** */
-    //in_data_exchange('\x00', '\xBB');
-    //
-    //gobble_number_of_bytes(26);
-    ////gobble_number_of_bytes
-    //// 00 00 FF - 13 ED - D5 41 00 04 A0 35 19 B2 BC 2B 80 A5 48 00 00 E1 10 12 00 EF 00
-    //in_data_exchange('\x04', '\xB7');
-    //gobble_number_of_bytes(26);
-    ////gobble_number_of_bytes
-    //                            //  (1  3  160  16  D 3  24 209 20 U  4)  q c  o  n
-    //// 00 00 FF - 13 ED - D5 41 00 01 03 A0 10 44 03 18 D1 01 14 55 04 71 63 6F 6E E7 00
-    //in_data_exchange('\x08', '\xB3');
-
-    //short attendeeId = 0;
-    //attendeeId = find_attendee_id();
-    //if (attendeeId == 0) return 0;
-    ////gobble_number_of_bytes
-    //                            //  s  f  .  c  o  m  /  ?  i  d  =  3  5  6  6 (254)
-    //// 00 00 FF - 13 ED - D5 41 00 73 66 2E 63 6F 6D 2F 3F 69 64 3D 33 35 36 36 FE 5A 00
-    //in_data_exchange('\x0C', '\xAF');
-    //gobble_number_of_bytes(26);
-    //wait_for_number_of_response_byte
-    // 00 00 FF - 13 ED - D5 41 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 EA 00
-
-    //return attendeeId;
 
 void powerdown () {
     send_preamble_and_start();
