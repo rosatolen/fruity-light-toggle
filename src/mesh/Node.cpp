@@ -787,9 +787,9 @@ bool Node::PutInRetryStorage(unsigned short userId) {
 	unsigned short temp[MAX_RETRY_STORAGE_SIZE] = {0};
 
 	if(this->RetryStorageContains(userId)) {
-		this->LedRed->On();
-		this->LedGreen->On();
-		this->LedBlue->On();
+		//this->LedRed->On();
+		//this->LedGreen->On();
+		//this->LedBlue->On();
 		return true;
 	}
 
@@ -808,9 +808,9 @@ bool Node::PutInRetryStorage(unsigned short userId) {
 		}
 	}
 
-	this->LedRed->On();
-	this->LedGreen->On();
-	this->LedBlue->On();
+	//this->LedRed->On();
+	//this->LedGreen->On();
+	//this->LedBlue->On();
 
 	this->SaveConfiguration();
 
