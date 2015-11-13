@@ -109,10 +109,10 @@ Node::Node(networkID networkId)
     activeModules[2] = new AdvertisingModule(moduleID::ADVERTISING_MODULE_ID, this, cm, "adv", 3);
     activeModules[3] = new ScanningModule(moduleID::SCANNING_MODULE_ID, this, cm, "scan", 4);
     activeModules[4] = new EnrollmentModule(moduleID::ENROLLMENT_MODULE_ID, this, cm, "enroll", 5);
-    activeModules[5] = new IoModule(moduleID::IO_MODULE_ID, this, cm, "io", 6);
-    activeModules[6] = new VotingModule(moduleID::VOTING_MODULE_ID, this, cm, "voting", 7);
-    activeModules[7] = new HeartbeatModule(this, cm, "heartbeat", 8);
-    activeModules[8] = new NFCModule(this, cm, "nfc", 9);
+    //activeModules[5] = new IoModule(moduleID::IO_MODULE_ID, this, cm, "io", 6);
+    activeModules[5] = new VotingModule(moduleID::VOTING_MODULE_ID, this, cm, "voting", 6);
+    activeModules[6] = new HeartbeatModule(this, cm, "heartbeat", 7);
+    activeModules[7] = new NFCModule(this, cm, "nfc", 8);
 
     isGatewayDevice = IS_GATEWAY_DEVICE;
 

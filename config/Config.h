@@ -202,7 +202,7 @@ class Conf
 #define SERIAL_NUMBER_LENGTH 5 //A serial could use the alphabet "BCDFGHJKLMNPQRSTVWXYZ123456789". This is good for readability (short, no inter-digit resemblance, 25 million possible combinations, no funny words)
 
 //Storage
-#define STORAGE_BLOCK_SIZE 128 //Determines the maximum size for a module configuration
+#define STORAGE_BLOCK_SIZE 640 //Determines the maximum size for a module configuration
 #define STORAGE_BLOCK_NUMBER 10 //Determines the number of blocks that are available
 
 /*############ LOGGER ################*/
@@ -257,7 +257,7 @@ enum moduleID{
 #define NODE_ID_SHORTEST_SINK 31001
 
 /*########### Voting Module Storage ###############*/
-#define MAX_RETRY_STORAGE_SIZE 12 //Specifies maximum size of retry storage for the voting moduleG
+#define MAX_RETRY_STORAGE_SIZE 96 //Specifies maximum size of retry storage for the voting moduleG
 
 /*########### Gateway or not? ###############*/
 #define IS_GATEWAY_DEVICE false

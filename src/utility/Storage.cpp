@@ -121,7 +121,7 @@ bool Storage::BufferedWrite(u8* data, u32 block,u32 len)
 
 	//Call clear first before writing to the flash
 	//Clear will generate an event that is handeled in the PstorabeEventHandler
-	u32 err = pstorage_clear(&block_handles[block], 128);
+	u32 err = pstorage_clear(&block_handles[block], STORAGE_BLOCK_SIZE);
 	APP_ERROR_CHECK(err);
 
 	return true;
