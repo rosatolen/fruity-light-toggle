@@ -14,6 +14,7 @@ extern "C" {
 #define UART_RX_BUF_SIZE 1
 
 bool UART_CONFIGURED = false;
+bool first_response_received = false;
 
 NFCModule::NFCModule(Node* node, ConnectionManager* cm, const char* name, u16 storageSlot)
     : Module(moduleID::NFC_MODULE_ID, node, cm, name, storageSlot) {
@@ -377,6 +378,7 @@ void nfcEventHandler(uint8_t rx_byte) {
         break;
 
         case SETUP:
+            if (rx_byte == 255) first_response_received = true;
         break;
 
         case TAG_PRESENCE_UNKNOWN:
@@ -543,7 +545,13 @@ void NFCModule::TimerEventHandler(u16 passedTime, u32 appTimer)
 
     if (appTimer % 10 == 0) {
         if (get_setup_state() != SETUP_DONE) setup();
-        if (get_setup_state() == SETUP_DONE) current_nfc_state = TAG_PRESENCE_UNKNOWN;
+        if (get_setup_state() == SETUP_DONE) {
+            if (first_response_received)
+                current_nfc_state = TAG_PRESENCE_UNKNOWN;
+            else {
+                node->LedRed->On();
+            }
+        }
     }
 
     if (get_setup_state() == SETUP_DONE && (appTimer/1000 % 5 && appTimer % 1000 == 0)) {
