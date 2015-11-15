@@ -289,21 +289,25 @@ typedef enum {
 
 data_grab_state_t grab_state = start_grabbing;
 
-uint8_t data_dump1[20] = {0};
-
+int max_remaining_byte_size_in_a_frame = 18;
+const int four_frame_data_dump_size = 72;
+static uint8_t data_dump1[four_frame_data_dump_size] = {0};
 int count = 0;
-void grab_bytes(uint8_t rx_byte) {
+int dump_index = 0;
+
+void grab_frame_bytes_into_mass_dump(uint8_t rx_byte) {
     Node *node = Node::getInstance();
     switch(grab_state)
     {
         case start_grabbing:
-            if (count < 18) {
-                data_dump1[count] = rx_byte;
+            if (count < max_remaining_byte_size_in_a_frame) {
+                data_dump1[dump_index] = rx_byte;
                 count++;
+                dump_index++;
                 grab_state = start_grabbing;
             } else {
-                count = 0;
                 grab_state = end_grabbing;
+                count = 0;
             }
         break;
     }
@@ -319,11 +323,11 @@ bool id_exists_in_response(uint8_t *response, int response_length) {
     }
 }
 
-short get_id(uint8_t *packet, int packet_length) {
+short get_id() {
     std::string response_string;
     int checksum_and_postamble_size = 3;
-    for (int i=0; i< packet_length - checksum_and_postamble_size; ++i) {
-        if (isprint(packet[i])) response_string = response_string + static_cast<char>(packet[i]);
+    for (int i=0; i< max_remaining_byte_size_in_a_frame - checksum_and_postamble_size; ++i) {
+        if (isprint(data_dump1[i])) response_string = response_string + static_cast<char>(data_dump1[i]);
     }
 
     std::size_t found = response_string.find("=");
@@ -417,28 +421,12 @@ void nfcEventHandler(uint8_t rx_byte) {
 
         case GET_PAID_1:
             grab_state = start_grabbing;
-            if (grab_state != end_grabbing) grab_bytes(rx_byte);
+            if (grab_state != end_grabbing) grab_frame_bytes_into_mass_dump(rx_byte);
 
             if (grab_state == end_grabbing) {
-                if (id_exists_in_response(data_dump1, 20)) {
-                    attendeeId = get_id(data_dump1, 20);
-
-                    node->PutInRetryStorage(attendeeId);
-                    node->LedRed->On();
-                    node->LedBlue->On();
-                    node->LedGreen->On();
-                    current_nfc_state = ID_TAKEN;
-                }
-                else {
-                    in_data_exchange('\x04', '\xB7');
-                    current_nfc_state = THIRD_READ_ACK;
-                }
+                in_data_exchange('\x04', '\xB7');
+                current_nfc_state = THIRD_READ_ACK;
             }
-        // try to search in all
-        //        && id_exists_in_response(data_dump1, 20)) {
-        //        attendeeId = get_id(data_dump1, 20);
-        //    } else {
-        //    }
         break;
 
         case THIRD_READ_ACK:
@@ -450,21 +438,11 @@ void nfcEventHandler(uint8_t rx_byte) {
 
         case GET_PAID_2:
             grab_state = start_grabbing;
-            if (grab_state != end_grabbing) grab_bytes(rx_byte);
+            if (grab_state != end_grabbing) grab_frame_bytes_into_mass_dump(rx_byte);
 
             if (grab_state == end_grabbing) {
-                if (id_exists_in_response(data_dump1, 20)) {
-                    attendeeId = get_id(data_dump1, 20);
-
-                    node->PutInRetryStorage(attendeeId);
-                    node->LedRed->On();
-                    node->LedBlue->On();
-                    node->LedGreen->On();
-                    current_nfc_state = ID_TAKEN;
-                } else {
-                    in_data_exchange('\x08', '\xB3');
-                    current_nfc_state = FOURTH_READ_ACK;
-                }
+                in_data_exchange('\x08', '\xB3');
+                current_nfc_state = FOURTH_READ_ACK;
             }
         break;
 
@@ -477,21 +455,11 @@ void nfcEventHandler(uint8_t rx_byte) {
 
         case GET_PAID_3:
             grab_state = start_grabbing;
-            if (grab_state != end_grabbing) grab_bytes(rx_byte);
+            if (grab_state != end_grabbing) grab_frame_bytes_into_mass_dump(rx_byte);
 
             if (grab_state == end_grabbing) {
-                if (id_exists_in_response(data_dump1, 20)) {
-                    attendeeId = get_id(data_dump1, 20);
-
-                    node->PutInRetryStorage(attendeeId);
-                    node->LedRed->On();
-                    node->LedBlue->On();
-                    node->LedGreen->On();
-                    current_nfc_state = ID_TAKEN;
-                } else {
-                    in_data_exchange('\x0C', '\xAF');
-                    current_nfc_state = FIFTH_READ_ACK;
-                }
+                in_data_exchange('\x0C', '\xAF');
+                current_nfc_state = FIFTH_READ_ACK;
             }
         break;
 
@@ -503,16 +471,15 @@ void nfcEventHandler(uint8_t rx_byte) {
 
         case GET_PAID_4:
             grab_state = start_grabbing;
-            if (grab_state != end_grabbing) grab_bytes(rx_byte);
+            if (grab_state != end_grabbing) grab_frame_bytes_into_mass_dump(rx_byte);
 
             if (grab_state == end_grabbing) {
-                if (id_exists_in_response(data_dump1, 20)) {
-                    attendeeId = get_id(data_dump1, 20);
-
-                    node->PutInRetryStorage(attendeeId);
+                if (id_exists_in_response(data_dump1, four_frame_data_dump_size)) {
+                    node->PutInRetryStorage(get_id());
                     node->LedRed->On();
                     node->LedBlue->On();
                     node->LedGreen->On();
+
                     current_nfc_state = ID_TAKEN;
                 } else {
                     current_nfc_state = NEEDS_RETRY;
@@ -530,7 +497,8 @@ void setup_state_machine() {
     number_of_tags = 0;
     attendeeId = 0;
     found_id = false;
-    for (int i=0; i<20; i++) {
+    dump_index = 0;
+    for (int i=0; i<four_frame_data_dump_size; i++) {
         data_dump1[i] = 0;
     }
 }

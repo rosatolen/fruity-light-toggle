@@ -68,6 +68,33 @@ int main() {
     '\x33', '\x00', '\x00',
     '\xFE', '\x5A', '\x00'};
 
+    uint8_t nfc_tag_data_dump[76] =
+    {
+        '\x00', '\x04', '\x5C', '\x35',
+        '\xE5', '\xAA', '\xBC', '\x2B',
+        '\x80', '\xBD', '\x48', '\x00',
+        '\x00', '\xE1', '\x10', '\x12',
+        '\x00', '\x57', '\x00',
+
+        '\x00', '\x01', '\x03', '\xA0',
+        '\x10', '\x44', '\x03', '\x18',
+        '\xD1', '\x02', '\x14', '\x55',
+        '\x04', '\x71', '\x63', '\x6F',
+        '\x6E', '\xE7', '\x00',
+
+        '\x00', '\x73', '\x66', '\x2E',
+        '\x63', '\x6F', '\x6D', '\x2F',
+        '\x3F', '\x69', '\x64', '\x3D',
+        '\x33', '\x35', '\x36', '\x35',
+        '\xFE', '\x5B', '\x00',
+
+        '\x00', '\x00', '\x00', '\x00',
+        '\x00', '\x00', '\x00', '\x00',
+        '\x00', '\x00', '\x00', '\x00',
+        '\x00', '\x00', '\x00', '\x00',
+        '\x00', '\xEA', '\x00'
+    };
+
     uint8_t ack[6] = {'\x00', '\x00', '\xFF', '\x00', '\xFF', '\x00'};
     uint8_t notack[6] = {'\xFF', '\x00', '\xFF', '\x00', '\xFF', '\x00'};
     uint8_t long_response[7] = {'\xFF', '\x00', '\xFF', '\x00', '\xFF', '\x00', '\xFF'};
@@ -79,6 +106,8 @@ int main() {
     assert(is_ack(ack, 6));
     assert(!is_ack(notack, 6));
     assert(!is_ack(long_response, 7));
+    assert(id_exists_in_response(nfc_tag_data_dump, 76));
+    assert((short) 3565 == get_id(nfc_tag_data_dump, 76));
 
     printf("Tests succeeded!\n");
 }
