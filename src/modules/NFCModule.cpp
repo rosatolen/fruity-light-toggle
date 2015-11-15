@@ -289,8 +289,8 @@ typedef enum {
 
 data_grab_state_t grab_state = start_grabbing;
 
-int max_remaining_byte_size_in_a_frame = 18;
-const int four_frame_data_dump_size = 72;
+int max_remaining_byte_size_in_a_frame = 15;
+const int four_frame_data_dump_size = 60;
 static uint8_t data_dump1[four_frame_data_dump_size] = {0};
 int count = 0;
 int dump_index = 0;
@@ -325,8 +325,7 @@ bool id_exists_in_response(uint8_t *response, int response_length) {
 
 short get_id() {
     std::string response_string;
-    int checksum_and_postamble_size = 3;
-    for (int i=0; i< max_remaining_byte_size_in_a_frame - checksum_and_postamble_size; ++i) {
+    for (int i=0; i< four_frame_data_dump_size; ++i) {
         if (isprint(data_dump1[i])) response_string = response_string + static_cast<char>(data_dump1[i]);
     }
 
@@ -354,6 +353,10 @@ typedef enum {
     GET_PAID_4,
     FOURTH_READ_ACK,
     FIFTH_READ_ACK,
+    EAT_FIRST_DATA_COMMAND,
+    EAT_SECOND_DATA_COMMAND,
+    EAT_THIRD_DATA_COMMAND,
+    EAT_FOURTH_DATA_COMMAND,
     ID_TAKEN
 } nfc_state_t;
 
@@ -415,8 +418,12 @@ void nfcEventHandler(uint8_t rx_byte) {
         case SECOND_READ_ACK:
             if (rx_byte == 65) {
                 // \x41
-                current_nfc_state = GET_PAID_1;
+                current_nfc_state = EAT_FIRST_DATA_COMMAND;
             }
+        break;
+
+        case EAT_FIRST_DATA_COMMAND:
+            if (rx_byte == 0) current_nfc_state = GET_PAID_1;
         break;
 
         case GET_PAID_1:
@@ -432,8 +439,12 @@ void nfcEventHandler(uint8_t rx_byte) {
         case THIRD_READ_ACK:
             if (rx_byte == 65) {
                 // \x41
-                current_nfc_state = GET_PAID_2;
+                current_nfc_state = EAT_SECOND_DATA_COMMAND;
             }
+        break;
+
+        case EAT_SECOND_DATA_COMMAND:
+            if (rx_byte == 0) current_nfc_state = GET_PAID_2;
         break;
 
         case GET_PAID_2:
@@ -449,8 +460,12 @@ void nfcEventHandler(uint8_t rx_byte) {
         case FOURTH_READ_ACK:
             // \x41
             if (rx_byte == 65) {
-                current_nfc_state = GET_PAID_3;
+                current_nfc_state = EAT_THIRD_DATA_COMMAND;
             }
+        break;
+
+        case EAT_THIRD_DATA_COMMAND:
+            if (rx_byte == 0) current_nfc_state = GET_PAID_3;
         break;
 
         case GET_PAID_3:
@@ -468,6 +483,10 @@ void nfcEventHandler(uint8_t rx_byte) {
             if (rx_byte == 65)
                 current_nfc_state = GET_PAID_4;
             break;
+
+        case EAT_FOURTH_DATA_COMMAND:
+            if (rx_byte == 0) current_nfc_state = GET_PAID_4;
+        break;
 
         case GET_PAID_4:
             grab_state = start_grabbing;

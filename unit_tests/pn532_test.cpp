@@ -25,16 +25,20 @@ bool id_exists_in_response(uint8_t *response, int response_length) {
 
 short get_id(uint8_t *packet, int packet_length) {
     std::string response_string;
-    int checksum_and_postamble_size = 3;
-    for (int i=0; i< packet_length - checksum_and_postamble_size; ++i) {
+    for (int i=0; i< packet_length; ++i) {
         if (isprint(packet[i])) response_string = response_string + static_cast<char>(packet[i]);
     }
 
     std::size_t found = response_string.find("=");
     std::string id = response_string.substr(found+1, 4);
 
+    std::cout << id;
+    std::cout << '\n';
     //CHECK NUMERIC LIMITS WITH std::numeric_limits<short>::lowest() std::numeric_limits<short>::max()
+    short number = atoi(id.c_str());
 
+    std::cout << atoi(id.c_str());
+    std::cout << '\n';
     return (short) atoi(id.c_str());
 }
 
@@ -58,41 +62,55 @@ int main() {
     '\x63', '\x6F', '\x6D', '\x2F',
     '\x3F', '\x69', '\x64', '\x3D',
     '\x33', '\x35', '\x36', '\x36',
-    '\xFE', '\x5A', '\x00'};
+    '\xFE'};
 
-    // need to assert limits of ids :(
-    uint8_t packet_with_id_300[18] =
+    uint8_t packet_with_id_300[17] =
     {'\x00', '\x73', '\x66', '\x2E',
     '\x63', '\x6F', '\x6D', '\x2F',
     '\x3F', '\x69', '\x64', '\x3D',
-    '\x33', '\x00', '\x00',
-    '\xFE', '\x5A', '\x00'};
+    '\x33', '\x30', '\x30', '\xFE',
+    '\xFE'};
 
-    uint8_t nfc_tag_data_dump[76] =
+    uint8_t packet_with_id_1000[17] =
+    {'\x00', '\x73', '\x66', '\x2E',
+    '\x63', '\x6F', '\x6D', '\x2F',
+    '\x3F', '\x69', '\x64', '\x3D',
+    '\x31', '\x30', '\x30', '\x30',
+    '\xFE'};
+
+    uint8_t packet_with_id_1500[17] =
+    {'\x00', '\x73', '\x66', '\x2E',
+    '\x63', '\x6F', '\x6D', '\x2F',
+    '\x3F', '\x69', '\x64', '\x3D',
+    '\x31', '\x35', '\x30', '\x30',
+    '\xFE'};
+
+    uint8_t packet_with_id_9000[17] =
+    {'\x00', '\x73', '\x66', '\x2E',
+    '\x63', '\x6F', '\x6D', '\x2F',
+    '\x3F', '\x69', '\x64', '\x3D',
+    '\x39', '\x30', '\x30', '\x30',
+    '\xFE'};
+
+    uint8_t nfc_tag_data_dump[51] =
     {
         '\x00', '\x04', '\x5C', '\x35',
         '\xE5', '\xAA', '\xBC', '\x2B',
         '\x80', '\xBD', '\x48', '\x00',
         '\x00', '\xE1', '\x10', '\x12',
-        '\x00', '\x57', '\x00',
+        '\x00',
 
         '\x00', '\x01', '\x03', '\xA0',
         '\x10', '\x44', '\x03', '\x18',
         '\xD1', '\x02', '\x14', '\x55',
         '\x04', '\x71', '\x63', '\x6F',
-        '\x6E', '\xE7', '\x00',
+        '\x6E',
 
         '\x00', '\x73', '\x66', '\x2E',
         '\x63', '\x6F', '\x6D', '\x2F',
         '\x3F', '\x69', '\x64', '\x3D',
         '\x33', '\x35', '\x36', '\x35',
-        '\xFE', '\x5B', '\x00',
-
-        '\x00', '\x00', '\x00', '\x00',
-        '\x00', '\x00', '\x00', '\x00',
-        '\x00', '\x00', '\x00', '\x00',
-        '\x00', '\x00', '\x00', '\x00',
-        '\x00', '\xEA', '\x00'
+        '\xFE'
     };
 
     uint8_t ack[6] = {'\x00', '\x00', '\xFF', '\x00', '\xFF', '\x00'};
@@ -106,8 +124,15 @@ int main() {
     assert(is_ack(ack, 6));
     assert(!is_ack(notack, 6));
     assert(!is_ack(long_response, 7));
-    assert(id_exists_in_response(nfc_tag_data_dump, 76));
-    assert((short) 3565 == get_id(nfc_tag_data_dump, 76));
+    assert(id_exists_in_response(nfc_tag_data_dump, 51));
+    assert((short) 3565 == get_id(nfc_tag_data_dump, 51));
+    assert((short) 3565 == get_id(nfc_tag_data_dump, 51));
+
+    /* NUMBER LIMITS */
+    assert((short) 300 == get_id(packet_with_id_300, 17));
+    assert((short) 1000 == get_id(packet_with_id_1000, 17));
+    assert((short) 1500 == get_id(packet_with_id_1500, 17));
+    assert((short) 9000 == get_id(packet_with_id_9000, 17));
 
     printf("Tests succeeded!\n");
 }
