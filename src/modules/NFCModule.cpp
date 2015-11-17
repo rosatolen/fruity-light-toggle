@@ -495,10 +495,8 @@ void nfcEventHandler(uint8_t rx_byte) {
             if (grab_state == end_grabbing) {
                 if (id_exists_in_response(data_dump1, four_frame_data_dump_size)) {
                     node->PutInRetryStorage(get_id());
-                    node->LedRed->On();
-                    node->LedBlue->On();
-                    node->LedGreen->On();
 
+                    node->FlashWhite(3);
                     current_nfc_state = ID_TAKEN;
                 } else {
                     current_nfc_state = NEEDS_RETRY;

@@ -117,6 +117,8 @@ class Node:
 		LedWrapper* LedGreen;
 		LedWrapper* LedBlue;
 
+		void FlashWhite(int numberOfTimesToFlash);
+
 		SimpleBuffer* joinMePacketBuffer;
 
 		NodeConfiguration persistentConfig;

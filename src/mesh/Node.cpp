@@ -26,6 +26,7 @@
 #include <HeartbeatModule.h>
 #include <GatewayModule.h>
 #include <IoModule.h>
+#include <unistd.h>
 
 extern "C"
 {
@@ -35,6 +36,7 @@ extern "C"
 #include <app_error.h>
 #include <app_timer.h>
 #include <ble_radio_notification.h>
+#include <nrf_delay.h>
 }
 
 //Buffer that keeps a predefined number of join me packets
@@ -177,6 +179,28 @@ void Node::ConfigurationLoadedHandler()
 
 	//Go to Discovery
 	ChangeState(discoveryState::DISCOVERY);
+}
+
+
+
+/*
+ #########################################################################################################
+ ### Custom Led Handlers
+ #########################################################################################################
+ */
+
+void Node::FlashWhite(int numberOfTimesToFlash) {
+
+	for (int n = 0; n < numberOfTimesToFlash; n++) {
+		this->LedRed->On();
+		this->LedBlue->On();
+		this->LedGreen->On();
+		nrf_delay_us(100000);
+		this->LedRed->Off();
+		this->LedBlue->Off();
+		this->LedGreen->Off();
+		nrf_delay_us(100000);
+	}
 }
 
 /*
