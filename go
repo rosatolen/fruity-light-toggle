@@ -6,6 +6,7 @@ function helptext {
     echo "Usage: ./go <command>"
     echo ""
     echo "Available commands are:"
+    echo "    recovery          Flash the device in recovery mode to retrieve votes"
     echo "    cn                Compile node code"
     echo "    d1                Deploy currently compiled code to a device I choose"
     echo "    fleet             Create and deploy a Fleet: All connected devices become Nodes except for 1 Gateway at oldest attached device"
@@ -146,6 +147,15 @@ function deploy-nodes-to-all-local-devices {
     $HOME/nrf/projects/fruitymesh/deploy/deploy-from-1-on.sh
 }
 
+function recovery-mode {
+    toggle-gateway-config false
+    toggle-terminal-config true
+    toggle-logging-config true
+    toggle-nfc-config false
+    compile
+    $HOME/nrf/projects/fruitymesh/deploy/deploy-from-1-on.sh
+}
+
 function fleet {
     deploy-nodes-to-all-local-devices
     create-gateway
@@ -184,6 +194,8 @@ function deploy-to-device-i-choose {
 }
 
 case "$1" in
+    recovery) recovery-mode
+    ;;
     cn) compile-node
     ;;
     d1) deploy-to-device-i-choose

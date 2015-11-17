@@ -876,7 +876,7 @@ void Node::RemoveFromRetryStorage(unsigned short userId) {
 
 void Node::PrintRetryStorage() {
 	for(int i =0; i < MAX_RETRY_STORAGE_SIZE; i++) {
-		logt("RETRY", "Storage: %d\n",  this->persistentConfig.retryStorage[i]);
+        logt("RETRY", "Vote: %d Time: %d \n",  this->persistentConfig.retryStorage[i], this->persistentConfig.timeStorage[i]);
 	}
 }
 

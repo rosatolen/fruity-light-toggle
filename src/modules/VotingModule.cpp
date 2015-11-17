@@ -126,21 +126,22 @@ bool VotingModule::TerminalCommandHandler(string commandName, vector<string> com
             nodeID destinationNode = (commandArgs[0] == "this") ? node->persistentConfig.nodeId : atoi(commandArgs[0].c_str());
             if(commandArgs.size() == 4 && commandArgs[2] == "set_time") {
                 u64 timeStamp = (atoi(commandArgs[3].c_str()) * (u64)APP_TIMER_CLOCK_FREQ);
-
                 node->globalTime = timeStamp;
                 app_timer_cnt_get(&node->globalTimeSetAt);
-
                 connPacketUpdateTimestamp packet;
-
                 packet.header.messageType = MESSAGE_TYPE_UPDATE_TIMESTAMP;
                 packet.header.sender = node->persistentConfig.nodeId;
                 packet.header.receiver = 0;
-
                 cm->SendMessageToReceiver(NULL, (u8*)&packet, SIZEOF_CONN_PACKET_UPDATE_TIMESTAMP, true);
-
                 return true;
             }
         }
+
+    }
+
+    if (commandName == "dump") {
+        node->PrintRetryStorage();
+        return true;
     }
 
     //Must be called to allow the module to get and set the config
