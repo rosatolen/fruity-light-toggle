@@ -116,6 +116,7 @@ class Node:
 		LedWrapper* LedRed;
 		LedWrapper* LedGreen;
 		LedWrapper* LedBlue;
+		LedWrapper* Buzzer;
 
 		void FlashWhite(int numberOfTimesToFlash);
 

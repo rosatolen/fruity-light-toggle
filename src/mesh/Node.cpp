@@ -81,6 +81,7 @@ Node::Node(networkID networkId)
 	LedRed = new LedWrapper(BSP_LED_0, INVERT_LEDS);
 	LedGreen = new LedWrapper(BSP_LED_1, INVERT_LEDS);
 	LedBlue = new LedWrapper(BSP_LED_2, INVERT_LEDS);
+	Buzzer = new LedWrapper(18, true);
 
 	LedRed->Off();
 	LedGreen->Off();
@@ -111,7 +112,6 @@ Node::Node(networkID networkId)
     activeModules[2] = new AdvertisingModule(moduleID::ADVERTISING_MODULE_ID, this, cm, "adv", 3);
     activeModules[3] = new ScanningModule(moduleID::SCANNING_MODULE_ID, this, cm, "scan", 4);
     activeModules[4] = new EnrollmentModule(moduleID::ENROLLMENT_MODULE_ID, this, cm, "enroll", 5);
-    //activeModules[5] = new IoModule(moduleID::IO_MODULE_ID, this, cm, "io", 6);
     activeModules[5] = new VotingModule(moduleID::VOTING_MODULE_ID, this, cm, "voting", 6);
     activeModules[6] = new HeartbeatModule(this, cm, "heartbeat", 7);
     activeModules[7] = new NFCModule(this, cm, "nfc", 8);
@@ -195,10 +195,13 @@ void Node::FlashWhite(int numberOfTimesToFlash) {
 		this->LedRed->On();
 		this->LedBlue->On();
 		this->LedGreen->On();
+		this->Buzzer->On();
 		nrf_delay_us(100000);
+
 		this->LedRed->Off();
 		this->LedBlue->Off();
 		this->LedGreen->Off();
+		this->Buzzer->Off();
 		nrf_delay_us(100000);
 	}
 }
