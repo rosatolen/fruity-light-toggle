@@ -13,10 +13,10 @@ function helptext {
     echo "    nodes             Create Nodes out of all connected devices"
     echo "    pers              Creates Persistors out of all connected devices"
     echo "    gate              Create and deploy a Gateway to oldest attached device"
-    echo "    term <tty.file>   Open terminal to specified file"
+    echo "    term <tty.file>   Open terminal to specified file (Requires minicom to be installed)"
     echo "    compile           Clean and compile FruityMesh source"
     echo "    debug             Setup jlinkgdbserver and start gdb"
-    echo "    size              Show the size of the FruityMesh.hex and Soft Device files used for flashing"
+    echo "    size              Show the size of the FruityMesh.hex and SoftDevice files used for flashing"
     echo "    minprog           Show the progression of file size."
 }
 
