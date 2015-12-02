@@ -27,6 +27,7 @@ static void vote(unsigned short uID) {
     Conf *config = Conf::getInstance();
 
     bool success = node->PutInRetryStorage(uID);
+
     if (success) {
         nodeID everyone = 0;
         u32 time = node->GetTimeFor(uID);
@@ -46,7 +47,6 @@ static void vote(unsigned short uID) {
 
         cm->SendMessageToReceiver(NULL, (u8 * ) & packet, SIZEOF_CONN_PACKET_MODULE + 10, true);
         logt("VOTING", "Sending vote with id: %d", uID);
-        //logt("VOTING", "Sending vote with id: %d and time: %d\n", uID, time);
 
     } else {
         logt("VOTING", "Queue full, unable to send vote with id: %d\n", uID);
@@ -75,15 +75,6 @@ void VotingModule::ConfigurationLoadedHandler()
 {
     //Does basic testing on the loaded configuration
     Module::ConfigurationLoadedHandler();
-
-    //Version migration can be added here
-    if(configuration.moduleVersion == 1){/* ... */};
-
-    //Do additional initialization upon loading the config
-
-
-    //Start the Module...
-
 }
 
 void VotingModule::TimerEventHandler(u16 passedTime, u32 appTimer) {
@@ -151,7 +142,6 @@ bool VotingModule::TerminalCommandHandler(string commandName, vector<string> com
 
 void VotingModule::ConnectionPacketReceivedEventHandler(connectionPacket* inPacket, Connection* connection, connPacketHeader* packetHeader, u16 dataLength)
 {
-    //Must call superclass for handling
     Module::ConnectionPacketReceivedEventHandler(inPacket, connection, packetHeader, dataLength);
 
     if(packetHeader->messageType == MESSAGE_TYPE_MODULE_ACTION_RESPONSE){

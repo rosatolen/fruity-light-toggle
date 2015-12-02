@@ -28,14 +28,11 @@ class VotingModule: public Module
 {
 	private:
 
-		//Module configuration that is saved persistently (size must be multiple of 4)
 		struct VotingModuleConfiguration : ModuleConfiguration{
-			//Insert more persistent config values here
-			//Insert more persistent config values here
 			u16 connectionReportingIntervalMs;
 			u16 statusReportingIntervalMs;
-			u8 connectionRSSISamplingMode; //typeof RSSISampingModes
-			u8 advertisingRSSISamplingMode; //typeof RSSISampingModes
+			u8 connectionRSSISamplingMode;
+			u8 advertisingRSSISamplingMode;
 			u16 reserved;
 		};
 
@@ -49,21 +46,6 @@ class VotingModule: public Module
 			RESPONSE_MESSAGE = 0
 		};
 
-		/*
-		//####### Module messages (these need to be packed)
-#pragma pack(push)
-#pragma pack(1)
-
-#define SIZEOF_TEMPLATE_MODULE_***_MESSAGE 10
-typedef struct
-{
-		//Insert values here
-
-		}VotingModule***Message;
-
-#pragma pack(pop)
-//####### Module messages end
-		 */
 u32 lastConnectionReportingTimer;
 u32 lastStatusReportingTimer;
 
@@ -76,11 +58,7 @@ void ResetToDefaultConfiguration();
 
 void TimerEventHandler(u16 passedTime, u32 appTimer);
 
-//void BleEventHandler(ble_evt_t* bleEvent);
-
 void ConnectionPacketReceivedEventHandler(connectionPacket* inPacket, Connection* connection, connPacketHeader* packetHeader, u16 dataLength);
-
-//void NodeStateChangedHandler(discoveryState newState);
 
 bool TerminalCommandHandler(string commandName, vector<string> commandArgs);
 };
