@@ -21,7 +21,7 @@ ScanningModule::ScanningModule(u16 moduleId, Node* node, ConnectionManager* cm, 
 		Module(moduleId, node, cm, name, storageSlot)
 {
 	//Register callbacks n' stuff
-	//Logger::getInstance().enableTag("SCANMOD");
+	Logger::getInstance().enableTag("SCANMOD");
 
 	//Save configuration to base class variables
 	//sizeof configuration must be a multiple of 4 bytes

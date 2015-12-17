@@ -52,7 +52,7 @@ function replace-line-in-config {
     mv config/temporary $FILE
 }
 
-GATEWAY_LINE=263
+GATEWAY_LINE=264
 GATEWAY_VARIABLE='IS_GATEWAY_DEVICE'
 GATEWAY_ON_CONFIG='#define IS_GATEWAY_DEVICE true'
 GATEWAY_OFF_CONFIG='#define IS_GATEWAY_DEVICE false'

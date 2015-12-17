@@ -192,7 +192,8 @@ void Connection::ReceivePacketHandler(connectionPacket* inPacket)
 	//If it is a packet from the handshake, we keep it, otherwise, we forwared it to the node
 	connPacketHeader* packetHeader = (connPacketHeader*) data;
 
-	logt("CONN", "Received packet type %d, len %d", packetHeader->messageType, dataLength);
+    logt("CONN", "Received packet type expected_connection:21 is: %d, len expected:9 is:%d", packetHeader->messageType, dataLength);
+    logt("CONN" "packetHeader->messageType")
 
 	/*#################### ROUTING ############################*/
 

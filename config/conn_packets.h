@@ -74,6 +74,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define MESSAGE_TYPE_DATA_1 80
 #define MESSAGE_TYPE_DATA_2 81
 #define MESSAGE_TYPE_HEARTBEAT 90
+#define MESSAGE_TYPE_LIGHT_TOGGLE 91
 
 
 //########## Message structs and sizes ###############################################

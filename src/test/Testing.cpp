@@ -62,23 +62,23 @@ Testing::Testing()
 	//Storage::getInstance();
 
 //	Logger::getInstance().enableTag("STORAGE");
-//	Logger::getInstance().enableTag("STATES");
+	Logger::getInstance().enableTag("STATES");
 //	Logger::getInstance().enableTag("CONN_QUEUE");
 	Logger::getInstance().enableTag("HANDSHAKE");
 //	Logger::getInstance().enableTag("TESTING");
-//	Logger::getInstance().enableTag("CONN");
+	Logger::getInstance().enableTag("CONN");
 //	Logger::getInstance().enableTag("DATA");
-//	Logger::getInstance().enableTag("ADV");
+    Logger::getInstance().enableTag("ADV");
 //	Logger::getInstance().enableTag("C");
 	Logger::getInstance().enableTag("DISCONNECT");
-//	Logger::getInstance().enableTag("JOIN");
-//	Logger::getInstance().enableTag("CONN");
+	Logger::getInstance().enableTag("JOIN");
+	Logger::getInstance().enableTag("CONN");
 	Logger::getInstance().enableTag("MODULE");
 
 
 
 
-	//Logger::getInstance().enableTag("SCAN");
+    Logger::getInstance().enableTag("SCAN");
 
 	//Logger::getInstance().logEverything = true;
 

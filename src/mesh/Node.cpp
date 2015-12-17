@@ -21,10 +21,11 @@
 #include <DebugModule.h>
 #include <ScanningModule.h>
 #include <EnrollmentModule.h>
-#include <VotingModule.h>
-#include <NFCModule.h>
-#include <HeartbeatModule.h>
+//#include <VotingModule.h>
+//#include <NFCModule.h>
+//#include <HeartbeatModule.h>
 #include <GatewayModule.h>
+#include <LightToggleModule.h>
 #include <IoModule.h>
 #include <unistd.h>
 
@@ -112,9 +113,10 @@ Node::Node(networkID networkId)
     activeModules[2] = new AdvertisingModule(moduleID::ADVERTISING_MODULE_ID, this, cm, "adv", 3);
     activeModules[3] = new ScanningModule(moduleID::SCANNING_MODULE_ID, this, cm, "scan", 4);
     activeModules[4] = new EnrollmentModule(moduleID::ENROLLMENT_MODULE_ID, this, cm, "enroll", 5);
-    activeModules[5] = new VotingModule(moduleID::VOTING_MODULE_ID, this, cm, "voting", 6);
-    activeModules[6] = new HeartbeatModule(this, cm, "heartbeat", 7);
-    activeModules[7] = new NFCModule(this, cm, "nfc", 8);
+    activeModules[5] = new LightToggleModule(this, cm, "lighttoggle", 6);
+    //activeModules[5] = new VotingModule(moduleID::VOTING_MODULE_ID, this, cm, "voting", 6);
+    //activeModules[6] = new HeartbeatModule(this, cm, "heartbeat", 7);
+    //activeModules[7] = new NFCModule(this, cm, "nfc", 8);
 
     isGatewayDevice = IS_GATEWAY_DEVICE;
 
