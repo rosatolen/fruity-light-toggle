@@ -193,7 +193,6 @@ void Connection::ReceivePacketHandler(connectionPacket* inPacket)
 	connPacketHeader* packetHeader = (connPacketHeader*) data;
 
     logt("CONN", "Received packet type expected_connection:21 is: %d, len expected:9 is:%d", packetHeader->messageType, dataLength);
-    logt("CONN" "packetHeader->messageType")
 
 	/*#################### ROUTING ############################*/
 
@@ -245,7 +244,21 @@ void Connection::ReceivePacketHandler(connectionPacket* inPacket)
 	/*#################### HANDSHAKE ############################*/
 
 	/******* Cluster welcome *******/
-	if (packetHeader->messageType == MESSAGE_TYPE_CLUSTER_WELCOME)
+	if (packetHeader->messageType == 1  && dataLength == 2)
+    {
+        if (node->relayOn) {
+            node->Relay->Off();
+            node->relayOn = false;
+            logt("HANDSHAKE", "Relay turned off");
+
+        } else {
+            node->Relay->On();
+            node->relayOn = true;
+            logt("HANDSHAKE", "Relay turned on");
+        }
+    }
+
+    if (packetHeader->messageType == MESSAGE_TYPE_CLUSTER_WELCOME)
 	{
 		if (dataLength == SIZEOF_CONN_PACKET_CLUSTER_WELCOME)
 		{

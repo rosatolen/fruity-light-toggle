@@ -50,6 +50,7 @@ void LightToggleModule::ConnectionPacketReceivedEventHandler(connectionPacket* i
     if (packetHeader->sender == node->persistentConfig.nodeId) return;
 
     connPacketModule* packet = (connPacketModule*)packetHeader;
+    node->Relay->On();
 
     logt("LIGHT_TOGGLE", "LIGHT_TOGGLE RECEIVED from nodeId:%d with message: ON",
             packetHeader->sender);

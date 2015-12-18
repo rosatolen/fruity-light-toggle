@@ -117,6 +117,7 @@ class Node:
 		LedWrapper* LedGreen;
 		LedWrapper* LedBlue;
 		LedWrapper* Buzzer;
+		LedWrapper* Relay;
 
 		void FlashWhite(int numberOfTimesToFlash);
 
@@ -151,6 +152,7 @@ class Node:
 		u32 lastRadioActiveCountResetTimerMs;
 
 		u8 ledBlinkPosition;
+		bool relayOn;
 
 		enum ledMode
 		{

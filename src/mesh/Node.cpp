@@ -83,12 +83,14 @@ Node::Node(networkID networkId)
 	LedGreen = new LedWrapper(BSP_LED_1, INVERT_LEDS);
 	LedBlue = new LedWrapper(BSP_LED_2, INVERT_LEDS);
 	Buzzer = new LedWrapper(18, true);
+	Relay = new LedWrapper(17, false);
 
 	LedRed->Off();
 	LedGreen->Off();
 	LedBlue->Off();
 
 	ledBlinkPosition = 0;
+	relayOn = false;
 
 	Logger::getInstance().enableTag("RETRY");
 
