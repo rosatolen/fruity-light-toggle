@@ -32,6 +32,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <Testing.h>
 #include <LedWrapper.h>
 #include <Module.h>
+#include <LightToggleModule.h>
 #include <Utility.h>
 #include <types.h>
 #include <TestBattery.h>
@@ -62,8 +63,8 @@ static u16 sizeOfCurrentEvent = sizeOfEvent;
 
 
 #define APP_TIMER_PRESCALER       0 // Value of the RTC1 PRESCALER register
-#define APP_TIMER_MAX_TIMERS      1 //Maximum number of simultaneously created timers (2 + BSP_APP_TIMERS_NUMBER)
-#define APP_TIMER_OP_QUEUE_SIZE   1 //Size of timer operation queues
+#define APP_TIMER_MAX_TIMERS      2 //Maximum number of simultaneously created timers (2 + BSP_APP_TIMERS_NUMBER)
+#define APP_TIMER_OP_QUEUE_SIZE   2 //Size of timer operation queues
 
 
 //Reference to Node
@@ -105,6 +106,8 @@ int main(void)
 
 	//Start Timers
 	initTimers();
+
+    LightToggleModule::ButtonInit();
 
 	while (true)
 	{

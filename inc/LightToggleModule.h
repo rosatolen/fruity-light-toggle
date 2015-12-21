@@ -5,10 +5,12 @@
 class LightToggleModule : public Module
 {
   public:
-      LightToggleModule(Node* node, ConnectionManager* cm, const char* name, u16 storageSlot);
+    LightToggleModule(Node* node, ConnectionManager* cm, const char* name, u16 storageSlot);
 
     void TimerEventHandler(u16 passedTime, u32 appTimer);
     void ConnectionPacketReceivedEventHandler(connectionPacket* inPacket, Connection* connection, connPacketHeader* packetHeader, u16 dataLength);
+
+    static void ButtonInit();
 
   private:
     ModuleConfiguration _configuration;
