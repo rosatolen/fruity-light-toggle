@@ -13,12 +13,12 @@ extern "C" {
 #define TOGGLE_ON_MESSAGE           0xff
 #define LIGHT_CONNECTED_NODE        4293
 
-void send_light_toggle_packet() {
+void send_light_toggle_packet(uint32_t to_node) {
     connPacketModule packet;
 
     Node* node = Node::getInstance();
     packet.header.sender = node->persistentConfig.nodeId;
-    packet.header.receiver = 4293;
+    packet.header.receiver = to_node;
     packet.header.messageType = MESSAGE_TYPE_LIGHT_TOGGLE;
     packet.data[0] = TOGGLE_ON_MESSAGE;
 
@@ -28,7 +28,7 @@ void send_light_toggle_packet() {
 
 static void button_handler(uint8_t pin_no, uint8_t button_action) {
     // BUTTON_1 is connected to PIN 17 on the PCA10028 Board.
-    if (button_action == APP_BUTTON_PUSH && pin_no == BUTTON_1) send_light_toggle_packet();
+    if (button_action == APP_BUTTON_PUSH && pin_no == BUTTON_1) send_light_toggle_packet(LIGHT_CONNECTED_NODE);
 }
 
 void LightToggleModule::ButtonInit() {
@@ -62,7 +62,7 @@ void LightToggleModule::TimerEventHandler(u16 passedTime, u32 appTimer) {
     // QA Testing: Enable if checking for queue robustness
     // Send a packet every second
     if ((appTimer / 1000) % 5 && appTimer % 2000 == 0) {
-        send_light_toggle_packet();
+        send_light_toggle_packet(NODE_ID_BROADCAST);
     }
 }
 
@@ -83,6 +83,7 @@ void LightToggleModule::ConnectionPacketReceivedEventHandler(connectionPacket* i
 
     if (packetHeader->messageType != MESSAGE_TYPE_LIGHT_TOGGLE) return;
     if (packetHeader->sender == node->persistentConfig.nodeId) return;
+    if (packetHeader->receiver != node->persistentConfig.nodeId) return;
 
     connPacketModule* packet = (connPacketModule*)packetHeader;
     node->Relay->On();
