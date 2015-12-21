@@ -127,7 +127,6 @@ function create-persistors {
     compile
     # Oldest connected J-Link device will become a persistor
     $HOME/nrf/projects/fruitymesh/deploy/deploy-from-1-on.sh
-    #echo 0 | $HOME/nrf/tools/jlink $HOME/nrf/projects/fruitymesh/deploy/single-fruitymesh-softdevice-deploy.jlink
 }
 
 function compile-node {
