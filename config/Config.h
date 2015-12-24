@@ -262,3 +262,6 @@ enum moduleID{
 
 /*########### Gateway or not? ###############*/
 #define IS_GATEWAY_DEVICE false
+
+/*########### Custom BLE Node ID ###############*/
+#define BLE_NODE_ID 57000

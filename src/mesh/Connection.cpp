@@ -194,6 +194,53 @@ void Connection::ReceivePacketHandler(connectionPacket* inPacket)
 
     logt("CONN", "Received packet type expected_connection:21 is: %d, len expected:9 is:%d", packetHeader->messageType, dataLength);
 
+
+	//#################### Feign handshake for non-mesh device connecting over BLE ###############
+	if (packetHeader->messageType == MESSAGE_TYPE_UART_WRITE)
+	{
+        for(int i=0; i<Config->meshMaxOutConnections; i++){
+
+            //Sometimes the nodeID is offset by one. Don't know why
+            if (cm->connections[i]->partnerId == BLE_NODE_ID || cm->connections[i]->partnerId == BLE_NODE_ID+1)
+            {
+                logt("TC", "Connection to BLE device already exists");
+
+                //TODO
+                //Extract our data and broadcast packet to everyone else
+                return;
+            }
+        }
+
+		if (node->inFeignHandshakeMode == false)
+		{
+		    logt("TC", "Recognised as UART Write Message, first pass");
+		    packetHeader->receiver = NODE_ID_BROADCAST;
+		    packetHeader->sender = BLE_NODE_ID+1;
+		    packetHeader->messageType = MESSAGE_TYPE_CLUSTER_WELCOME;
+		    dataLength = SIZEOF_CONN_PACKET_CLUSTER_WELCOME;
+
+		    node->inFeignHandshakeMode = true;
+		}
+
+		else
+		{
+            logt("TC", "Recognised as UART Write Message, second pass");
+
+            packetHeader->receiver = node->persistentConfig.nodeId;
+            packetHeader->sender = BLE_NODE_ID+1;
+            packetHeader->messageType = MESSAGE_TYPE_CLUSTER_ACK_1;
+            dataLength = SIZEOF_CONN_PACKET_CLUSTER_ACK_1;
+
+            node->inFeignHandshakeMode = false;
+		}
+	}
+
+    //Inspect current connections to this node
+    logt("TC", "Current Connections 1 are: %d", cm->connections[0]->partnerId);
+    logt("TC", "Current Connections 2 are: %d", cm->connections[1]->partnerId);
+    logt("TC", "Current Connections 3 are: %d", cm->connections[2]->partnerId);
+
+
 	/*#################### ROUTING ############################*/
 
 	//We are the last receiver for this packet

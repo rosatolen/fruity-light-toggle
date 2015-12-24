@@ -50,6 +50,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //Others
 #define MESSAGE_TYPE_UPDATE_TIMESTAMP 30 //Used to enable timestamp distribution over the mesh
 
+//Message Type for our write characteristic over UART
+#define MESSAGE_TYPE_UART_WRITE 39
+
 //Module messages: Protocol defined (yet unfinished)
 //MODULE_CONFIG: Used for many different messages that set and get the module config
 //MODULE_TRIGGER_ACTION: trigger some custom module action

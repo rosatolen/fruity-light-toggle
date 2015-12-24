@@ -112,6 +112,7 @@ class Node:
 		}
 
 		bool isGatewayDevice;
+		bool inFeignHandshakeMode;
 
 		LedWrapper* LedRed;
 		LedWrapper* LedGreen;

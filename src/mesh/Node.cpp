@@ -85,6 +85,8 @@ Node::Node(networkID networkId)
 	Buzzer = new LedWrapper(18, true);
 	Relay = new LedWrapper(17, false);
 
+	inFeignHandshakeMode = false;
+
 	LedRed->Off();
 	LedGreen->Off();
 	LedBlue->Off();
@@ -92,7 +94,13 @@ Node::Node(networkID networkId)
 	ledBlinkPosition = 0;
 	relayOn = false;
 
-	Logger::getInstance().enableTag("RETRY");
+    Logger::getInstance().enableTag("RETRY");
+
+	Logger::getInstance().enableTag("TC");
+	Logger::getInstance().enableTag("C");
+	Logger::getInstance().enableTag("CONN_DATA");
+	Logger::getInstance().enableTag("HANDSHAKE");
+
 
 	//Register terminal listener
 	Terminal::AddTerminalCommandListener(this);
