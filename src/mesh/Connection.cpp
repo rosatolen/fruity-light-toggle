@@ -172,6 +172,13 @@ void Connection::DisconnectionHandler(ble_evt_t* bleEvent)
 
 	logt("DISCONNECT", "Disconnected %d from connId:%d, HCI:%d %s", partnerId, connectionId, disconnectReason, Logger::getHciErrorString(disconnectReason));
 
+	//If for some reason BLE device disconnected make sure our inFeignHandShakeMode is set to false
+	if ((partnerId == BLE_NODE_ID || (partnerId == BLE_NODE_ID + 1)) && disconnectReason == 19)
+	{
+	    node->inFeignHandshakeMode = false;
+	    logt("TC", "Disconnected, Node Handshake set to off");
+	}
+
 	//Decrease Cluster size
 	this->connectedClusterSize = 0;
 	node->clusterSize -= this->connectedClusterSize;
@@ -179,7 +186,7 @@ void Connection::DisconnectionHandler(ble_evt_t* bleEvent)
 
 	//Reset variables
 	this->Init();
-
+	logt("TC", "Current Connections are: %d, %d, %d", cm->connections[0]->partnerId, cm->connections[1]->partnerId, cm->connections[2]->partnerId);
 }
 
 
@@ -196,6 +203,9 @@ void Connection::ReceivePacketHandler(connectionPacket* inPacket)
 
 
 	//#################### Feign handshake for non-mesh device connecting over BLE ###############
+	//Inspect current connections to this node
+    logt("TC", "Current Connections are: %d, %d, %d", cm->connections[0]->partnerId, cm->connections[1]->partnerId, cm->connections[2]->partnerId);
+
 	if (packetHeader->messageType == MESSAGE_TYPE_UART_WRITE)
 	{
         for(int i=0; i<Config->meshMaxOutConnections; i++){
@@ -234,12 +244,6 @@ void Connection::ReceivePacketHandler(connectionPacket* inPacket)
             node->inFeignHandshakeMode = false;
 		}
 	}
-
-    //Inspect current connections to this node
-    logt("TC", "Current Connections 1 are: %d", cm->connections[0]->partnerId);
-    logt("TC", "Current Connections 2 are: %d", cm->connections[1]->partnerId);
-    logt("TC", "Current Connections 3 are: %d", cm->connections[2]->partnerId);
-
 
 	/*#################### ROUTING ############################*/
 
