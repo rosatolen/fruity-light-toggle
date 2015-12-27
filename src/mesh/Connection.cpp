@@ -215,8 +215,15 @@ void Connection::ReceivePacketHandler(connectionPacket* inPacket)
             {
                 logt("TC", "Connection to BLE device already exists");
 
+                //Inspect contents of received packet
+            	char stringBuffer[200];
+	            Logger::getInstance().convertBufferToHexString(data, dataLength, stringBuffer);
+
+                logt("TC", "Data in received packet is: %s", stringBuffer);
+
                 //TODO
                 //Extract our data and broadcast packet to everyone else
+                //cm->connectionManagerCallback->messageReceivedCallback(inPacket);
                 return;
             }
         }
