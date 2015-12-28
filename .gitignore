@@ -10,5 +10,6 @@ _build/
 .idea/
 *.iml
 CMakeLists.txt
+*.iml
 
 unit_tests/a.out
