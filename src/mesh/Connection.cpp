@@ -213,16 +213,15 @@ void Connection::ReceivePacketHandler(connectionPacket* inPacket)
             //Sometimes the nodeID is offset by one. Don't know why
             if (cm->connections[i]->partnerId == BLE_NODE_ID || cm->connections[i]->partnerId == BLE_NODE_ID+1)
             {
-                logt("TC", "Connection to BLE device already exists");
+                //Get target NodeID and Data Value
+                unsigned short targetNodeId = (( (short)data[2] ) << 8) | data[1];
+                unsigned char dataValue = data[3];
 
-                //Inspect contents of received packet
-            	char stringBuffer[200];
-	            Logger::getInstance().convertBufferToHexString(data, dataLength, stringBuffer);
-
-                logt("TC", "Data in received packet is: %s", stringBuffer);
+                logt("TC", "Node ID is: %d", targetNodeId);
+                logt("TC", "Data Value is: %d", dataValue);
 
                 //TODO
-                //Extract our data and broadcast packet to everyone else
+                //Broadcast packet to everyone else if its not ours
                 //cm->connectionManagerCallback->messageReceivedCallback(inPacket);
                 return;
             }
