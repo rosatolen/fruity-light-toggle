@@ -86,9 +86,7 @@ int main(void)
 
 	//Enable logging for some interesting log tags
 	Logger::getInstance().enableTag("NODE");
-	Logger::getInstance().enableTag("STORAGE");
 	Logger::getInstance().enableTag("DATA");
-	Logger::getInstance().enableTag("SEC");
 	Logger::getInstance().enableTag("HANDSHAKE");
 	Logger::getInstance().enableTag("CONN");
 	Logger::getInstance().enableTag("CONN_DATA");

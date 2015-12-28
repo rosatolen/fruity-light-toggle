@@ -199,8 +199,6 @@ void Connection::ReceivePacketHandler(connectionPacket* inPacket)
 	//If it is a packet from the handshake, we keep it, otherwise, we forwared it to the node
 	connPacketHeader* packetHeader = (connPacketHeader*) data;
 
-    logt("CONN", "Received packet type expected_connection:21 is: %d, len expected:9 is:%d", packetHeader->messageType, dataLength);
-
 
 	//#################### Feign handshake for non-mesh device connecting over BLE ###############
 	//Inspect current connections to this node
@@ -221,7 +219,7 @@ void Connection::ReceivePacketHandler(connectionPacket* inPacket)
                 logt("TC", "Data Value is: %d", dataValue);
 
                 //Fix the packet header
-                packetHeader->messageType = 120;
+                packetHeader->messageType = MESSAGE_TYPE_LIGHT_TOGGLE;
                 packetHeader->receiver = targetNodeId;
                 packetHeader->sender = BLE_NODE_ID+1;
 
@@ -315,20 +313,6 @@ void Connection::ReceivePacketHandler(connectionPacket* inPacket)
 	/*#################### HANDSHAKE ############################*/
 
 	/******* Cluster welcome *******/
-	if (packetHeader->messageType == 1  && dataLength == 2)
-    {
-        if (node->relayOn) {
-            node->Relay->Off();
-            node->relayOn = false;
-            logt("HANDSHAKE", "Relay turned off");
-
-        } else {
-            node->Relay->On();
-            node->relayOn = true;
-            logt("HANDSHAKE", "Relay turned on");
-        }
-    }
-
     if (packetHeader->messageType == MESSAGE_TYPE_CLUSTER_WELCOME)
 	{
 		if (dataLength == SIZEOF_CONN_PACKET_CLUSTER_WELCOME)
