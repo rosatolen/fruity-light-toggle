@@ -220,9 +220,23 @@ void Connection::ReceivePacketHandler(connectionPacket* inPacket)
                 logt("TC", "Node ID is: %d", targetNodeId);
                 logt("TC", "Data Value is: %d", dataValue);
 
-                //TODO
-                //Broadcast packet to everyone else if its not ours
-                //cm->connectionManagerCallback->messageReceivedCallback(inPacket);
+                //Fix the packet header
+                packetHeader->messageType = 120;
+                packetHeader->receiver = targetNodeId;
+                packetHeader->sender = BLE_NODE_ID+1;
+
+                if (targetNodeId == node->persistentConfig.nodeId)
+                {
+                    //Send packet to our modules
+                    cm->connectionManagerCallback->messageReceivedCallback(inPacket);
+                }
+
+                else
+                {
+                    //Broadcast packet to everyone else if its not ours
+                    cm->SendMessageOverConnections(this, data, dataLength, reliable);
+                }
+
                 return;
             }
         }
