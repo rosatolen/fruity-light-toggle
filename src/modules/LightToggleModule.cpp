@@ -22,7 +22,7 @@ void send_light_toggle_packet(uint32_t to_node, uint8_t dataValue) {
     packet.data[0] = dataValue;
 
     ConnectionManager *cm = ConnectionManager::getInstance();
-    cm->SendMessageToReceiver(NULL, (u8*)&packet, SIZEOF_CONN_PACKET_MODULE + 2 + 1, true);
+    cm->SendMessageToReceiver(NULL, (u8*)&packet, SIZEOF_CONN_PACKET_MODULE + 1 + 1, true);
 }
 
 static void button_handler(uint8_t pin_no, uint8_t button_action) {

@@ -219,7 +219,7 @@ void Connection::ReceivePacketHandler(connectionPacket* inPacket)
                 logt("TC", "Data Value is: %d", dataValue);
 
                 //Fix the packet header
-                inPacket->dataLength = SIZEOF_CONN_PACKET_HEADER + 1 + 1;
+                inPacket->dataLength = SIZEOF_CONN_PACKET_MODULE + 1 + 1;
                 packetHeader->messageType = MESSAGE_TYPE_LIGHT_TOGGLE;
                 packetHeader->receiver = targetNodeId;
                 packetHeader->sender = BLE_NODE_ID+1;
