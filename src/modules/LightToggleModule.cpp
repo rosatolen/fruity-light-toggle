@@ -10,11 +10,10 @@ extern "C" {
 
 #define APP_TIMER_PRESCALAR         0
 #define BUTTON_DETECTION_DELAY      APP_TIMER_TICKS(50u, APP_TIMER_PRESCALAR)
-#define LIGHT_CONNECTED_NODE        4293
+#define LIGHT_CONNECTED_NODE        10731
 
 void send_light_toggle_packet(uint32_t to_node, uint8_t dataValue) {
     connPacketModule packet;
-
     Node* node = Node::getInstance();
     packet.header.sender = node->persistentConfig.nodeId;
     packet.header.receiver = to_node;
