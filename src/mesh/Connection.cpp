@@ -219,20 +219,28 @@ void Connection::ReceivePacketHandler(connectionPacket* inPacket)
                 logt("TC", "Data Value is: %d", dataValue);
 
                 //Fix the packet header
+                inPacket->dataLength = SIZEOF_CONN_PACKET_HEADER + 1 + 1;
                 packetHeader->messageType = MESSAGE_TYPE_LIGHT_TOGGLE;
                 packetHeader->receiver = targetNodeId;
                 packetHeader->sender = BLE_NODE_ID+1;
+                data[inPacket->dataLength - 1] = dataValue;
 
                 if (targetNodeId == node->persistentConfig.nodeId)
                 {
                     //Send packet to our modules
+
+                    for (int n=0; n<inPacket->dataLength; n++)
+                    {
+                        logt("TC", "Data Value at %d is: %d", n, inPacket->data[n]);
+                    }
+
                     cm->connectionManagerCallback->messageReceivedCallback(inPacket);
                 }
 
                 else
                 {
                     //Broadcast packet to everyone else if its not ours
-                    cm->SendMessageOverConnections(this, data, dataLength, reliable);
+                    cm->SendMessageOverConnections(this, data, inPacket->dataLength, reliable);
                 }
 
                 return;
