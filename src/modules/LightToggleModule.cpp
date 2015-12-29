@@ -12,6 +12,8 @@ extern "C" {
 #define BUTTON_DETECTION_DELAY      APP_TIMER_TICKS(50u, APP_TIMER_PRESCALAR)
 #define LIGHT_CONNECTED_NODE        10731
 
+bool relayToggle = false;
+
 void send_light_toggle_packet(uint32_t to_node, uint8_t dataValue) {
     connPacketModule packet;
     Node* node = Node::getInstance();
@@ -26,7 +28,19 @@ void send_light_toggle_packet(uint32_t to_node, uint8_t dataValue) {
 
 static void button_handler(uint8_t pin_no, uint8_t button_action) {
     // BUTTON_1 is connected to PIN 17 on the PCA10028 Board.
-    if (button_action == APP_BUTTON_PUSH && pin_no == BUTTON_1) send_light_toggle_packet(LIGHT_CONNECTED_NODE, 255);
+
+    if (button_action == APP_BUTTON_PUSH && pin_no == BUTTON_1)
+    {
+        if (relayToggle) {
+            send_light_toggle_packet(LIGHT_CONNECTED_NODE, 255);
+            relayToggle = false;
+        }
+
+        else {
+            send_light_toggle_packet(LIGHT_CONNECTED_NODE, 0);
+            relayToggle = true;
+        }
+    }
 }
 
 void LightToggleModule::ButtonInit() {
