@@ -107,7 +107,7 @@ void LightToggleModule::ConnectionPacketReceivedEventHandler(connectionPacket* i
         node->LedRed->On();
         node->LedBlue->On();
         node->LedGreen->On();
-        //node->Relay->On();
+        node->Relay->On();
         logt("LIGHT_TOGGLE", "LIGHT_TOGGLE RECEIVED from nodeId:%d with message: ON", packetHeader->sender);
     }
 
@@ -116,7 +116,7 @@ void LightToggleModule::ConnectionPacketReceivedEventHandler(connectionPacket* i
         node->LedRed->Off();
         node->LedBlue->Off();
         node->LedGreen->Off();
-        //node->Relay->Off();
+        node->Relay->Off();
         logt("LIGHT_TOGGLE", "LIGHT_TOGGLE RECEIVED from nodeId:%d with message: OFF", packetHeader->sender);
     }
 }

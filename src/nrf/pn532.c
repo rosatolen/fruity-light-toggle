@@ -367,8 +367,6 @@ void uart_115200_config(uint8_t rts_pin_number,
     m_event_handler = event_handler;
 
     //?? needed? nrf_gpio_pin_set(txd_pin_number);
-    nrf_gpio_cfg_output(18);
-    nrf_gpio_cfg_output(17);
     nrf_gpio_cfg_output(txd_pin_number);
     nrf_gpio_cfg_input(rxd_pin_number, NRF_GPIO_PIN_PULLUP);
     // old - nrf_gpio_cfg_input(rxd_pin_number, NRF_GPIO_PIN_NOPULL);

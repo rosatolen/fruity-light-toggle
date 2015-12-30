@@ -121,4 +121,10 @@
 #define SER_CON_SPIS_RDY_PIN        14    // SPI READY GPIO pin number.
 #define SER_CON_SPIS_REQ_PIN        13    // SPI REQUEST GPIO pin number.
 
+// Custom GPIO Assignments
+#define GPIO_BUZZER                 18
+#define GPIO_RELAY                  15
+#define INVERT_GPIOS                true
+
+
 #endif // PCA10028_H

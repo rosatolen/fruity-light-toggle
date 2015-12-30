@@ -82,8 +82,8 @@ Node::Node(networkID networkId)
 	LedRed = new LedWrapper(BSP_LED_0, INVERT_LEDS);
 	LedGreen = new LedWrapper(BSP_LED_1, INVERT_LEDS);
 	LedBlue = new LedWrapper(BSP_LED_2, INVERT_LEDS);
-	Buzzer = new LedWrapper(18, true);
-	Relay = new LedWrapper(17, false);
+	Buzzer = new LedWrapper(GPIO_BUZZER, INVERT_GPIOS);
+	Relay = new LedWrapper(GPIO_RELAY, INVERT_GPIOS);
 
 	inFeignHandshakeMode = false;
 

@@ -53,4 +53,9 @@
 #define RTS_PIN_NUMBER 8
 #define HWFC           true
 
+// Custom GPIO Assignments
+#define GPIO_BUZZER     18
+#define GPIO_RELAY      15
+#define INVERT_GPIOS    true
+
 #endif
