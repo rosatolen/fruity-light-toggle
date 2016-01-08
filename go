@@ -12,6 +12,7 @@ function helptext {
     echo "    fleet             Create and deploy a Fleet: All connected devices become Nodes except for 1 Gateway at oldest attached device"
     echo "    nodes             Create Nodes out of all connected devices"
     echo "    pers              Creates Persistors out of all connected devices"
+    echo "    reset             Factory Reset"
     echo "    gate              Create and deploy a Gateway to oldest attached device"
     echo "    term <tty.file>   Open terminal to specified file (Requires minicom to be installed)"
     echo "    compile           Clean and compile FruityMesh source"
@@ -192,6 +193,10 @@ function deploy-to-device-i-choose {
     $HOME/nrf/tools/jlink deploy/single-fruitymesh-softdevice-deploy.jlink
 }
 
+function reset {
+    $HOME/nrf/tools/jlink deploy/factory_reset_device.jlink
+}
+
 case "$1" in
     recovery) recovery-mode
     ;;
@@ -210,6 +215,8 @@ case "$1" in
     term) term "$2"
     ;;
     compile) compile
+    ;;
+    reset) reset
     ;;
     debug) debug
     ;;
